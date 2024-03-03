@@ -1,8 +1,16 @@
 [package]
-name = "rust-book"
+name = "my-rust-book"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+[[bin]]
+name = "hello"
+path = "src/main.rs"
+
+[[bin]]
+name = "function_for"
+path = "src/function_for/main.rs"
