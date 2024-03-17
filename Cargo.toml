@@ -14,3 +14,15 @@ path = "src/main.rs"
 [[bin]]
 name = "function_for"
 path = "src/function_for/main.rs"
+
+[[bin]]
+name = "if_return_value"
+path = "src/if/main.rs"
+
+[[bin]]
+name = "mutable_var"
+path = "src/mutable_var/main.rs"
+
+[[bin]]
+name = "as"
+path = "src/as/main.rs"
