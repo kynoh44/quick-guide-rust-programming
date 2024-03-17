@@ -26,3 +26,15 @@ path = "src/mutable_var/main.rs"
 [[bin]]
 name = "as"
 path = "src/as/main.rs"
+
+[[bin]]
+name = "match"
+path = "src/match/main.rs"
+
+[[bin]]
+name = "expr"
+path = "src/expr/main.rs"
+
+[[bin]]
+name = "array_slice"
+path = "src/array_slice/main.rs"
