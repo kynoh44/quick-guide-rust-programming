@@ -544,3 +544,643 @@ sum_array_ref는 배열을 참조로 전달받는 함수이고,  sum_slice는 �
 배열이나 문자열을 처리하는 함수를 만들 때는 항상 슬라이스로 인자를 받도록 만드는 습관을 가지면 좋습니다.
 
 물론 슬라이스같은 참조가 아니라 배열이나 문자열을 그대로 전달하면 소유권까지 함수로 넘어가게되서 함수를 호출한 코드에서 다시는 배열이나 문자열을 접근할 수 없게되기 때문에, 그렇게 슬라이스로 처리를 할 수 밖에 없습니다. 러스트의 소유권 개념은 너무나 유명해서 아마 한두번은 들어보셨을 것입니다. 어쨌든 러스트는 이렇게 사용자가 실수할 수 있는 부분들을 최대한 막으려는 디자인 철학을 가진 언어입니다. C의 문제점들을 해결하려고 C++에서 수십차례 버전을 올려가며 규약들을 만들고, 스마트 포인터를 만드는 등의 노력을 했었지만, 근본적으로 언어의 철학 자체가 개발자가 모든 것을 직접 처리할 수 있어야 한다는 철학을 밑바탕에 가지고 있기 때문에 완전히 막을 수 없는 헛점들이 있었습니다. 러스트는 그런 C++의 최신 기법들을 모두 모아놓고, 강제로 쓰도록 정해놓았다고 이해를 해되 된다고 생각합니다.
+
+## String
+
+C같은 언어에서는 문자열은 char 타입의 배열입니다. 하지만 러스트를 비롯한 고급언어들은 문자열은 String이라는 구조체나 새로운 타입으로 표현합니다.
+
+그럼에도 러스트에서 슬라이스와 함께 문자열을 설명하는 경우가 많은데 그 이유를 알아보겠습니다.
+
+우선 String(https://doc.rust-lang.org/std/string/struct.String.html)이라는 타입에 대해서 알아보겠습니다.
+
+메뉴얼을 자세히 볼 필요는 없지만 첫줄만 봐도 결국 하나의 구조체라는 것을 알 수 있습니다. C에서와같이 문자의 배열은 아닙니다. 따라서 String을 사용하기 위해서는 우선 구조체에 속한 메소드를 호출해서 객체를 생성해야합니다. 다음 짧은 예제에는 몇가지 흔하게 사용되는 String 생성 방법들을 모아봤습니다. 참고로 String은 러스트의 “The Rust Standard  Library”에 포함되기 때문에 C와 같은 include등의 추가적인 라이브러리 참조 코드를 쓸 필요없이 바로 사용할 수 있습니다.
+
+```rust
+fn main() {
+    let hello = String::from("Hello, world!");
+    let mut s = String::new();
+    let s = "initial contents".to_string();
+    let hello = String::from("안녕하세요");
+}
+```
+
+가장 먼저 익숙해져야할 것은 “이렇게 큰따옴표안에있는 문자열”, 즉 리터럴(Literal)은 String이 아니라는 것입니다. 리터럴은 컴파일 시점에 고정된 크기의 데이터입니다. 소스 코드에 하드 코딩된 문자열이니까요. 리터럴은 소스 코드에 하드 코딩되었으므로 프로그램의 실행중에 데이터가 변하거나 크기가 바뀌는 일이 없습니다. 따라서 컴파일러는 메모리를 할당해서 리터럴을 저장하는게 아니라 프로그램 코드가 저장되는 영역 (프로그램 바이너리 파일이나 프로세스가 실행된 뒤에는 프로그램의 코드가 저장된 메모리 영역)에 저장합니다. 리터럴은 리터럴이고, String이라는 타입(구조체)의 객체는 다른 것입니다. String타입의 객체는 프로세스가 실행 중에 프로세스의 힙 영역에 메모리를 할당하고, 할당된 메모리에 리터럴 데이터를 복사해서 생성합니다. 그런 메모리 할당과 복사를 from이라는 정적 메소드나 to_string이라는 메소드가 실행하는 것입니다.
+
+물론 러스트는 최신 언어답게 UTF-8을 지원하고있어서 어떤 언어든지 String객체를 만들 수 있습니다.
+
+각 메소드들을 설명하자면 다음과 같습니다.
+
+- from(”msg”): “와 “안에 들어가는 문자열을 String 객체로 생성함
+- new(): 아무런 데이터가 없는 String 객체 생성
+- “msg”.to_string(): “와 “안에 있는 문자열을 String객체로 생성함, from과 같음
+
+그리고 또 하나 흔하게 String을 만드는 방법이 format! 매크로 함수를 이용한 방식입니다.
+
+```rust
+let s1 = String::from("tic");
+let s2 = String::from("tac");
+let s3 = String::from("toe");
+
+let s = format!("{}-{}-{}", s1, s2, s3);
+```
+
+String이 객체이니까 당연히 많은 메소드들이 있을 것입니다. 자바등 고급 언어를 다뤄본 분이라면 익숙한 메소드들이 많을 것입니다. push_str나 insert, len 등등 대부분의 언어들과 마찬가지로 String객체에 추가로 문자열을 넣거나 길이를 반환하거나 하는 메소드들이 있습니다.
+
+그럼 “이렇게 큰따옴표 안에 들어간 문자열”은 무엇이고, String과의 관계는 어떻게 되는 걸까요?
+
+String 구조체의 정의부터 찾아보겠습니다.
+
+```rust
+pub struct String {
+    vec: Vec<u8>,
+}
+```
+
+출처: https://doc.rust-lang.org/src/alloc/string.rs.html#365
+
+고급 언어를 다뤄봤다면 반드시 사용해봤을만한 벡터가 나타났습니다. 사실 String은 그냥 8비트 값들의 벡텨였던 것입니다. UTF-8 코딩의 정의를 생각해본다면 당연한 것일지도 모르겠습니다.
+
+그럼 String의 슬라이스는 무엇일까요? 결론부터 말하면 &str 타입이 String의 슬라이스입니다.
+
+```rust
+let greeting: String = String::from("Hello, world");
+let gretting_slice: &String = &greeting[1..3];
+```
+
+그런데 이 예제 코드는 컴파일되지 않습니다. 아래와 같은 에러 메제시가 나타납니다.
+
+```rust
+error[E0308]: mismatched types
+   --> src/main.rs:173:35
+    |
+173 |     let gretting_slice: &String = &greeting[1..3];
+    |                         -------   ^^^^^^^^^^^^^^^ expected `&String`, found `&str`
+    |                         |
+    |                         expected due to this
+    |
+    = note: expected reference `&String`
+               found reference `&str`
+```
+
+아직 에러 메세지가 다 이해는 안되지만 다음과 같이 코드를 바꾸라는 도움말이 나왔습니다. 도움말대로 수정하면 빌드가 제대로 되는 것을 확인할 수 있습니다.
+
+```rust
+let greeting: String = String::from("Hello, world");
+let gretting_slice: &str = &greeting[1..3];
+```
+
+결국 우리는 String객체의 참조가 &String이 아닌 &str인것을 알 수 있습니다.
+
+String은 흔히 말하는 Fat pointer입니다. 실제로 문자열이 저장된 메모리의 주소도 들어있지만, 데이터의 현재 길이나 버퍼의 크기 등 추가 정보들이 들어있습니다. 슬라이스는 이전 배열에서도 봤지만 코드가 실행되는 시점에서 순수 데이터의 일부분이나 데이터 전체를 보기 위한 참조입니다. String객체를 C에서 하나의 구조체라고 생각하고, 슬라이스를 구조체의 필드 중에 하나인 char*라고 생각하면 그 관계에 대해 이해하기 쉬울지도 모르겠습니다.
+
+```rust
+struct String {
+    int buffer_len;
+    int data_len;
+    char *buffer;
+};
+```
+
+그럼 한가지 의문이 드는게 &str이 아니라 str으로 참조 연산자를 안쓰고 사용할 수는 없는가 입니다. 사용할 수 없습니다. 왜냐면 러스트는 메모리 관리를 위해 컴파일 시점에서 크기가 정해진 객체만을 허용하기 때문입니다.
+
+str은 벡터에 들어있는 UTF-8데이터 그 자체, 그 메모리 덩어리를 가지는 변수가 되어야 합니다. 하지만 문자열의 길이는 정해진 것이 아닙니다. 일반적인 구조체는 각 필드의 데이터 타입이 고정되어있으니 컴파일 시점에 크기를 알 수 있습니다. 배열은 배열을 선언할 때 데이터가 몇개인지 지정하기 때문에 크기를 알 수 있습니다. 하지만 벡터가 가진 메모리 덩어리의 크기는 String객체를 어떤 문자열로 만들느냐에 따라서 변할 수가 있는 것입니다. 결국 str라는 타입은 사용할 수가 없습니다.
+
+하지만 참조연산자 &를 붙이면 이야기가 달라집니다. 왜냐면 &str는 포인터이고 포인터의 크기는 컴파일 시점에 고정되어있기 때문입니다. 최신 씨피유를 쓴다면 64비트이니까요. 따라서 아래와 같이 선언하는 것은 컴파일러가 봤을 때 64비트의 변수를 스택 메모리에 만들면 되는 것이니, 아무런 문제가 없습니다.
+
+```rust
+let s: &str = "hello";
+```
+
+&str는 순수 문자열에 대한 참조입니다. 따라서 “hello”와 같이 문자열만 쓴 것으로 생성할 수 있습니다. 하지만 이런 문자열에 대한 참조가 String은 아닙니다. String을 만들려면 벡터를 만들어야되고, 벡터를 만들려면 힙 메모리에 메모리를 할당해야하고, 그 외에 문자열을 관리하기 위한 추가 데이터들을 할당해야합니다. 따라서 슬라이스 “hello”를 가지고 String을 만들기 위한 추가 작업들 format!의 호출이나 to_string메소드 호출 등을 해야하는 것입니다.
+
+사실 왜를 따지다보면 처음 러스트를 접하는 입장에서는 혼란만 생깁니다. 왜 메모리 크기가 컴파일 시점에 고정되어야하는지, 그럼 동적으로 할당되는 메모리는 사용할 수 없는 것인지 의문이 더 생깁니다. 현재 이 순간에는 String에 대한 참조나 슬라이스가 &str라는 것만 생각하고 넘어가는 것도 방법입니다. 아니면 러스트의 String 구조체에 대한 매뉴얼이나 The Rust Programming Language등의 추가 자료를 찾아보는 것도 좋은 공부방법이라고 생각합니다.
+
+마지막으로 String 객체를 다른 함수에 전달할 때 슬라이스를 써야한다는 것을 이야기하겠습니다. 아직 소유권에 대해서 배우지는 않았지만 간단하게 말하면 String 을 그대로 다른 함수에 전달하면, 그 함수를 호출한 이후에는 그 객체를 다시 사용할 수 없습니다. 객체를 그대로 전달한다는 것은 소유권까지 넘겼다는 것이기 때문입니다. 그 와 반대로 String객체의 슬라이스를 넘기는 것은 객체에 있는 문자열 데이터의 참조권을 잠시 빌려주는 것으로 생각하면 됩니다. 함수가 끝나더라도 객체의 소유권은 함수를 호출한 코드에 남아있기 때문에 계속 객체를 사용할 수 있습니다.
+
+아래 코드를 빌드해보겠습니다.
+
+```rust
+fn moved_string(data: String) {
+    println!("{}", data);
+}
+
+fn main() {
+    let mut mutable_string = String::from("hello");
+
+    moved_string(mutable_string);
+    println!("{}", mutable_string);
+}
+```
+
+이런 에러 메세지를 볼 수 있습니다.
+
+> 161 | fn moved_string(data: String) {
+|    ------------       ^^^^^^ this parameter takes ownership of the value
+|    |
+|    in this function
+> 
+
+객체를 그대로 함수에 전달했기 때문에 함수의 파라미터에 객체의 소유권까지 옮겨졌다는 뜻입니다.
+
+어떤 객체를 함수에 전달할 때는 보통 참조를 전달해야하고, 그러므로 String을 함수에 전달할 때는 &str을 전달해야한다는 것을 기억합시다.
+
+```rust
+fn moved_string(data: &str) {
+    println!("{}", data);
+}
+
+fn main() {
+    let mut mutable_string = String::from("hello");
+
+    moved_string(&mutable_string);
+    println!("{}", mutable_string);
+}
+```
+
+### String을 배열처럼 참조할 수 없는 이유
+
+아래와 같이 String객체에서 첫번째 글자를 출력할 수 있을까요?
+
+```rust
+let mut mutable_string = String::from("hello");
+println!("{}", mutable_string[0]);
+```
+
+할 수 없습니다. 아래와 같은 에러 메세지를 얻으실겁니다.
+
+> error[E0277]: the type `String` cannot be indexed by `{integer}`
+--> src/main.rs:167:20
+|
+167 |     println!("{}", mutable_string[0]);
+|                    ^^^^^^^^^^^^^^^^^ `String` cannot be indexed by `{integer}`
+> 
+
+일단 답부터 이야기하면 아래와 같이 chars메소드를 호출해서 이터레이터를 만든 후, nth메소드로 특정 인덱스의 문자를 얻을 수 있습니다.
+
+```rust
+let mut mutable_string = String::from("hello");
+println!("{}", mutable_string.chars().nth(0).unwrap());
+```
+
+nth메소드는 Option이라는 Enums를 반환하므로 이 Enums에서 최종 문자를 얻어내기 위해 unwrap이라는 메소드를 호출한 것입니다.
+
+일단 Option이라는 Enums은 추후에 알아보기로 하고, 왜 인덱스를 이용한 직접 접근이 안되게 막아놨을까요? 연산자 오버라이딩 등의 방법이 있었을텐데요.
+
+그 이유는 UTF-8을 완벽하게 지원하기 위해서입니다. 언어를 디자인할 때 인덱스 참조를 지원해서 [0]이 0번째 바이트를 반환하도록 만들었을 수도 있습니다. 하지만 이러면 ascii에 대한 지원은 잘 될지 몰라도 UTF-8을 제대로 지원하는 언어가 될 수는 없습니다. 첫번째 글자를 반환할 수도 있었겠지만, 첫번째 글자 하나만 놓고봤을 때 이 첫글자가 1바이트가 될지 2바이트가 될지 알 수가 없습니다. 이런 여러가지 문제들이 있기 때문에, 항상 이터레이터를 호출하도록 만들고, 이터레이터가 문자열의 전체 데이터를 분석한 후에 한 문자씩 반환하도록 만들었습니다. 그런 이유로 String의 이터레이터 메소드 chars의 처리 속도가 느린 것입니다.
+
+만약 바이트 단위로 쪼개고싶다면 as_bytes라는 메소드를 호출하면 됩니다. 문자열 데이터가 반드시 ascii 문자열이라는 상황이라면 괸찬은 옵션입니다.
+
+## 러스트의 소유권(Ownership) 개념
+
+배열에서의 슬라이스나 String과 &str의 관계를 보면서 소유권을 넘기지 않기 위해 참조를 사용한다는 이야기를 수차례 했습니다. 슬라이스도 그렇지만 그 외에 러스트의 문법적인 특징들의 상당수가 소유권 개념을 구현하기 위해서 만들어진 것들이라고 해도 과언이 아닙니다. 왜 이런 문법을 정했을까? 왜 이건 이렇게 복잡하지? 등등 러스트를 공부하면서 겪게되는 의문들과 진입장벽들의 상당수가 소유권과 연관이 있을 것입니다. 그리고 러스트가 가진 장점 중에 가장 큰 장점이라고 이야기하는 메모리 안전성이 바로 소유권 개념으로 인해 가능한 것입니다.
+
+소유권이 뭔지 그래서 러스트가 데이터를 메모리에 어떻게 배치하고 관리하는지를 이야기해보겠습니다.
+
+### 소유권의 의미
+
+소유권은 단어 그대로 생각하면 메모리를 마음대로 할 수 있는 권한 즉 데이터나 변수를 할당하고 읽고 쓰고 해지해할 수 있는 권리일 것입니다. 함수의 인자로 전달받은 메모리에 대한 소유권도 있을 수 있으니 여러 함수 혹은 여러 쓰레드에서 공유되는 데이터나 메모리에 대한 권한을 생각해야합니다.
+
+가비지 콜렉터가 있는 자바 등의 언어는 메모리를 해지할 수 있는 권한이 프로그램 코드가 아닌 가비지 콜렉터에게 있습니다. 프로그램은 메모리를 할당받아서 읽고 쓸 수 있지만 해지하지는 않습니다. 그냥 더 이상 접근하지 않고 있으면 가비지 콜렉터가 알아서 메모리를 해지해줍니다.
+
+러스트는 컴파일러가 프로그램 코드를 컴파일 할 때 모든 메모리의 소유권을 추적합니다. 러스트가 정한 규칙에 어긋나게 메모리에 접근하는 코드가 있으면 친절한 안내 메세지를 출력하고 더 이상 컴파일을 하지 않습니다. 그래서 러스트 코드의 컴파일 시간이 오래걸린다는 불평이 많습니다. 수십 ~ 수백줄의 간단한 코드도 몇 초정도 시간이 걸리는걸 보면서 좀 답답할 때도 있긴합니다. 하지만 그정도의 간단한 코드를 만드는데 여러번 빌드해야할 정도로 컴파일 에러를 많이 만들고 있다는 것은 사용자에게 문제가 더 있는게 아닌가 생각됩니다. 그리고 빌드를 여러번 할 필요도 없는게 VSCODE등 대부분의 개발툴에서 러스트 언어를 동적으로 분석해주고, 코드를 쓸 때마다 에러 체크를 해줍니다. 빌드하기전에 미리 모든 컴파일 에러를 고칠 수 있습니다.
+
+VSCODE를 예를 들면 Inlay hints https://code.visualstudio.com/docs/languages/rust#_inlay-hints 나 Linting https://code.visualstudio.com/docs/languages/rust#_linting 등의 기능이 있어서, cargo를 호출하기전에 미리 거의 모든 컴파일 에러를 잡을 수 있습니다.
+
+또한 러스트 언어는 한번 빌드가 되고나면 좀처럼 메모리 관련 에러는 발생하지 않습니다. 기타 로우레벨 언어들이 빌드되서 실행이 되더라도 오랜 시간동안 에러가 없는지 검증해야되고, 정적 분석 툴 등을 돌려야 되는 시간들을 생각해보면 전체적인 개발 시간은 확실히 줄어드는 것이라 생각합니다.
+
+The Rust Programming Language에서는 소유권이라는 것이 3가지 규칙을 의미한다고 설명합니다.
+
+- Each value in Rust has an *owner*.
+- There can only be one owner at a time.
+- When the owner goes out of scope, the value will be dropped.
+
+(https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html)
+
+제가 번역과 함께 좀더 설명을 붙이면 이렇습니다.
+
+- 하나의 변수는 하나의 스코프에 소유됩니다. 당연히 하나의 스코프는 여러 변수를 소유할 수 있습니다.
+- 하나의 변수의 소유권을 여러 스코프가 동시에 가질 수 없습니다. 하지만 대여할 수는 있습니다.
+- 소유권을 가진 스코프가 끝나면 변수는 해지됩니다.
+
+러스트 언어에서 변수의 스코프는 {로 시작하고 }로 끝나는 구역을 의미합니다.
+
+함수가 대표적인 하나의 스코프입니다.
+
+```rust
+fn main() {
+    let hello_string = String::from("hello");
+    println!("{}", hello_string);
+}
+```
+
+main함수 시작 부분에서 생성된  hello_string이라는 변수는 main함수가 끝나는 }를 만나면서 해지됩니다.
+
+간단하게 함수 내부에 스코프를 하나 더 만들어서 실험해보겠습니다.
+
+```rust
+fn main() {
+    let hello_string = String::from("hello");
+    {
+        let world_string = String::from("world");
+        println!("{}", hello_string);
+        println!("{}", world_string);
+    }
+}
+```
+
+```rust
+$ cargo run
+hello
+world
+```
+
+hello_string이라는 변수의 스코프는 main함수가 끝날 때까지 입니다. 따라서 그 이전에는 어디에서도 사용될 수 있습니다. world_string이라는 변수의 소유권은 내부 블럭에 있습니다. 따라서 아래와같이 내부 블럭의 밖에서는 사용할 수가 없습니다.
+
+```rust
+fn main() {
+    let hello_string = String::from("hello");
+    {
+        let world_string = String::from("world");
+        println!("{}", hello_string);
+    }
+    println!("{}", world_string);
+}
+```
+
+```rust
+$ cargo build
+error[E0425]: cannot find value `world_string` in this scope
+   --> src/main.rs:7:20
+    |
+  7 |     println!("{}", world_string);
+    |                    ^^^^^^^^^^^^ help: a local variable with a similar name exists: `hello_string`
+```
+
+world_string이 사용된 스코프는 world_string을 소유하지 않았다는 에러 메세지를 확인할 수 있습니다.
+
+그럼 다음과 같이 같은 이름의 변수가 중첩된 스코프에 존재할 때는 어떨까요?
+
+```rust
+fn main() {
+    let hello_string = String::from("hello");
+    {
+        let hello_string = String::from("world");
+        println!("{}", hello_string);
+    }
+    println!("{}", hello_string);
+}
+```
+
+Cargo를 이용해서 코드를 실행해보면 다음과 같이 출력됩니다.
+
+```rust
+$ cargo run
+world
+hello
+```
+
+2개의 변수가 동일한 이름으로 생성되지만 “hello”라는 데이터를 가진 변수는 main 함수가 끝나는 바깥 스코프에가 소유권을 가지고있고, “world”라는 데이터를 가진 변수는 main함수 안에서 새로 생성된 작은 스코프가 소유권을 가지고 있는 것입니다. 작은 스코프가 끝날 때 “world”라는 데이터를 가진 변수(혹은 객체)는 해지됩니다.
+
+참고로 스코프가 끝날 때 자신이 소유한 변수들의 drop 메소드를 호출합니다. 다음은 MyStruct라는 아무런 데이터를 가지지않는 구조체를 선언하고, drop 메소드를 구현해준 코드입니다. (아직 구조체에 대한 문법을 알아보지않았지만, 구조체의 선언만 보면 C언어와 거의 동일합니다. 구조체의 메소드를 정의하는 문법은 아직 모르지만, 일단 drop이라는 메소드가 호출되는 시점만 생각해보겠습니다.)
+
+```rust
+struct MyStruct {}
+
+impl Drop for MyStruct {
+    fn drop(&mut self) {
+        println!("Dropping MyStruct now!");
+    }
+}
+
+fn main() {
+    println!("main starts");
+    {
+        println!("inner-scope starts");
+        let my: MyStruct = MyStruct{};
+        println!("inner-scope ends");
+    }
+    println!("main ends");
+}
+```
+
+```rust
+main starts
+inner-scope starts
+inner-scope ends
+Dropping MyStruct now!
+main ends
+```
+
+drop메소드가 호출되는 지점이 곧 변수의 메모리가 해지되는 지점인데, “inner-scope ends”라는 메세지 후에 drop메소드가 호출되는 것을 볼 수 있습니다. 즉 스코프 안의 모든 코드가 끝나고 스코프가 없어지는 최후의 순간에 스코프가 소유한 변수들을 해지하는 것을 확인할 수 있습니다.
+
+### 소유권의 이동
+
+사실 개념 설명만 들으면 약간 그래서 어쩌라는 건가 라는 생각이 들 수 밖에 없습니다. 몇가지 제가 자주 겪어본 케이스 몇가지를 소개하겠습니다. 이정도만 일단 알고 시작하면 작은 프로젝트를 시작하는데는 문제가 없을거라 생각합니다.
+
+#### 변수 할당에서 소유권이 이동하는 경우
+
+가장 간단한 예는 변수간에 할당이 발생할 때 소유권이 이동하는 경우입니다.
+
+```rust
+let s1 = String::from("foo");
+println!("{}", s1);
+let s2 = s1;
+println!("{} {}", s1, s2);
+```
+
+이 예제에서 러스트는 s1을 s2로 이동시킵니다. 보통의 언어들에서는 객체의 복사가 일어나거나 포인터의 복사가 일어날 것입니다. 러스트에서는 내부적으로는 포인터의 복사만 일어나고, 거기에 더해서 소유권의 이동까지 일어납니다. 객체 데이터를 복사하지 않기 때문에 속도는 빠르면서 소유권의 이동까지 일어나므로 데이터가 의도하지 않게 공유되는 것을 방지합니다.
+
+그런데 실제로 뭔가를 만드는 경우에 이렇게 예제와 같이 변수에 변수를 옮기는 경우는 거의 없습니다. 실제로 많이 겪는 경우는 변수의 이동이 일어나는지 잘 안보이는 경우들이 대부분입니다.
+
+```rust
+let mut user_input = String::from("아이유");
+println!("{}", user_input);
+let mut greeting = user_input + "씨 안녕하세요";
+println!("{}", greeting);
+println!("{}", user_input); // Compile error
+```
+
+기존 언어에 익숙하다보면 이 코드에 문제가 안보일 수 있습니다. 사실 안보이는게 당연한것입니다. 하지만 러스트에서는 user_inut의 소유권 이동이 일어나고, 거기에 메세지가 추가되서 greeting 변수에 저장된다는 차이가 있습니다.
+
+```rust
+error[E0382]: borrow of moved value: `user_input`
+   --> src/main.rs:175:20
+    |
+171 |     let mut user_input = String::from("아이유");
+    |         -------------- move occurs because `user_input` has type `String`, which does not implement the `Copy` trait
+172 |     println!("{}", user_input);
+173 |     let mut greeting = user_input + "씨 안녕하세요";
+    |                        ---------------------------- `user_input` moved due to usage in operator
+174 |     println!("{}", greeting);
+175 |     println!("{}", user_input); // Compile error
+    |                    ^^^^^^^^^^ value borrowed here after move
+```
+
+이와같이 소유권이 이동이 안보이는 경우가 많긴합니다만, 변수의 이동은 컴파일러가 너무나 친절하게 어디에서 이동이 발생했고, 소유권이 없는 변수를 어디에서 접근해서 에러가 발생했는지를 다 알려줍니다. 그래서 에러를 찾기도 쉽고 고치기도 어렵지 않습니다.
+
+#### 함수 인자로 전달되고 반환값을 받을 때 소유권이 이동하는 경우
+
+```rust
+fn make_greeting(name: String) -> String {
+    let greeting = format!("{}씨 안녕하세요", name);
+    greeting
+}
+
+fn main() {
+    let user = "아이유".to_string();
+    let greeting = make_greeting(user);
+    println!("{}", greeting);
+}
+```
+
+이번에도 크게 어렵지 않은 경우입니다. user라는 변수가 make_greeting의 name이라는 인자에 바인딩되었습니다. 따라서 이전에 본 변수의 할당과 같은 경우입니다. make_greeting 함수가 끝난 뒤에는 user 변수는 사용할 수 없습니다. greeting이라는 변수는 make_greeting이라는 함수에서 생성되었지만 main 함수로 이동된 경우입니다.
+
+```rust
+fn make_greeting(name: String) -> String {
+    let greeting = format!("{}씨 안녕하세요", name);
+    greeting
+}
+
+fn main() {
+    let mut user = "아이유".to_string();
+    user = make_greeting(user);
+    println!("{}", user);
+}
+```
+
+좀 웃기긴 하지만 위 예제는 user 변수의 소유권을 main에서 make_greeting으로 이동한 후, 다시 main으로 가져오는 예제입니다. 그냥 이런것도 가능하다는 것을 보여드린 예제입니다.
+
+실질적으로 이렇게 구현하는 경우는 드물겠지요. 함수를 호출할 때는 보통 객체의 레퍼런스를 전달해서 소유권을 넘기지 않습니다.
+
+```rust
+fn make_greeting(name: &str) -> String {
+    let greeting = format!("{}씨 안녕하세요", name);
+    greeting
+}
+
+fn main() {
+    let mut user = "아이유".to_string();
+    user = make_greeting(&user);
+    println!("{}", user);
+}
+```
+
+이전에 알아본 레퍼런스가 이렇게 변수의 이동없이도 다른 스코프에서 변수를 사용할 수 있도록 하기 위한 방법입니다. 내부적으로는 포인터만을 전달하는 것입니다. 따라서 C/C++ 언어와 성능 차이가 없습니다. 하지만 컴파일러가 컴파일을 하는 단계에서 소유권의 이동을 체크하고 메모리 공유를 막기 때문에 성능이 좋으면서도 메모리 안전성이 좋은 언어가 된 것입니다.
+
+러스트는 이렇게 레퍼런스를 생성하는 것을 빌렸다 Borrowing 이라고 표현합니다. 소유권의 이동없이 다른 스코프에서 사용하도록 해주는 것이니 적절한 표현이라고 생각합니다.
+
+위 예제에서는 단순히 읽기만 가능한 Immutable reference를 사용했는데요, 쓰기도 가능한 Mutable reference 도 있습니다.
+
+```rust
+fn make_greeting(name: &mut String) {
+    name.push_str("씨 안녕하세요");
+}
+
+fn main() {
+    let mut user = "아이유".to_string();
+    make_greeting(&mut user);
+    println!("{}", user);
+}
+```
+
+mut 키워드를 호출하는 부분에도 넣고, 함수 인자에도 넣어야 된다는 것을 기억해야합니다.
+
+아래와 같이 Immutable한 변수의 Mutable reference를 만드는 것은 불가능합니다.
+
+```rust
+fn main() {
+    let user = "아이유".to_string();
+    make_greeting(&mut user);
+    println!("{}", user);
+}
+```
+
+소유자가 바꾸고 싶지 않은 변수를 빌린쪽에서 맘대로 바꾸는 것은 당연히 허용하면 안되겠지요.
+
+레퍼런스에 대한 규칙을 요약하자면 다음과 같습니다.
+
+- Mutable reference는 하나만 존재할 수 있다.
+- Immutable reference는 여러개 존재할 수 있다.
+- 레퍼런스는 언제나 실제 데이터를 참조해야한다.
+
+상식적으로 생각해도 이해가 되는 규칙입니다. 데이터를 바꿀 수 없는 Immutable reference가 여러개 있다고해도 데이터는 변하지 않으니까 상관없습니다. 데이터를 바꿀 수 있는 Mutable reference가 있다면 이 데이터는 언제든지 바뀔 수 있으므로 다른 어떠한 형태의 레퍼런스도 존재하면 안됩니다.
+
+#### 이터레이터와 소유권
+
+마지막으로 벡터나 배열같이 여러개의 데이터를 이터레이터로 접근하는 경우를 알아보겠습니다. 사실 이 경우가 가장 흔하게 실수하는 경우이고, 소유권 개념을 알았더라도 한동안은 당황하게 되는 경우입니다.
+
+ 배열이나 벡터등의 이터레이터를 만드는 메소드는 2가지가 있습니다.
+
+- iter(): 슬라이스 이터레이터를 만듬
+- into_iter(): 변수 값으로 이터레이터를 만듬
+
+참고: https://doc.rust-lang.org/std/iter/trait.IntoIterator.html#tymethod.into_iter
+
+두개가 무슨 차인지 한번 실험을 해보겠습니다. 먼저 변수의 값으로 이터레이터를 만들어보겠습니다.
+
+```rust
+fn main() {
+    let user: [String;3] = ["My".to_string(),
+                            "Bloody".to_string(),
+                            "Valentine".to_string()];
+    for c in user.into_iter() {
+        println!("{}", c);
+    }
+    println!("{:?}", user);
+}
+```
+
+```rust
+error[E0382]: borrow of moved value: `user`
+   --> src/main.rs:8:22
+    |
+2   |     let user: [String;3] = ["My".to_string(),
+    |         ---- move occurs because `user` has type `[String; 3]`, which does not implement the `Copy` trait
+...
+5   |     for c in user.into_iter() {
+    |                   ----------- `user` moved due to this method call
+...
+8   |     println!("{:?}", user);
+    |                      ^^^^ value borrowed here after move
+    |
+note: `into_iter` takes ownership of the receiver `self`, which moves `user`
+   --> /Users/user/.rustup/toolchains/stable-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/iter/traits/collect.rs:262:18
+    |
+262 |     fn into_iter(self) -> Self::IntoIter;
+    |                  ^^^^
+    = note: this error originates in the macro `$crate::format_args_nl` which comes from the expansion of the macro `println` (in Nightly builds, run with -Z macro-backtrace for more info)
+help: you can `clone` the value and consume it, but this might not be your desired behavior
+    |
+5   |     for c in user.clone().into_iter() {
+    |                   ++++++++
+```
+
+Copy trait나 self, clone등 모르는 키워드들이 나와서 당황스러울 수 있습니다. 미리 into_iter가 무엇인지 모른 상태에서 이 에러메세지를 본다면 막막할 수 있습니다.
+
+일단 지금 상태에서 into_iter말고 iter 메소드를 사용해보겠습니다.
+
+```rust
+fn main() {
+    let user: [String; 3] = [
+        "My".to_string(),
+        "Bloody".to_string(),
+        "Valentine".to_string(),
+    ];
+    for c in user.iter() {
+        println!("{}", c);
+    }
+    println!("{:?}", user);
+}
+```
+
+```rust
+My
+Bloody
+Valentine
+["My", "Bloody", "Valentine"]
+```
+
+아무 이상없이 실행됩니다. 무슨 차이일까요?
+
+into_iter를 사용했을 때의 에러 메세지를 보면 이런 말이 있습니다.
+
+> note: `into_iter` takes ownership of the receiver `self`, which moves `user`
+> 
+
+값으로 이터레이터를 만든다는 의미는 변수의 값을 이동시킨다는 의미입니다. 즉 소유권을 가져간다는 뜻입니다. for 루프에서 c변수의 타입이 String이 되고, c변수가 루프를 돌때마다 배열에 있는 객체를 하나씩 소유하게 됩니다. 그리고 루프가 끝날 때마다 스코프가 끝나고, 객체가 해지됩니다. 모든 루프가 끝나면 배열 전체가 다 해지됩니다.
+
+반대로 iter()는 슬라이스를 만든 후 슬라이스의 이터레이터를 만듭니다. 슬라이스는 배열이나 벡터, 문자열등에 접근하기 위한 레퍼런스입니다. 따라서 소유권을 가져갈 수 없습니다. 결론적으로 소유권 이동없이 배열의 각 항목에 레퍼런스로 접근합니다. c 변수의 타입은 &str이 됩니다.
+
+이터레이터에 대한 팁을 한가지 드리자면 iter와 into_iter가 각각 사용하는 경우가 다릅니다.
+
+- iter: 루프 후에도 계속 데이터를 접근할 경우, 대부분 iter를 더 자주 사용함
+- into_iter: 데이터 구조의 포인터를 모아놓은 벡터를 해지할 때 사용
+
+데이터 구조의 포인터들을 모아놓은 벡터를 해지할 때, 루프를 돌면서 각 데이터 구조를 해지하고, 마지막에 벡터를 해지하는 경우가 흔할 것입니다. 이럴 때 into_iter를 사용하면, 각각의 항목을 따로 해지하지않아도 각 루프의 스코프가 끝나면서 자동으로 해지됩니다.
+
+### Clone과 소유권
+
+좀전에 into_iter를 사용한 경우 컴파일 에러를 보면 user.clone().into_iter()로 고쳐보라는 에러 메세지가 있습니다. 
+
+```rust
+fn main() {
+    let user: [String; 3] = [
+        "My".to_string(),
+        "Bloody".to_string(),
+        "Valentine".to_string(),
+    ];
+    for c in user.clone().into_iter() {
+        println!("{}", c);
+    }
+    println!("{:?}", user);
+}
+```
+
+이렇게 바꾸면 컴파일 에러 없이 잘 동작합니다. clone은 말 그대로 데이터를 똑같이 복사해서 클론을 만드는 것입니다. Deep copy를 한다고 생각할 수도 있습니다.
+
+위에서는 루프를 돌기전에 user의 이름없는 복사본을 만들고 그 복사본의 into_iter 메소드를 호출해서 인터레이터를 만듭니다. 그래서 user 객체는 그대로 존재하고, 복사본만 해지됩니다.
+
+### 스택 영역과 힙 영역
+
+크게 중요한 내용은 아니지만 러스트의 내부를 이해하기 위한 설명을 약간 해보겠습니다.
+
+이전에 만들었던 피보나치 함수를 다시 읽어보겠습니다.
+
+```rust
+fn fib(mut index: i32) -> i32 {
+    let mut a = 1;
+    let mut b = 1;
+    let mut t;
+
+    loop {
+        t = a + b;
+        a = b;
+        b = t;
+
+        index -= 1;
+        if index <= 0 {
+            break;
+        }
+    }
+    b
+}
+```
+
+t = a+b라는 코드가 있는데요 t변수는 a와 b중 어느 변수의 소유권을 가지게되는 것일까요? 
+
+사실 정수 타입의 변수는 소유권 이동이 일어나지 않습니다. 정수나 부동 소수점 타입등과 Boolean타입은 소유권의 이동도 일어나지않습니다. 함수 호출에 인자로 전달되면 값이 복사됩니다. 또 위 코드와 같이 대입이 될때도 값이 복사됩니다.
+
+그럼 소유권 이동이 일어나는 타입과 그런 규칙에서 예외되는 타입의 구분은 무엇일까요? 변수의 할당에 대해서 신경써야되는 로우레벨 언어에 대한 경력이 있으신 분들은 금방 눈치챘을 것입니다. 바로 스택에 할당되는 변수이나 힙에 할당되는 영역이냐의 차이입니다.
+
+일반적인 숫자 (정수와 부동 소수점)과 참/거짓의 Boolean 타입은 메모리 크기가 정해져있습니다. i32이면 4바이트이고 u8이면 1바이트입니다. 이렇게 컴파일 시점에 이미 메모리 크기가 정해진 변수는 스택에 할당됩니다. 세부적인 것 까지 이야기할 수는 없지만 스택 메모리에 할당하는 것이 빠르고 관리가 쉽기 때문입니다. 스택에 저장된 변수들은 함수가 종료될 때 스택 영역 전체를 해지하면서 한꺼번에 해지됩니다. 따라서 메모리에 대한 염려도 없고 메모리 크기가 작으므로 복사하는데도 시간이 오래 걸리지 않습니다. 따라서 굳이 소유권을 설정하지 않아도 되는 것입니다. 
+
+그와 다른게 String과 같은 구조체 타입을 들 수 있습니다. 구조체 타입에 맞게 메모리를 할당해서 객체를 만드는 것은 힙 영역의 메모리를 사용합니다. malloc같은 메모리 할당 함수를 내부적으로 호출해서 메모리 영역을 할당하는 것입니다. 왜냐면 컴파일 시점에 String 객체의 어떤 데이터를 넣을지 모르기 때문입니다. 리터럴로 String 객체를 만들 때는 데이터 크기를 알 수 있겠지만, 사용자 입력을 받아서 String 객체를 만들거나 네트워크에서 받은 데이터로 객체를 만들 때는 프로그램이 실행 중일 때만 데이터의 크기를 알 수 있습니다.
+
+```rust
+fn main() {
+    let s = String::new();
+}
+```
+
+위와 같이 s라는 변수를 만들었습니다. 이 s는 사실 스택에 생성된 포인터 변수입니다. 64비트 CPU를 가진 시스템에서 동작한다면 스택에 8바이트 메모리 영역을 할당하고, 힙 영역에 String객체를 생성한 후 스택 메모리 영역에 힙 영역의 주소를 저장한 것입니다. 우리가 s라는 변수를 통해 객체에 저장된 데이터를 읽으면
+
+1. s라는 변수에서 힙 영역의 주소 값을 읽음
+2. 힙 영역에서 데이터를 읽음
+
+이와 같이 2번의 메모리 접근이 일어납니다. 따라서 아래와 같이 변수 대입이나 함수 호출을 통해 소유권을 전달한다는 것은 물리적으로 따지면 포인터 값 (64비트 정수 값)을 복사하는 것 뿐입니다. 컴파일러가 변수 대입이나 함수 호출 등 소유권 규칙에 따른 동작이 일어날 때마다 소유권의 이동을 감시하고 규칙에 부합하는지를 따지는 것 뿐입니다. 그러므로 컴파일러가 많은 일을 하지만, 최종 생성되는 프로그램 코드가 늘어나거나 하지 않고, 결과적으로 메모리 관리가 안정적인 프로그램을 만들 수 있는 것입니다.
+
+정리를 하자면 러스트에서 원시 타입 Primitive type으로 분류된 타입들은 이동이 아니라 복사가 일어나입니다. 어떤 타입들이 원시 타입인지는 Rust의 Standard Library 메뉴얼을 참고하시기 바랍니다.
+
+https://doc.rust-lang.org/std/#primitives
+
+C/C++ 개발자라면 이렇게 생각하면 쉽습니다.
+
+> malloc/new 등으로 할당하고 free로 해지해줘야되는 메모리나 객체를 자동으로 해지해주는 대신 소유권을 관리해줘야 한다. Primitive type은 복사가 일어나고 그 외는 이동이 발생한다.
+> 
+
+모던 C++을 아는 개발자는 더 이해하기 쉬울 것입니다.
+
+> RAII가 권장이 아니라 강제 사항이다. 모든 포인터는 스마트 포인터이다.
+> 
+
+나중에 Copy trait라는게 나오는데, 미리 간단하게 말씀드리면 데이터 타입의 크기를 컴파일러가 알기 때문에 데이터의 이동이 아니라 복사를 해주는 데이터 타입들의 속성이라고 생각하면 됩니다. 컴파일러가 크기를 안다는 것은 Primitive type은 기본적으로 Copy trait를 구현하고 있다는 말입니다. 그 외의 타입들은 동적으로 크기가 바뀔 수도 있으므로 컴파일러가 Copy trait를 자동으로 구현해주지 못합니다.

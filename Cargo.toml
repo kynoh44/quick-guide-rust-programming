@@ -38,3 +38,11 @@ path = "src/expr/main.rs"
 [[bin]]
 name = "array_slice"
 path = "src/array_slice/main.rs"
+
+[[bin]]
+name = "string"
+path = "src/string/main.rs"
+
+[[bin]]
+name = "ownership"
+path = "src/ownership/main.rs"
