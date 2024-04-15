@@ -46,3 +46,7 @@ path = "src/string/main.rs"
 [[bin]]
 name = "ownership"
 path = "src/ownership/main.rs"
+
+[[bin]]
+name = "struct"
+path = "src/struct/main.rs"
