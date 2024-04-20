@@ -102,3 +102,23 @@ path = "src/trait_default/main.rs"
 [[bin]]
 name = "trait_partialeq"
 path = "src/trait_partialeq/main.rs"
+
+[[bin]]
+name = "generic_struct"
+path = "src/generic_struct/main.rs"
+
+[[bin]]
+name = "generic_trait"
+path = "src/generic_trait/main.rs"
+
+[[bin]]
+name = "generic_trait_struct"
+path = "src/generic_trait_struct/main.rs"
+
+[[bin]]
+name = "lifetime"
+path = "src/lifetime/main.rs"
+
+[[bin]]
+name = "error"
+path = "src/error/main.rs"
