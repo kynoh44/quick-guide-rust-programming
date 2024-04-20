@@ -1475,3 +1475,1467 @@ fn main() {
     println!("area size={} {:?}", rect.area(), rect);
 }
 ```
+
+## 열거형 Enums
+
+### 기본 열거형
+
+열거형도 패턴 매칭과 마찬가지로 러스트를 처음 접한 C/C++개발자들이 낯설어하는 특징 중에 하나입니다. 하지만 조금만 쓰다보면 너무나 편리하고 강력(강력하다 Powerful하다는건 아무데나 막 갖다써도 잘 동작한다는 뜻입니다)하기 때문에 자주 쓰게됩니다.
+
+러스트 언어다운 프로그래밍을 하려면 이 열거형를 잘 활용하는게 중요합니다.
+
+보통 C/C++에서 열거형를 쓰는 이유는 주로 특정 값만을 가지는 타입을 새로 만들기 위해서입니다.
+
+```c
+#include <stdio.h>
+
+enum DayOfWeek {    // 열거형 정의
+    Sunday = 0,         // 초깃값 할당
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday
+};
+
+int main()
+{
+    enum DayOfWeek week;    // 열거형 변수 선언
+
+    week = Tuesday;    // 열거형 값 할당
+
+    printf("%d\n", week);   // 2: Tuesday의 값 출력
+
+    return 0;
+}
+```
+
+출처: https://dojang.io/mod/page/view.php?id=480
+
+위와 같이 DayOfWeek이라는 새로운 타입을 만들고, 이 타입의 변수는 Sunday부터  Saturday라는 값만을 갖도록 만드는게 열거형을 쓰는 이유입니다.
+
+러스트의 열거형도 마찬가지로 가장 기본적인 사용법은 특정 값만을 갖는 새로운 타입을 만드는 것입니다.
+
+```rust
+enum IpAddrKind {
+    V4,
+    V6,
+}
+```
+
+### 데이터를 포함하는 열거형
+
+Rust 언어의 열거형(Enums)은 다음과 같이 데이터를 포함할 수도 있습니다.
+
+별도의 쓰레드나 비동기 함수에서 특정 디렉토리를 감시하다가 이런 이벤트를 전달하고, 메인 쓰레드에서 각 이벤트에 맞게 처리하는 프로그램을 상상해보겠습니다.
+
+```rust
+enum MyEvent {
+    NewFile(String),
+    NewData { path: String, contents: String },
+    Close,
+}
+
+fn events_handler(events: Vec<MyEvent>) {
+    for ev in events.into_iter() {
+        // ownership is moved!!
+        match ev {
+            MyEvent::NewFile(path) => println!("New file {} is created", path),
+            MyEvent::NewData { path, contents } => {
+                println!("New data \"{}\" in file {}", contents, path)
+            }
+            MyEvent::Close => println!("Event monitor is closed"),
+        }
+    }
+}
+
+fn main() {
+    let create_file = MyEvent::NewFile("/root/conf.ini".to_string());
+    let write_data = MyEvent::NewData {
+        path: "/root/conf.init".to_string(),
+        contents: "Hello!".to_string(),
+    };
+    let close_monitoring = MyEvent::Close;
+    let mut events: Vec<MyEvent> = Vec::new();
+    events.push(create_file);
+    events.push(write_data);
+    events.push(close_monitoring);
+    events_handler(events);
+}
+```
+
+이벤트를 표현하는 MyEvent라는 열거형을 만듭니다. 각 이벤트는 다음과 같습니다.
+
+- NewFile: 새로 파일이 생성되는 것을 알리는 이벤트, 파일 이름을 데이터로 전달함
+- NewData: 어느 파일에 어떤 데이터가 새로 추가되었는지를 알리는 이벤트, 파일 이름과 추가된 데이터를 전달함
+- Close: 이벤트 모니터링을 끝내라는 명령을 전달함
+
+열거형에 특정 타입의 값들 뿐 아니라 각 값에 추가 데이터를 저장할 수 있도록 지원하기 때문에 이렇게 간단하게 처리가 되는 것입니다.
+
+주의할 점은 match에서 MyEvent::NewData {path, contents}와 같이 열거형에 정의된 변수 이름을 똑같이 써줘야 한다는 것입니다.
+
+그리고 events.into_iter를 사용했으므로 이벤트 처리가 끝나면 이벤트에 속한 데이터들이 모두 해지됩니다. 따로 이벤트 안에 데이터가 있는지 없는지 검사하고, 해지하는 등의 처리가 필요없습니다. 만약에 다른 쓰레드로부터 이벤트를 전달받았다고해도, 이벤트의 소유권을 넘겨받았으므로 메모리를 해지하는데 아무런 문제가 없습니다. 이벤트를 생성한 쓰레드는 소유권을 넘기고 다시는 접근하지 못하게 되었으므로, 이벤트를 처리하는 쓰레드에서는 간편하게 아무런 확인작업없이 메모리를 해지할 수 있는 것입니다.
+
+만약 나중에 다른 개발자가 실수로 이벤트 전달 후에 이벤트에 접근하려고하는 코드를 작성하려고해도 쉽게 에러를 찾아낼 수 있습니다. 만약 C같은 언어였으면 동기화 문제를 찾아내는데 얼마나 시간과 노력이 소모될지 알 수 없었을 것입니다.
+
+만약 C나 다른언어였으면 대략 아래와 같은 방식으로 구현했을 것입니다.
+
+```rust
+type enum {
+    NEWFILE,
+    NEWDATA,
+    CLOSE,
+} EventType;
+
+struct MyEvent {
+    EventType type,
+    char *path,
+    char *data,
+};
+
+...skip
+if (ev->type == NEWFILE) {
+    printf("%s\n", ev->path);
+} else if (ev->type == NEWDATA) {
+    printf("%s, %s\n", ev->path, ev->data);
+} else if (ev->type = CLOSE) {
+    call_close_handler();
+} else {
+    call_error_handler();
+}
+...
+```
+
+이런 처리 방법에는 2가지 문제가 있습니다.
+
+첫번째로 type 필드에 NEWFILE, NEWDATA, CLOSE 외에 다른 정수값이 들어가는 것을 막을 수 없습니다. 따라서 항상 에러처리를 해야합니다.
+
+둘째로 이벤트마다 갖는 path, data라는 메모리가 이벤트 처리와는 별개로 할당되고 해지된다는 것입니다. 이벤트를 처리한다고해도 메모리 해지는 별개입니다. 혹시라도 메모리 처리를 잘못하면 메모리 릭이 발생하게되거나, use-after-free 에러가 발생할 수도 있습니다.
+
+러스트에서는 이벤트가 해지될 때 이벤트에 속한 데이터도 모두 해지해주므로 메모리 릭이 발생할 위험을 없앨 수 있습니다. 소유권 개념을 이해하는게 정말 중요합니다.
+
+## 에러 처리를 위한 Result
+
+열거형의 기본 정의에 대해서 알아봤으니 열거형 타입의 데이터 구조 중에 가장 많이 쓰일만한 Result에 대해서 이야기하겠습니다.
+
+Result의 소스 코드부터 보겠습니다.
+
+```rust
+enum Result<T, E> {
+   Ok(T),
+   Err(E),
+}
+```
+
+https://doc.rust-lang.org/std/result/
+
+Result는 프로그램 실행 중 발생한 에러를 표현하는 타입입니다. 그 중 가장 대표적인 예가 함수의 반환값입니다.  Result에는 2개의 타입이 존재합니다. (variant라고 부르지만 마땅한 한글 단어가 없어서 타입이라고 부르겠습니다.) Ok는 성공했을 때의 값을 내장하는 타입이고, Err는 실패했을 때의 값을 내장하는 타입입니다. 에러메세지가 될 수도 있고, 에러 상태를 나타내는 데이터가 될 수도 있겠지요.
+
+아주 간단한 예제부터 보겠습니다.
+
+```rust
+fn divide(numerator: i32, denominator: i32) -> Result<i32, String> {
+    if denominator == 0 {
+        return Err(String::from("denominator cannot be zero"));
+    }
+    Ok(numerator / denominator)
+}
+
+fn main() {
+    let result = divide(10, 0);
+    match result {
+        Ok(value) => println!("Result: {}", value),
+        Err(message) => println!("Error: {}", message),
+    }
+}
+
+```
+
+나눗셈이 정상적이면 Ok안에 결과 값을 전달하고, 나눗셈을 실행할 수 없으면 Err타입에 에러 메세지를 넣어서 전달합니다. main함수는 반환값의 타입을 보고, 정상적인 결과인지 문제가 발생한 상황인지를 알 수 있습니다. 타입을 확인하는 것은 패턴 매칭을 이용하면 항상 모든 에러 값을 놓치지 않고 처리할 수 있습니다. 여기서 패턴 매칭의 편리함과 강력함을 다시 느끼게 됩니다.
+
+```rust
+fn say_hello() -> Result<String, String> {
+    Ok(String::from("hello"))
+}
+    
+fn main() {
+    let result = say_hello();
+    match result {
+        Ok(message) => println!("Say: {}", message),
+        Err(message) => println!("Error: {}", message),
+    }
+}
+```
+
+위와 같이 에러 상황이나 정상 상황에서나 반환되는 값이 같은 경우에 Ok나 Err 타입을 가지고 에러 상황을 판단할 수 있어서 쓸모가 있습니다. 사실 C/C++언어에서 포인터를 반환하는 함수들이 에러 상황에 NULL (사실은 정수 0을 다른 이름으로 바꾸기만 한 것)을 반환하는게 보통인데 이게 에러 상황인 것은 나타낼 수 있지만, 왜 에러가 발생했는지를 표현할 수도없고, 실수하기도 쉬운 불편한 방식이었습니다.
+
+NULL이라는 개념을 처음 만들었다는 Tony Hoare님의 후회한다고(https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare/) 이야기한 것도 그렇고 모던C++ (C++ 17)에서 optional, expected 등을 도입하는 것 등을 보면 Result를 잘 활용하는 것이 얼마나 프로그램의 안정성에 필수적인지 알 수 있습니다.
+
+반드시 반환값을 갖는 함수는 최대한 전부 Result타입으로 반환하도록 작성하려고 노력해보세요.
+
+참고로 Result에서는 한가지 타입의 에러만 반환할 수 있습니다. say_hello에서 반환할 수 있는 에러는 String타입 뿐입니다. 만약에 좀더 긴 함수를 작성하고있고, 이 함수가 몇가지 라이브러리를 호출하는데, 각 라이브러리마다 반환하는 에러의 타입이 다르다면 어떻게 해야할까요? 각 라이브러리마다 자신의 에러를 표현하기 위한 구조체를 만들어서 사용한다면, 모든 에러 값들을 하나의 타입으로 또다시 바꿔야할까요? 뒤에나올 trait라는 것을 사용해서 다양한 에러 타입들을 하나의 타입으로 표현할 수 있습니다. 지금은 어떤 상황에서도 Result를 사용할 수 있다는 것만 기억하시기 바랍니다.
+
+### 반환값이 없는 함수
+
+그럼 반환값이 없는 함수는 Result를 쓸 필요가 없을까요? 다음과 같은 경우를 생각해보겠습니다.
+
+```rust
+fn check_command_valid(cmd: &str) -> Result<(), String> {
+    match cmd {
+        "good" => Ok(()),
+        "unsupported" => Err("Unsupported command".to_owned()),
+        "bad" => Err("Bad command".to_owned()),
+        _ => Err("Wierd command".to_owned()),
+    }
+}
+```
+
+cmd로 전달받은 명령어에 문제가 있다면 에러 메세지를 반환하는 함수입니다. 그리고 문제가 없을 때는 아무 반환값도 없습니다. 이렇게 반환값이 없는 함수라 하더라도 에러 상황에 대한 정보를 전달해야할 때가 많습니다. 이럴 때는 위 예제와 같이 비어있는 값 ()를 반환하도록 하면 됩니다.
+
+## 함수 결과값 반환을 위한 Option
+
+Result는 특정 처리가 성공했냐 실패했냐를 표현할 수 있었습니다. 그런데 모든게 다 성공과 실패로 판단되는 것은 아닙니다. 예를 들어 이전에 처리한 결과 파일을 읽는 경우 처음 실행되는 경우에는 파일이 없을 수 있습니다. 그런 경우는 실패도 아니고 에러 상황도 아닙니다. 굳이 따지자면 에러 상황으로 처리할 수도 있지만 러스트는 보다 더 명확한 처리를 위해 Option이라는 열거형 타입을 제공합니다.
+
+Option의 정의는 값이 있고 없고를 표현하는 타입입니다. 소스 코드를 먼저 확인해보겠습니다.
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+```
+
+https://doc.rust-lang.org/std/option/enum.Option.html
+
+값이 있을 때는 Some타입 안에 존재하는 값을 저장하고, 값이 없을 때는 None으로 표현합니다. 특히 함수 반환 값을 Option으로 반환한다면, 함수를 호출 한 후에는 반드시 제대로 된 값이 있는지 없는지를 확인해야하므로 에러 처리를 확실하게 할 수 밖에 없게됩니다. 보다 안정적인 코드가 될 수 밖에 없습니다.
+
+Result와 마찬가지로 되도록 모든 함수의 반환값을 Option으로 처리할 수 있도록 노력해야합니다.
+
+이제 사용 예제를 한번 보겠습니다.
+
+```rust
+let x: Option<i32> = Some(5);
+let y: Option<i32> = None;
+
+match x {
+    Some(n) => println!("x is {}", n),
+    None => println!("x is not present"),
+}
+
+match y {
+    Some(n) => println!("y is {}", n),
+    None => println!("y is not present"),
+}
+
+if let Some(n) = x {
+    println!("x is {}", n);
+}
+
+if let Some(n) = y {
+    println!("y is {}", n);
+} else {
+    println!("y is not present");
+}
+
+```
+
+사용법 자체는 크게 어렵지 않습니다. 패턴 매칭을 사용해서 결과 값을 확인하는 것도 Result에서 해본 방식입니다.
+
+그 외에 처음 소개되는 방법이 if let을 사용해서 값을 확인하는 방법입니다. if let 을 사용하면 값이 존재할 때의 처리를 할 수 있고, else에서는 값이 없을 때의 처리를 할 수 있습니다.
+
+### Option이 제공하는 메소드들
+
+제가 처음 러스트를 접하면서 겪은 바로는 처음에 Option을 사용하면 값을 여러번 읽을 때마다 매번 if let이나 패턴 매칭을 사용해서 값이 있는지 없는지를 확인하게되는게 번거로웠습니다. 그래서 저는 간단한 코드를 만들 때는 unwrap이라는 메소드를 자주 사용했었습니다.
+
+unwrap 메소드는 Option 안에 존재하는 값을 꺼내주는 일을 합니다. 만약 Some안에 값이 있다면 값을 반환해주는데, None이라면 패닉을 발생시키고 프로그램을 멈춥니다. 따라서 반드시 값이 있는 상황에서만 사용해야 합니다.
+
+```rust
+let x: Option<i32> = Some(5);
+let y: Option<i32> = None;
+
+println!("x is {}", x.unwrap());
+println!("y is {}", y.unwrap());
+
+```
+
+사용법은 간단합니다. unwrap이라는 메소드를 호출하기만 하면 됩니다. 물론 실제 제품을 개발하는데 unwrap을 사용하면 안됩니다. 굳이 Option에서 값을 꺼내는게 필요하다면 unwrap_or나 unwrap_or_default 등을 사용하면 됩니다.
+
+```rust
+let x: Option<i32> = Some(5);
+let y: Option<i32> = None;
+
+println!("x is {}", x.unwrap_or(-1));
+println!("y is {}", y.unwrap_or_default());
+
+```
+
+i32타입의 디폴트 값은 0입니다. 따라서 “y is 0”이라는 메세지가 출력됩니다.
+
+그리고 unwrap보다 더 권장되는 방식이  expect메소드입니다. 
+
+```rust
+let x: Option<i32> = Some(5);
+let y: Option<i32> = None;
+    
+let item = y.expect("slice should not be empty");
+```
+
+unwrap은 패닉만 발생시킵니다. 패닉이 발생한 소스 코드 위치는 알 수 있지만 어떤 상황인지 판단할 정보가 부족할 때가 많습니다. expect를 사용하면 직접 에러 메세지를 추가할 수 있습니다. 여기에 다양한 정보를 추가한다면 문제 해결에 큰 도움이 될 수 있습니다.
+
+
+## ? 연산자
+
+Result와 Option타입을 배웠으면 이제 이렇게 프로그래밍을 하게 될 것입니다.
+
+```rust
+fn main() {
+    let r = foo();
+    match r {
+        Ok(n) => println!("Do something with {}", n),
+        Err(s) => println!("Do error handling with {}", s),
+    }
+}
+
+fn foo() -> Result<i32, String> {
+    let r = bar();
+    match r {
+        Ok(n) => {
+            println!("Do something with {}", n);
+            return Ok(1);
+        }
+        Err(s) => {
+            println!("Do error handling with {}", s);
+            return Err(s);
+        }
+    }
+}
+
+fn bar() -> Result<i32, String> {
+    let r = foobar();
+    match r {
+        Ok(n) => {
+            println!("Do something with {}", n);
+            return Ok(1);
+        }
+        Err(s) => {
+            println!("Do error handling with {}", s);
+            return Err(s);
+        }
+    }
+}
+
+fn foobar() -> Result<i32, String> {
+    let r = "foobar error".to_string();
+    Err(r)
+}
+```
+
+매번 함수나 라이브러리를 호출할 때마다 패턴 매칭을 실행하고, 동일한 에러 값을 다시 상위 레벨로 전달하는 일을 한다는게 이상하지 않나요? 사실 러스트를 접하기 전까지 저는 C/C++이나 파이썬 프로그래밍을 하면서 지금까지
+
+이렇게 하위 레이어에서 발생한 에러를 상위 레이러로 전달하는게 어쩔 수 없는 필요악이라고 생각했습니다. 단지 개발자가 실수하면 안된다고 생각해서 모든 책임이 개발자에게 있다고만 생각했었습니다.
+
+그런데 러스트 언어에서는 try 연산자라고 부르기도하는 ? 연산자를 제공해줘서, Result나 Option에서의 에러값(Err나 None 모두)를 전달하는 것을 편리하게 해줬습니다. 러스트같이 함수의 반환값을 암묵적으로 무시하지 못하는 언어에서는 정말 필수적인 연산자라고 생각합니다.
+
+그래서 위의 예제는 아래와 같이 바뀔 수 있습니다.
+
+```rust
+fn main() {
+    let r = foo();
+    match r {
+        Ok(n) => println!("Do something with {}", n),
+        Err(s) => println!("Do error handling with {}", s),
+    }
+}
+
+fn foo() -> Result<i32, String> {
+    let r = bar()?;
+    println!("Do something with {}", r);
+    return Ok(1);
+}
+
+fn bar() -> Result<i32, String> {
+    let r = foobar()?;
+    println!("Do something with {}", r);
+    return Ok(1);
+}
+
+fn foobar() -> Result<i32, String> {
+    let r = "foobar error".to_string();
+    Err(r)
+}
+```
+
+에러를 확인하는 코드를 모두 없앨 수 있습니다. ?연산자는 값이 None이거나 Err타입이면 바로 현재 함수의 반환값으로 반환해버립니다. 아니면 Ok나 Some안에 저장된 원래 값을 꺼내서 반환해서 계속 처리를 진행하게 해줍니다. 에러 처리뿐 아니라 unwrap이 하는 일까지 같이 해주는 것입니다.
+
+조금 더 실질적인 예제를 하나 더 보겠습니다.
+
+```rust
+use std::fs::File;
+use std::io::prelude::*;
+
+fn read_file_contents(filename: &str) -> std::io::Result<String> {
+    let mut file = File::open(filename)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    Ok(contents)
+}
+
+fn main() {
+    match read_file_contents("example.txt") {
+        Ok(contents) => println!("File contents: {}", contents),
+        Err(error) => println!("Error reading file: {}", error),
+    }
+}
+
+```
+
+read_file_contents 함수는 std::fs::File 라이브러리의 함수를 호출 할 때마다 ?연산자로 에러 처리를 합니다. 에러가 발생하면 에러가 무엇이든 상관없이 바로 상위 함수로 반환됩니다.
+
+?연산자가 없었다면 read_file_contents 함수에 최소 2개의 match 표현식이 들어갔을 것입니다.
+
+물론 단점도 있습니다. 에러값을 그대로 상위 레벨로 전달하는 경우보다는, 중간 중간 에러 처리를 하는 경우도 많다는 것입니다. 위의 예제에서도 파일을 닫거나 새로 생성하거나 하는 에러 처리를 해야한다면 ?연산자는 쓸 수 없겠지요. 
+
+그래도 제 경험상 에러 처리 코드가 절반가까이 줄어들 수 있었습니다. ?연산자를 더 잘 활용하기 위해 함수를 더 잘게 쪼개고 디자인을 바꾸다보면 더 유연한 코드가 되기도 하니까 적극적으로 활용하시기 바랍니다.
+
+## 함수 포인터와 클로저
+
+### 함수 포인터
+
+다음은 fizzbuzz 함수를 함수 포인터로 구현한 예제입니다.
+
+```rust
+fn fizzcheck(n: i32) -> bool {
+    n % 3 == 0
+}
+
+fn buzzcheck(n: i32) -> bool {
+    n % 5 == 0
+}
+fn fizzbuzz_fn(fizzfn: fn(i32) -> bool, buzzfn: fn(i32) -> bool) {
+    for i in 1..=100 {
+        if fizzfn(i) && buzzfn(i) {
+            println!("FizzBizz");
+        } else if fizzfn(i) {
+            println!("Fizz");
+        } else if buzzfn(i) {
+            println!("Buzz");
+        }
+    }
+}
+
+fn main() {
+    fizzbuzz_fn(fizzcheck, buzzcheck);
+}
+```
+
+fn이 하나의 키워드로서 함수 포인터를 나타냅니다. C/C++에서 함수 포인터를 표현할 때
+
+```c
+int (*변수이름)(int)
+```
+
+위와 같이 사용하는데 함수 포인터라는 타입이 있지만 사실상 타입의 이름이 없다는 것을 알 수 있습니다. 그래서 단순히 변수 이름없이 타입만 정의할 때는 이렇게 사용하기 도 합니다.
+
+```c
+int (*)(int)
+```
+
+러스트에서는 명확하게 fn이라는 타입 이름을 붙여서 사용합니다. 
+
+저자코멘트) 함수 포인터를 표헌하는 타입이 fn만 있는게 아닙니다. 추후에 소유권에 대한 개념을 설명한 후 Fn, FnMut, FnOnce를 설명하겠습니다.
+
+### 클로저
+
+거의 모든 최신 언어들이 지원하고 있는 클로저를 러스트에서도 사용할 수 있습니다.
+
+```rust
+fn fizzbuzz_fn(fizzfn: fn(i32) -> bool, buzzfn: fn(i32) -> bool) {
+    for i in 1..=100 {
+        if fizzfn(i) && buzzfn(i) {
+            println!("FizzBizz");
+        } else if fizzfn(i) {
+            println!("Fizz");
+        } else if buzzfn(i) {
+            println!("Buzz");
+        }
+    }
+}
+
+fn main() {
+    fizzbuzz_fn(|i| i % 3 == 0, |k| k % 5 == 0);
+}
+```
+
+fn이라는 키워드가 함수 포인터를 위한 키워드일뿐 아니라 클로저를 위한 키워드도 된다는 것을 알 수 있습니다.
+
+
+## map 메소드
+
+클로저를 사용하는 방법중에 가장 많이 사용하게 되는게 배열이나 벡터의 이터레이터의  map 메소드와 사용하는 방법일 것입니다. 그리고 Option과 사용하는 것도 자주 사용되는 방식이니까 이 두가지 경우를 이야기해보려고 합니다. 
+
+### 배열과 collect
+
+배열이나 range, 벡터등에서 각 데이터에 접근하기 위한 방법으로 for 루프대신 map을 사용하는게 더 편리할 때가 많습니다. 그리고 많은 경우에 map을 이용하는게 처리 속도가 더 빠르기도 합니다.
+
+가장 간단한 예를 가지고 시작해보겠습니다. 다음 예제는 이전에 패턴 매칭의 예제로 만들어봤던 fizzbuzz 함수를 이터레이터와 map으로 다시 만들어본 예제입니다.
+
+```rust
+fn fizzbuzz_2(max: i32) {
+    for i in 1..=max {
+        match (i % 3, i % 5) {
+            (0, 0) => println!("{} - FizzBuzz", i),
+            (0, _) => println!("{} - Fizz", i),
+            (_, 0) => println!("{} - Buzz", i),
+            (_, _) => (),
+        }
+    }
+}
+
+fn fizzbuzz_3(max: i32) {
+    let ret = (1..=max)
+        .into_iter()
+        .map(|i| match (i % 3, i % 5) {
+            (0, 0) => format!("{} - FizzBuzz\n", i),
+            (0, _) => format!("{} - Fizz\n", i),
+            (_, 0) => format!("{} - Buzz\n", i),
+            (_, _) => "".to_string(),
+        })
+        .collect::<Vec<String>>()
+        .join("");
+    println!("{}", ret);
+}
+```
+
+1부터 max까지의 각 숫자들에 대해 한번씩 map에 지정된 클로저를 호출하는 것입니다. 프로그래밍 언어와 상관없이 조금의 개발 경험만 있다면 이해할 수 있을 것입니다.
+
+하지만 러스트 언어를 사용하기 위해 주의해야할 점이 있는데 collect 메소드를 호출해야한다는 것입니다. map메소드는 반환값으로 이터레이터를 반환합니다. 즉 이터레이터를 받아서 처리하고 또 다른 이터레이터를 반환하는 것이 map이 하는 일입니다. 그러면 ret 변수에 저장되는 값은 이터레이터가 됩니다. 이터레이터를 최종적으로는 값의 집합으로 바꿔서 벡터를 만들어야 map에 지정된 클로저가 호출됩니다.
+
+언어마다 이터레이터의 연산이 실행되는 시점이 다릅니다만, 러스트에서는 collect메소드가 호출되었을 때 최종적으로 map에 지정된 연산을 실행하여 결과값을 생성합니다. 위의 fizzbuzz_3함수에서는 최종적으로 생성하는 값이 문자열의 벡터이기 때문에 collect에게 다음과 같이 반환값의 타입을 알려줍니다.
+
+```rust
+collect::<Vec<String>>()
+```
+
+<Vec<String>> 부분이 바로 반환값이 타입을 지정하는 부분입니다.
+
+러스트 언어의 매뉴얼에는 다음과 같은 예제 코드가 있습니다.
+
+```rust
+let a = [1, 2, 3];
+
+let mut iter = a.iter().map(|x| 2 * x);
+
+assert_eq!(iter.next(), Some(2));
+assert_eq!(iter.next(), Some(4));
+assert_eq!(iter.next(), Some(6));
+assert_eq!(iter.next(), None);
+```
+
+https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.map
+
+이 예제가 보여주는 것이 바로 map 메소드가 호출되는 순간에 클로저가 호출되고 연산이 발생하지 않는다는 것입니다. next 메소드가 호출되면 그때 한번의 연산이 발생하고 하나의 값을 반환하는 것입니다. 물론 연산에 필요한 입력 데이터가 있을 수도 있고 없을 수도 있습니다. 그럴때 사용하는 것이 바로 Option 타입입니다. 따라서 next메소드는 Option 타입의 값을 반환하는 것입니다. next 메소드가 호출되면 입력 데이터를 하나씩 하나씩 클로저에 넘겨서 처리를 하고 마지막으로 남은 입력데이터가 없으면 None을 반환합니다.
+
+그렇게 한번씩 호출되는 연산을 한꺼번에 모두 실행하고 모든 결과값을 벡터에 담아서 전달하는 메소드가 collect 입니다.
+
+상황에 따라서 next를 사용할 수도 있고 collect를 사용할 수도 있습니다.
+
+다시한번 주의해서 생각해야할 것이 바로 이터레이터를 생성할 때 iter 메소드를 사용할 것인지, into_iter를 사용할 것인지 판단하는 것입니다. 아래 예제를 가지고 다양하게 실험해보면서 연습해보시기 바랍니다.
+
+```rust
+fn ownership(nums: Vec<i32>) {
+    // What happens if switch .iter and .into_iter?
+    // What are the types of first i and the second i?
+    let ret = nums
+        .iter()
+        .map(|i| format!("{}", i))
+        .collect::<Vec<String>>()
+        .join("");
+    println!("{}", ret);
+
+    let ret = nums
+        .into_iter()
+        .map(|i| format!("{}", i))
+        .collect::<Vec<String>>()
+        .join("");
+    println!("{}", ret);
+}
+```
+
+### Option와 map
+
+이터레이터뿐 아니라 Option 타입도 map메소드를 가지고 있습니다.
+
+```rust
+fn main() {
+    let some_number = Some(5);
+    let none_number: Option<i32> = None;
+
+    let double_some = some_number.map(|x| x * 2);
+    let double_none = none_number.map(|x| x * 2);
+
+    println!("Double Some: {:?}", double_some); // Double Some: Some(10)
+    println!("Double None: {:?}", double_none); // Double None: None
+}
+```
+
+보통 함수의 반환값으로 Option타입의 값을 받겠지만 이 예제에서는 일단 Some타입과 None타입의 2가지 변수를 만들었습니다. 그리고 각각 map메소드를 호출해주었습니다.
+
+이 예제 소스는 워낙 간단하니까 우리 눈에 변수가 Some타입일지 None타입일지 알 수 있지만, 당연히 보통의 경우에는 어떤 함수의 반환값이 어느 타입일지는 알 수 없습니다. 그러면 매번 패턴 매칭이나 if let을 사용해서 값을 꺼내서 필요한 연산을 해주게 되면 코드가 길어질 것입니다. 코드가 길어진다는 것은 읽기 힘들어지고, 에러가 날 경우도 많아진다는 것입니다. 단순히 성능의 최적화를 위해 코드를 짧게 유지하는게 필요한게 아니라, 읽기 좋고 버그가 적은 코드를 만들기 위해서도 코드를 짧게 유지하는게 좋습니다.
+
+Option의 메소드인 map은 타입이 Some일때는 값을 꺼내서 클로저를 호출해주고 결과값을 Option타입으로 반환해줍니다. None 타입을 위해 호출되면 아무런 처리도 하지않고 None을 그대로 반환해줍니다.
+
+그리고 Some이나 None 값을 출력하기 위해서 “{:?}” 리터럴을 사용하는 것도 알아두시면 좋습니다. 
+
+마지막으로 주의해야 할 점이 하나 있는데 바로 map을 호출하면 객체가 해지된다는 것입니다. 영어로는 consume이라고 표현하는데, 그 의미는 자기 자신의 값을 소비해서 없애버리고 반환값을 생성한다는 것입니다.
+
+```rust
+let maybe_some_string = Some(String::from("Hello, World!"));
+// `Option::map` takes self *by value*, consuming `maybe_some_string`
+let maybe_some_len = maybe_some_string.map(|s| s.len());
+assert_eq!(maybe_some_len, Some(13));
+//println!("{:?}", maybe_some_string); // error
+```
+
+https://doc.rust-lang.org/std/option/enum.Option.html#method.map
+
+maybe_some_string은 소비consume되어버렸으니 map연산을 호출한 이후에는 다시 사용할 수 없는 변수가 됩니다. 따라서 map 메소드를 호출하는 것은 이 값을 Some(x) 값을 Some(y) 값으로 바꾸고 이전 값은 다시 사용할 필요가 없을 때 사용합니다. 대부분의 값들이 최종 값을 얻기 위한 중간 결과물이니까 이런 방식의 처리를 하도록 디자인되었을 것입니다. maybe_some_string이라는 객체가 더 이상 필요하지 않으면 괜찮지만 만약 계속 써야하는 데이터라면 객체가 해지되지 않도록 해야합니다.
+
+그럼 map을 써도 원본 객체가 해지되지 않으려면 어떡해야할까요? 답은 컴파일러가 이미 알려주고 있습니다. 아래는 위 예제의 마지막 줄을 주석처리하지않고 빌드했을 경우 에러 메세지입니다.
+
+```rust
+error[E0382]: borrow of moved value: `maybe_some_string`
+    --> main.rs:60:22
+     |
+56   |     let maybe_some_string = Some(String::from("Hello, World!"));
+     |         ----------------- move occurs because `maybe_some_string` has type `Option<String>`, which does not implement the `Copy` trait
+57   |     // `Option::map` takes self *by value*, consuming `maybe_some_string`
+58   |     let maybe_some_len = maybe_some_string.map(|s| s.len());
+     |                          ----------------- ---------------- `maybe_some_string` moved due to this method call
+     |                          |
+     |                          help: consider calling `.as_ref()` or `.as_mut()` to borrow the type's contents
+59   |     assert_eq!(maybe_some_len, Some(13));
+60   |     println!("{:?}", maybe_some_string);
+     |                      ^^^^^^^^^^^^^^^^^ value borrowed here after move
+```
+
+중간에보면 as_ref 메소드를 호출해서 객체의 레퍼런스를 만든 후에 map 메소드를 호출하라고 알려줍니다. 객체의 값으로 map을 호출하면 객체가 해지되니, 레퍼런스를 통해서 map 메소드를 호출하면 객체가 해지되지 않는다는 것을 알려줍니다.
+
+```rust
+let maybe_some_string = Some(String::from("Hello, World!"));
+// `Option::map` takes self *by value*, consuming `maybe_some_string`
+let maybe_some_len = maybe_some_string.as_ref().map(|s| s.len());
+assert_eq!(maybe_some_len, Some(13));
+println!("{:?}", maybe_some_string);
+```
+
+as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다.
+
+### Result의 map_err 메소드
+
+map_err은 map과 반대로 Result의 값이 에러일때 실행할 코드를 지정하는 것입니다.
+
+하나의 예를 들면 아래처럼 serde_json에서 전달된 에러를, 자신이 정의한 에러 타입으로 변환할 때 사용할 수 있습니다.
+
+```rust
+let new_value = serde_json::to_string(&row).map_err(|e| {
+                            MyError::StorageMsg(format!(
+                                "failed to serialize row={:?} error={}",
+                                row, e
+                            ))
+                        })?;
+```
+
+위의 예제에서 만약 serde_json::to_string메소드의 반환값이 에러가 아니라면 ? 연산자는 Ok()안에 있는 문자열의 값을 Ok밖으로 꺼내서 new_value에 저장합니다.
+
+하지만 serde_json::to_string 메소드가 에러를 반환하면 그것을 MyError::StorageMsg라는 타입으로 변환합니다. 결국 map_err은 Err(MyError::StorageMsg)타입의 에러를 반환하고 ? 연산자는 에러 값을 상위 함수로 전달합니다.
+
+이렇게 에러 상황일때만 실행될 코드를 지정할 때 map_err을 사용합니다.
+
+### 연습문제
+
+1. Option의 메소드 중에는 map외에 map_or와 map_or_else가 있습니다. 지금까지의 예제들을 map_or나 map_or_else 로 바꿔보세요.
+2. 이터레이터의 메소드중에 for_each라는 메소드가 있습니다. map과 for_each는 어떤 차이가 있을까요? 힌트는 for_each호출에는 collect가 필요하지 않다는 점입니다. 왜 필요하지 않을까요?
+
+## 프로젝트 관리
+
+이번 장에서는 여러개의 파일에 코드를 나누어서 관리하는 방법을 알아보겠습니다.
+
+### Crate 크레이트와 Package 패키지
+
+러스트 컴파일러(rustc)가 한번에 처리하는 코드를 크레이트라고 정의한다고 합니다.  (https://doc.rust-lang.org/book/ch07-01-packages-and-crates.html) 사실 정의만 보면 잘 이해가 안되는데 쉽게 말해서 지금 내가 만들고있는게 하나의 실행 파일이나, 하나의 라이브러리이면 이게 바로 하나의 크레이트입니다. 컴파일러가 빌드해서 하나나 여러개의 결과물을 생성하는게, 그 각각을 크레이트라고 부른다는 것입니다. 
+
+우리는 지금까지 하나의 실행파일이 생성되는 예제들을 만들었습니다. 그럼 지금까지 하나의 크레이트를 만들었다는 것입니다. Binary crate바이너리 크레이트는 말 그대로 실행 파일 하나를 만드는 코드입니다. Library crate는 라이브러리를 만들기 위한 코드입니다. 코드가 파일 하나에만 있던지 여러개에 있던지는 상관없습니다. 여러 코드 파일들이 하나의 결과물을 만들면, 모든 파일이 하나의 크레이트를 구현하는 것입니다.
+
+패키지는 필요에 따라 여러 크레이트를 모아놓은 것입니다. Cargo를 이용해서 빌드를 하면 Cargo.toml파일에 가장 먼저 [package]라고 패키지 정보를 셋팅합니다. 그것은 내가 Cargo를 이용해서 하나의 패키지를 만든다는 뜻입니다.
+
+그런데 왜 패키지일까요? 예제 프로그램만 만들다보면 다른 라이브러리를 사용할 일이 없었을 것입니다. 그럼 하나의 크레이트만 있는 패키지를 만드신 것입니다. 그리고 그 하나의 크레이트는 자신이 만든 크레이트인 패키지입니다. Cargo.toml파일의 [dependendies] 섹션에 외부 라이브러리를 추가하게되면, 하나의 바이너리 크레이트와 여러개의 라이브러리 크레이트로 이루어진 패키지를 만들게되는 것입니다. 당연히 여러개의 바이너리를 하나의 Cargo.toml에서 빌드할 수 있습니다. 그럼 여러개의 라이브러리 크레이트와 여러개의 바이너리 크레이트로 구성된 패키지를 만드는 것입니다.
+
+이전에 Cargo를 사용해서 패키지 디렉토리를 생성하는 방법을 이야기했었습니다. cargo new <package-name> 명령을 사용하면 된다고 이야기했었는데요 사실은 —bin옵션을 생략한 것입니다.
+
+```rust
+study % cargo new mybin --bin
+     Created binary (application) `mybin` package
+study % ls -R mybin
+Cargo.toml	src
+
+mybin/src:
+main.rs
+```
+
+라이브러리 패키지를 만들때는 —lib옵션을 사용합니다. src/main.rs대신에 src/lib.rs를 만들어줍니다.
+
+```rust
+study % cargo new mylib --lib
+     Created library `mylib` package
+study % ls -R mylib
+Cargo.toml	src
+
+mylib/src:
+lib.rs
+```
+
+### Modules 모듈
+
+패키지와 크레이트는 라이브러리나 실행 파일등의 최종 결과물을 생성하는 단위입니다. 하나의 프로젝트 안에서 여러개의 파일들이 있을때 참조하는 방법은 모듈이라는 방식을 사용합니다. 네임스페이스에 익숙한 분들은 비슷한 것이라고 생각해도 될듯합니다.
+
+아래 예제를 보면 네임스페이스나 기타 언어들이 다른 파일의 함수나 변수등에 접근하는 방식과 유사하다는 것을 알 수 있습니다.
+
+```rust
+fn main() {
+    my_module::test_my_mod();
+}
+
+mod my_module {
+    pub fn test_my_mod() {
+        println!("This is my_module::test_my_mod()");
+    }
+}
+```
+
+예제에서 my_module이라는 모듈안에 구현된 test_my_mod 함수는 pub이라는 키워드를 붙여야 모듈 밖에서도 참조가 가능합니다. 그리고 특정 모듈안의 함수 등을 참조할 때는 <모듈이름>::<이름> 같은 방식으로 접근이 가능합니다.
+
+만약 모듈 이름이 길거나 모듈안에 다른 모듈이 있거나 해서 이름이 길어지는 경우 아래와같이 use 키워드를 사용해서 모듈 경로를 생략할 수도 있습니다.
+
+```rust
+use my_module::test_my_mod;
+
+fn main() {
+    test_my_mod();
+}
+
+mod my_module {
+    pub fn test_my_mod() {
+        println!("This is my_module::test_my_mod()");
+    }
+}
+```
+
+그럼 다른 파일에 있는 함수 등은 어떻게 접근할까요? 실험을 위해 아래와 같이 my_module.rs 파일을 새로 추가합니다.
+
+```rust
+% ls src
+main.rs         my_module.rs
+```
+
+my_module.rs 파일에 아래와같이  my_module에 정의했던 함수들을 옮겨줍니다. 주이할 것은 mod my_module 선언을 따로 해주지않고 바로 함수 정의를 시작한다는 것입니다. 파일 하나가 하나의 모듈이 되기 때문입니다. 파일 이름이 my_module.rs이기때문에 my_module이라는 모듈이 자동으로 선언된 것입니다.
+
+```rust
+pub fn test_my_mod() {
+    println!("This is my_module::test_my_mod()");
+}
+```
+
+main.rs에서 my_module을 참조하기 위해서는 아래와같이 mod <모듈 이름>을 사용합니다.
+
+```rust
+mod my_module;
+
+fn main() {
+    my_module::test_my_mod();
+}
+```
+
+use 키워드를 사용할 수도있는데 mod로 모듈 참조를 선언한 이후에 use 키워드를 사용할 수 있습니다.
+
+```rust
+mod my_module;
+use my_module::test_my_mod;
+
+fn main() {
+    test_my_mod();
+}
+```
+
+만약 소스 디렉토리를 분리하고 싶다면 아래와 같이 각 하위 디렉토리마다 mod.rs라는 파일을 만들어야 합니다. 그리고 mod.rs에 같은 디렉토리에 있는 파일들을 참조해야합니다.
+
+간단한 실험을 위해 아래와 같이 src/second_mod 라는 디렉토리를 만듭니다. 그리고 [mod.rs](http://mod.rs) 파일과 sec_mod_file.rs 파일을 만듭니다.
+
+```rust
+% ls src/second_mod 
+mod.rs          sec_mod_file.rs
+```
+
+mod.rs 파일을 자신과 같은 디렉토리에 있는 모듈들을 모아서 참조하는 일을 합니다. 아래와 같이 sec_mod_file.rs 파일을 public으로 참조합니다.
+
+```rust
+pub mod sec_mod_file;
+```
+
+sec_mod_file.rs에는 main에서 호출된 함수를 하나 만들어줍니다.
+
+```rust
+pub fn second_module() {
+    println!("Here second-module");
+}
+```
+
+이제 main.rs에서 어떻게 참조할 수 있는지 확인해보겠습니다.
+
+```rust
+mod my_module;
+mod second_mod;
+
+use my_module::test_my_mod;
+
+fn main() {
+    test_my_mod();
+    second_mod::sec_mod_file::second_module();
+}
+```
+
+“mod second_mod” 와 같이 디렉토리 이름으로 모듈을 참조합니다. 그리고 함수를 호출할 때는 <모듈이름>::<파일이름>::<함수이름>으로 호출할 수 있습니다.
+
+### 참고 링크
+
+- Cargo 사용법: https://doc.rust-lang.org/cargo/index.html
+
+### 연습문제
+
+1. 아래와같이 second_module함수를 모듈 이름을 붙이지 않고 호출할 수 있도록 고쳐보세요.
+
+```rust
+mod my_module;
+mod second_mod;
+
+use my_module::test_my_mod;
+// 연습문제1
+
+fn main() {
+    test_my_mod();
+    second_module();
+}
+```
+
+1. second_module안에 sec_mod_file.rs파일외에 sec_mod_file2.rs 파일을 만들고 간단한 함수를 추가하고, main함수에서 호출해보세요.
+2. second_module안에 하위 모듈 third_module을 추가해보세요.
+
+## Trait 트레이트
+
+트레이트은 객체에 특정한 메소드를 구현하도록 지정하는 방법입니다. 서로 다른 타입의 객체들이라고 해도 같은 트레이트을 구현하도록 만들면 공통된 특징을 갖도록 만들 수 있습니다. 결국 함수 인자로 객체를 넘길 때, 객체의 타입을 지정하는게 아니라, 트레이트을 구현한 모든 객체 타입을 지정할 수 있게 됩니다. 다른 객체지향 언어를 경험해봤다면 인터페이스를 이야기한다는 것을 눈치채셨겠지요. 다양한 타입의 객체들을 묶는 추상화를 할 수 있기도 하고, 코드를 재사용할 수도 있는 등 러스트로 규모있는 프로그램을 만들기 위해서는 필수적으로 잘 활용할 수 있어야되는 문법입니다.
+
+아주 간단한 예제를 가지고 시작해보겠습니다. 다음 예제는 서로 다른 타입의 두 구조체 Person과 Book에 공통의 트레이트 Printable을 구현하는 예제입니다.
+
+```
+trait Printable {
+    type Age;
+    fn print(&self);
+    fn get_age(&self) -> Self::Age;
+}
+
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl Person {
+    fn new(name: &str, age: u32) -> Self {
+        Person {
+            name: name.to_string(),
+            age: age,
+        }
+    }
+}
+
+impl Printable for Person {
+    type Age = u32;
+    fn print(&self) {
+        println!("Name: {}, {} years old", self.name, self.age);
+    }
+    fn get_age(&self) -> Self::Age {
+        self.age
+    }
+}
+
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl Printable for Book {
+    type Age = u32;
+    fn print(&self) {
+        println!(
+            "Title: {}\nAuthor: {}\nPublished: {}",
+            self.title, self.author, self.published
+        );
+    }
+    fn get_age(&self) -> Self::Age {
+        self.published
+    }
+}
+
+fn print_info(item: &dyn Printable<Age = u32>) {
+    item.print();
+}
+
+fn main() {
+    let person = Person::new("Alice", 22);
+    let book = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    print_info(&person);
+    print_info(&book);
+}
+```
+
+첫번째로 Printable이라는 트레이트를 선언하는 코드가 나옵니다.
+
+```rust
+trait Printable {
+    type Age;
+    fn print(&self);
+    fn get_age(&self) -> Self::Age;
+}
+```
+
+Printable이라는 트레이트에는 2개의 함수와 1개의 타입이 포함됩니다. 이제 이 트레이트를 구현할 구조체들은 2개의 함수를 정의해야합니다. 그리고 Age라는 타입을 무슨 데이터 타입으로 사용할 것인지를 정해야합니다. i32같은 기본 타입을 사용할 수도있고, 새로운 구조체를 만들어서 사용할 수도있습니다.
+
+그러니 트레이트라는 것이 반드시 특정 함수를 구현하도록 하는 것만이 아니라, 어떤 데이터 타입을 쓸지도 정할 수 있다는 것을 기억하시기 바랍니다.
+
+다음으로는 Person 구조체의 구현 코드가 나옵니다.
+
+```rust
+struct Person {
+    name: String,
+    age: u32,
+}
+
+impl Person {
+    fn new(name: &str, age: u32) -> Self {
+        Person {
+            name: name.to_string(),
+            age: age,
+        }
+    }
+}
+
+impl Printable for Person {
+    type Age = u32;
+    fn print(&self) {
+        println!("Name: {}, {} years old", self.name, self.age);
+    }
+    fn get_age(&self) -> Self::Age {
+        self.age
+    }
+}
+```
+
+우선 Person타입이 트레이트와 상관없이 가지는 Person타입만의 고유한 함수 new를 구현합니다. 그리고 그 다음으로 Printable 트레이트를 구현하는 코드가 나옵니다.
+
+먼저 Age라는 타입을 정의합니다. 타입 이름은 Age이지만, 사실은 u32타입의 alias별칭이라고 생각하면 됩니다. 그리고 print 함수와 get_age함수의 구현이 있습니다. get_age함수는 Age타입을 반환해야하니까 결과적으로는 u32타입을 반환하는 것이 됩니다.
+
+그리고 Book 구조체의 정의와, Book 구조체를 위한 Printable 트레이트의 구현이 나옵니다.
+
+```rust
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl Printable for Book {
+    type Age = u32;
+    fn print(&self) {
+        println!(
+            "Title: {}\nAuthor: {}\nPublished: {}",
+            self.title, self.author, self.published
+        );
+    }
+    fn get_age(&self) -> Self::Age {
+        self.published
+    }
+}
+```
+
+Age타입을 u32로 정의했습니다. 왜 Person과 Book의 Age 타입을 같은 u32로 정의했는지는 곧 알게됩니다. 그리고 print함수와 get_age함수의 구현이 나옵니다. 아주 단순한 예제 함수이니까 이해하는데 어려움은 없을거라 생각합니다.
+
+이제 정말 중요한게 나옵니다. 바로 dyn이라는 키워드입니다.
+
+```rust
+fn print_info(item: &dyn Printable<Age = u32>) {
+    item.print();
+}
+```
+
+print_info라는 일반 함수인데, 인자의 타입이 특이합니다. dyn이라는 키워드가 있는 참조 타입입니다. “dyn Printable”의 의미는 Printable 트레이트를 구현한 객체입니다. 참조 키워드 &가 있으므로 Printable 트레이트를 구현한 객체를 참조하겠다는 뜻이 됩니다. 그리고 하나가 더 있는데 <Age=u32>가 추가되어서, Age타입을 u32로 정의한 객체만 참조하겠다는 것이 됩니다.
+
+정리하자면 Printable 트레이트를 구현하되 Age타입을 u32로 정의한 객체들을 참조하게됩니다. print_info함수를 호출할 때 서로 다른 타입 Person과 Book의 참조를 전달할 수 있게되는 이유가 바로, Person과 Book이 Printable 트레이트를 구현했고, Age타입을 u32로 정의했기 때문입니다. 만약 Printable 트레이트를 구현했다해도, Age의 타입이 u32이 아닌 다른 타입이었다면 print_info함수에 전달할 수 없습니다.
+
+러스트 컴파일러는 print_info함수가 호출되는 코드를 만날 때마다, 전달되는 인자의 타입을 보고 Printable틀이브를 구현했는지, Age타입을 u32로 사용하는지를 확인합니다. 컴파일 시간은 길어질 수 있지만, 추상화에 필요한 코드가 더해지지않으므로 더 빠른 코드를 만들 수 있습니다. 이렇게 컴파일타임에 다형성을 체크하는 것을 정적 다형성이라고 합니다만, OOP프로그램에 익숙하지않다면, 그냥 트레이트를 구현하는 객체의 참조나 포인터로 이해하는 것도 괸찬을거라 생각합니다.
+
+만약에 여러개의 트레이트를 구현하는 타입들을 지정하고 싶다면 아래와같이 사용하면 됩니다.
+
+```rust
+fn some_function(param: &(dyn Trait1 + Trait2)) {
+    // Function body
+}
+```
+
+### 연관 타입(Associated Type)과 연관 함수 (Associated Function)
+
+이전 예제에서 Printable 트레이트에 있는 Age 타입을 연관 타입이라고 부릅니다. 트레이트 구현에 공통적으로 필요한 변수가 있는데 어떤 타입이 될지는 구현에 따라 달라질 수 있습니다. print_info 함수에서와 같이 특정 연관 타입을 동일하게 갖는 객체들을 공통적으로 사용할 수 있습니다.
+
+그리고 Person구조체에 있는 new 함수를 연관 함수라고 부릅니다. 자세히보면 함수의 인자에 self가 없습니다. 그러므로 특정 구조체 객체에 종속되서 동작하는게 아니라 객체가 없는 상태에서 Person::new와 같이 호출할 수 있습니다. 보통 new라는 이름으로 객체를 생성하는 연관 함수를 만드는게 관례입니다.
+
+사실 이름이 어떻든 직관적으로 사용할 수 있는 것들이지만 제대로된 명칭정도는 알고있는게 협업하는데 필요할 것이라고 생각해서 소개했습니다. 둘 다 실제 구현되기 이전에 존재한다는 특징이 있습니다. 
+
+### Trait object 트레이트 객체
+
+dyn키워드는 트레이트 객체를 나타내는 키워드라고 설명했습니다. 이 트레이트 객체를 좀더 자세히 이해할 필요가 있습니다. 자연스럽게 dyn 키워드 다음에는 대부분 트레이트의 이름이 나오겠지요.
+
+```rust
+dyn TraitName
+```
+
+다음에 제너릭을 배우면 좀더 간단한 표현을 배우겠지만, 특정 트레이트를 구현한 객체를 가르키는 것은 동일합니다.
+
+위의 예제에서 print_info함수는 전달받은 item 객체의 print함수를 호출합니다. 이게 어떻게 가능할까요?
+
+함수를 호출한다는 것은 사실 어떤 코드 지점으로 점프한다는 것입니다. 더 정확하게 말하면 어셈블리어 jmp등을 이용해서 특정 메모리 주소로 EIP레지스터의 값을 바꾸는 것입니다. 그러면 그 메모리 지점에 있는 코드가 하나씩 실행됩니다. item.print라는 코드에서 Book이라는 객체의 print함수의 주소를 찾아낼 수 있을까요? Person타입의 print함수는 0x1000_0000에 있고, Book타입의 print함수는 0x3000_0000에 있다고 생각해봅시다. 그럼 item은 Person객체의 주소가 될 것이니 print_info함수의 코드를 jmp 0x1000_0000으로 만들면 될까요?
+
+안되겠지요. 그러면 Book의 print함수를 호출할 수 없게됩니다. 컴피일러는 보통 vtable이라는 것을 만들어서 트레이트에서 구현된 함수들의 포인터를 관리합니다. (이것은 자바나 C++의 인터페이스와 동일합니다.)
+
+```rust
+book.vtable.print = 0x1000_0000;
+person.vtable.print = 0x3000_0000;
+
+fn print_info(item: &dyn Printable<Age = u32>) {
+    jmp item.vtable.print
+}
+```
+
+위와같이 트레이트를 구현하는 객체마다 vtable을 추가해서 트레이트 함수들의 포인터를 저장합니다. 그러면 같은 트레이트를 구현하는 객체마다 동일한 위치에 함수 포인터가 저장될 것이므로, 객체의 타입에 상관없이 트레이트 함수를 호출할 수 있게됩니다. 이것을 Dynamic dispatch라고 부릅니다만 용어보다는 공통된 특성 혹은 함수들의 구현을 위해 추가적인 데이터가 들어간다는 것을 알고있는게 중요할 것입니다.
+
+물론 변수를 한번 더 읽게되는 단점도 있습니다만 특별하게 CPU를 많이 사용하는 연산을 수행하는 부분에서 호출되지 않는한 별 차이는 없을 것입니다.
+
+약간 내부 구현에 관해 생각해봤지만, 굳이 거기까지 이해할 필요는 없습니다. 특정 함수나 타입을 공통으로 구현하는 공통된 특성을 가진 타입들을 사용할 수 있다는 추상적인 의미를 이해하는 것으로도 충분합니다.
+
+### 표준 라이브러리에 포함된 트레이트
+
+트레이트를 직접 만들 수 있지만, 러스트의 표준 라이브러리에서 미리 정의해놓은 트레이트들이 있습니다. 그만큼 어떤 상황에서도 만들어놓으면 좋은 트레이트겠지요. 여러개가 있지만 그중에서 몇가지만 예제를 만들어보겠습니다.
+
+참고 링크: https://youtu.be/Nzclc6MswaI
+
+#### Display 트레이트
+
+참고 링크: https://doc.rust-lang.org/std/fmt/trait.Display.html
+
+Display라는 트레이트가 있습니다. 구조체 타입을 println! 등의 출력 함수에서 곧바로 출력할 수 있도록 만드는 트레이트입니다.
+
+```rust
+use std::fmt;
+
+pub trait Display {
+    // Required method
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>;
+}
+```
+
+위에서 Printable이라는 트레이트를 만들어봤는데 동일한 일을 하는 트레이트입니다. Book타입의 Display트레이트를 구현해보겠습니다.
+
+```rust
+use std::fmt;
+
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl fmt::Display for Book {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Title: {}\nAuthor: {}\nPublished: {}\n",
+            self.title, self.author, self.published
+        )
+    }
+}
+
+fn main() {
+    let book = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    println!("{}", book);
+}
+```
+
+Display라는 트레이트는 fmt 하나의 함수로 이루어져있습니다. 함수 인자로 std::fmt에 선언된 Formatter라는 구조체가 들어가는데 아직은 자세하게 설명할 수 있는 것은 아닙니다. 그리고 굳이 자세히 알 필요도 없습니다. 그냥 잘 써먹으라고 충분히 추상화되어있는 것이니 사용법에 맞게 쓰기만 하면 됩니다.
+
+```rust
+write!(f, "내가 쓰고싶은 메세지{}", 출력할 데이터)
+```
+
+이런 형태로 얼마든지 자유롭게 쓰기만하면 됩니다. 주의할 것은 write!호출 후에 “;” 세미콜론을 쓰지 않는 다는 점입니다. fmt함수의 반환값이 fmt::Result입니다. 그러므로 해당 타입의 값을 반환해야합니다. write! 매크로 함수가 fmt::Result 값을 반환하므로 “;” 세미콜론을 쓰면 안됩니다. 만약 쓰게되면 아무런 값도 반환하지 않게되서 컴파일 에러가 발생할 것입니다.
+
+#### Debug 트레이트
+
+참고링크: https://doc.rust-lang.org/std/fmt/trait.Debug.html
+
+Debug트레이트라는 것도 있습니다. 참고 링크를 보시면 Display와 다를게 없어보입니다.
+
+```rust
+use std::fmt;
+
+pub trait Debug {
+    // Required method
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>;
+}
+```
+
+그럼 Display 트레이트와 뭐가 다른 걸까요? 아래에 Debug트레이트를 직접 구현한 예제를 잘 보시면 다른 점이 하나 있습니다.
+
+```rust
+use std::fmt;
+
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl fmt::Debug for Book {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Title: {}\nAuthor: {}\nPublished: {}\n",
+            self.title, self.author, self.published
+        )
+    }
+}
+
+fn main() {
+    let book = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    println!("{:?}", book); // USE {:?} for Debug trait
+}
+```
+
+예 println에서 사용하는 포맷이 다릅니다. 보통 println에서 사용하는 포맷은 “{}”입니다만 Debug 트레이트를 사용할 때는 “{:?}”가 됩니다.
+
+그리로 사실 Debug트레이트는 이전에 구조체를 설명하면서 한번 사용해봤었습니다. 그때는 지금처럼 직접 구현하지않아도 사용할 수 있었습니다. 지금 우리가 만든 Book 구조체에도 사실은 직접 구현할 필요없이 다음처럼 derive를 사용해서 트레이트를 구현할 수 있습니다.
+
+```rust
+#[derive(Debug)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+fn main() {
+    let book = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    println!("{:?}", book); // USE {:?} for Debug trait
+}
+```
+
+이렇게 derive를 이용해서 자동으로 Debug 트레이트를 구현하면 좋은 점이 있습니다. 위 예제를 실행해보면 좀더 자세한 정보가 나오는 것을 알 수 있습니다.
+
+```rust
+Book { title: "The Rust Programming Language", author: "Steve Klabnik and Carol Nichols", published: 20230228 }
+```
+
+구조체의 이름과 각 필드의 이름이 자동으로 출력됩니다. 따라서 Debug트레이트는 직접 구현하는 것보다 derive를 이용하는 것을 추천합니다.
+
+만약 굳이 구조체의 정보를 출력해야한다면 Display 트레이트를 구현하는 것을 추천합니다.
+
+#### Clone
+
+참고링크: https://doc.rust-lang.org/std/clone/trait.Clone.html
+
+Clone 트레이트는 clone이라는 메소드를 구현하는 것인데, 간단하게 설명하면 바로 deep copy를 수행하는 것입니다.
+
+```rust
+pub trait Clone: Sized {
+    // Required method
+    fn clone(&self) -> Self;
+
+    // Provided method
+    fn clone_from(&mut self, source: &Self) { ... }
+}
+```
+
+한가지 먼저 알아야되는게 있습니다. self와 Self의 차이입니다. &str과 String의 차이와 비슷합니다. self는 객체 자신을 가르키는 변수입니다. 그리고 Self는 객체의 타입입니다. &str이 스트링 객체의 참조이고, String이 문자열의 타입인것과 같습니다.
+
+그래서 clone함수는 자기 자신을 참조하면서, 같은 타입을 반환하는 함수입니다. 그럼 한번 직접 만들어보겠습니다.
+
+```rust
+#[derive(Debug)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl Clone for Book {
+    fn clone(&self) -> Self {
+        Book {
+            title: self.title.clone(),
+            author: self.author.clone(),
+            published: self.published,
+        }
+    }
+}
+
+fn main() {
+    let book = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    let another = Book {
+        title: String::from("The another book"),
+        author: String::from("Unknown"),
+        published: 20111111,
+    };
+
+    let mut book_clone = book.clone();
+    println!("{:?}", book_clone);
+    book_clone.clone_from(&another);
+    println!("{:?}", book_clone);
+}
+```
+
+clone함수의 내용을 보면 새로운 Book 객체를 만듭니다. title필드는 self.title을 그대로 복사해야합니다. self.title은 String타입의 객체이므로 String타입의 clone메소드를 호출하면 똑같은 객체를 만들 수 있습니다. String 타입의 clone 메소드 또한 Clone 트레이트를 구현한 것이겠지요. 표준 라이브러리에 정의된 타입들은 대부분 clone 메소드를 가지고 있습니다. 만약 clone메소드를 호출하지않고 다음과 같이 만든다면 어떻게될까요?
+
+```rust
+impl Clone for Book {
+    fn clone(&self) -> Self {
+        Book {
+            title: self.title,
+            author: self.author,
+            published: self.published,
+        }
+    }
+}
+```
+
+소유권에 대해서 설명할 때 이야기한 바와 같이 힙 영역 메모리에 저장된 객체들은 이와같이 대입이 될때 소유권의 이동이 일어납니다. 그래서 다음과 같은 컴파일 에러가 발생합니다.
+
+```rust
+error[E0507]: cannot move out of `self.title` which is behind a shared reference
+  --> src/main.rs:43:20
+   |
+43 |             title: self.title,
+   |                    ^^^^^^^^^^ move occurs because `self.title` has type `String`, which does not implement the `Copy` trait
+```
+
+만약 Copy 트레이트가 구현되어있다면 clone 메소드를 호출해서 자동으로 객체 복사를 해주게되지만, String 타입은 Copy 트레이트를 구현하지않았으므로 위와같은 에러가 발생합니다.
+
+그리고 published는 u32타입의 변수이므로 clone이 필요없이 값이 복사됩니다.
+
+```rust
+fn print_info(item: &dyn Clone) {
+    println!("item implements Clone trait");
+}
+```
+
+```rust
+error[E0038]: the trait `Clone` cannot be made into an object
+  --> src/main.rs:50:22
+   |
+50 | fn print_info(item: &dyn Clone) {
+   |                      ^^^^^^^^^ `Clone` cannot be made into an object
+   |
+   = note: the trait cannot be made into an object because it requires `Self: Sized`
+   = note: for a trait to be "object safe" it needs to allow building a vtable to allow the call to be resolvable dynamically; for more information visit <https://doc.rust-lang.org/reference/items/traits.html#object-safety>
+```
+
+컴파일러 메세지가 약간 이해하기 어렵지만 간단하게 생각해보면 이해할 수 있습니다. 트레이트 객체로 전달한다는 것은 원래의 타입이 뭔지를 숨기고 여러 타입이 공통으로 구현한 함수를 호출하는 것입니다. 만약 구현하는 함수가 clone 메소드처럼 Self를 반환한다면, 트레이트 객체의 원래 타입이 뭔지 알아야됩니다. 따라서 clone 메소드를 구현해야하는 Clone 트레이트는 트레이트 객체로 사용할 수 없는 것입니다. 
+
+Object safety(https://doc.rust-lang.org/reference/items/traits.html#object-safety) 라는 규칙들이 있는데 트레이트 오브젝트를 만들기 위한 규칙들입니다. 여기에 Sized 트레이트를 구현하면 안된다고 써있는데 Clone 트레이트는 상위 트레이트로 Sized 트레이트를 구현하고 있습니다. Sized 트레이트를 상위 트레이트로 가진다는 것은 바로 트레이트에서 사용하는 모든 타입들이 컴파일 시점에 어느 크기를 갖는지 알 수 있다는 제한을 부여하는 것입니다. 컴파일 타임에 Self 타입의 크기를 알아야 메모리 복사에서 안정성을 보장할 수 있기 때문입니다.
+
+참고로 이와같이 어떤 메소드를 구현하고자하는 트레이트가 아니라, 속성만 부여하고자하는 트레이트가 여러가지가 있습니다. 그리고 그런 트레이트들을 Marker trait라고 부릅니다. 그래서 Sized트레이트가 정의된 위치가 std::marker입니다.
+
+https://doc.rust-lang.org/std/marker/trait.Sized.html
+
+러스트는 이와같이 메모리 안정성을 위해서 복잡해보이는 규칙들을 가지고 있습니다. 과하다싶을 때도 있지만, 이런 규칙들을 개발자가 생각하면서 개발해야하는 언어들의 문제점을 해결하는게 이토록 쉽지않은 일이라는 것을 알 수 있습니다. 처음에는 복잡해보이고 의미를 알 수 없는 규칙들이지만, 메모리 안정성을 염두해두고 연습을 해나간다면 이해할 수 있습니다.
+
+지금까지 길게 Clone 트레이트의 구현을 설명했지만, 사실은 이렇게 직접 구현할 필요가 없습니다. derive를 쓰면 자동으로 생성됩니다.
+
+```rust
+#[derive(Debug, Clone)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+fn main() {
+    let book = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    let another = Book {
+        title: String::from("The another book"),
+        author: String::from("Unknown"),
+        published: 20111111,
+    };
+
+    let mut book_clone = book.clone();
+    println!("{:?}", book_clone);
+    book_clone.clone_from(&another);
+    println!("{:?}", book_clone);
+}
+```
+
+#### Default
+
+Default 트레이트는 구조체의 각 필드를 디폴트값을 초기화해서 객체를 생성해줍니다.
+
+```rust
+#[derive(Debug, Clone, Default)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+fn main() {
+    let book = Book::default();
+    let mut book_clone = book.clone();
+    println!("{:?}", book_clone);
+}
+```
+
+새로운 객체를 만들 때 사용하므로 정적 메소드입니다. 따라서 “타입이름::default()” 형태로 호출합니다. 
+
+물론 러스트 언어에서 기본값으로 지정한 값이 개발자의 의도와 다를 때가 있습니다. 그럴때는 직접 구현하면 됩니다.
+
+#### PartialEq
+
+PartialEq는 두 객체가 같은 값을 가지고 있는지를 확인하는 트레이트입니다.
+
+```rust
+#[derive(Debug, Clone, Default)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl PartialEq for Book {
+    fn eq(&self, other: &Self) -> bool {
+        self.title == other.title && self.author == other.author
+    }
+}
+
+fn main() {
+    let second = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+
+    let first = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20190812,
+    };
+
+    if second == first {
+        println!(
+            "Yes, they are same book but different release {} != {}.",
+            first.published, second.published
+        );
+    }
+}
+```
+
+위와 같이 두 책이 같은 책인지 확인하려면 책 제목과 저자 이름을 확인하게 됩니다.
+
+트레이트 이름이 PartialEq라고해서 왜 Partial이라는 이름이 들어갔는지 의아하게 생각할 수도 있습니다. 하지만 완전하게 동일한 객체를 비교하는게 아니라 위와같이 좀더 넓은 의미에서 일부 같은 값을 가진 객체도 비교할 수 있다는 유연성을 갖는다고 이해하면 쉬울듯합니다. 바로 아래 예제를 생각해보면 됩니다.
+
+```rust
+#[derive(Debug)]
+struct Person {
+    name: String,
+    age: u32,
+}
+
+#[derive(Debug, Clone, Default)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl PartialEq for Book {
+    fn eq(&self, other: &Self) -> bool {
+        self.title == other.title && self.author == other.author
+    }
+}
+
+impl PartialEq<Person> for Book {
+    fn eq(&self, other: &Person) -> bool {
+        self.author.contains(&other.name)
+    }
+}
+
+impl PartialEq<Book> for Person {
+    fn eq(&self, other: &Book) -> bool {
+        other.author.contains(&self.name)
+    }
+}
+
+fn main() {
+    let second = Book {
+        title: String::from("The Rust Programming Language"),
+        author: String::from("Steve Klabnik and Carol Nichols"),
+        published: 20230228,
+    };
+    let steve = Person {
+        name: "Steve Klabnik".to_string(),
+        age: 30,
+    };
+    if second == steve {
+        println!("Yes, this book is writtend by {:?}", steve);
+    }
+}
+```
+
+Book 타입과 Person 타입은 동일한 객체가 될 수는 없습니다. 하지만 일부 같은 값을 갖는지를 비교할 수는 있겠지요. 아직 제너릭에 대한 이야기를 하지 않았지만, PartialEq에 어떤 타입 바인딩을 쓰는지에 따라서 비교할 대상의 타입을 지정할 수 있다는 것만 생각해보시면 되겠습니다.
+
+PartialEq 외에도 Eq 트레이트가 있습니다. 하지만 보통 우리가 == 연산자로 비교할 때는 PartialEq를 사용한다는 것을 기억하시기 바랍니다.
+
