@@ -50,3 +50,55 @@ path = "src/ownership/main.rs"
 [[bin]]
 name = "struct"
 path = "src/struct/main.rs"
+
+[[bin]]
+name = "enum"
+path = "src/enum/main.rs"
+
+[[bin]]
+name = "result_enum"
+path = "src/result_enum/main.rs"
+
+[[bin]]
+name = "option_enum"
+path = "src/option_enum/main.rs"
+
+[[bin]]
+name = "try_operator"
+path = "src/try_operator/main.rs"
+
+[[bin]]
+name = "function_pointer"
+path = "src/function_pointer/main.rs"
+
+[[bin]]
+name = "map"
+path = "src/map/main.rs"
+
+[[bin]]
+name = "project"
+path = "src/project/main.rs"
+
+[[bin]]
+name = "trait"
+path = "src/trait/main.rs"
+
+[[bin]]
+name = "trait_display"
+path = "src/trait_display/main.rs"
+
+[[bin]]
+name = "trait_debug"
+path = "src/trait_debug/main.rs"
+
+[[bin]]
+name = "trait_clone"
+path = "src/trait_clone/main.rs"
+
+[[bin]]
+name = "trait_default"
+path = "src/trait_default/main.rs"
+
+[[bin]]
+name = "trait_partialeq"
+path = "src/trait_partialeq/main.rs"
