@@ -2086,7 +2086,9 @@ fn main() {
 
 Option의 메소드인 map은 타입이 Some일때는 값을 꺼내서 클로저를 호출해주고 결과값을 Option타입으로 반환해줍니다. None 타입을 위해 호출되면 아무런 처리도 하지않고 None을 그대로 반환해줍니다.
 
-그리고 Some이나 None 값을 출력하기 위해서 “{:?}” 리터럴을 사용하는 것도 알아두시면 좋습니다. 
+그리고 Some이나 None 값을 출력하기 위해서 “{:?}” 리터럴을 사용하는 것도 알아두시면 좋습니다.
+
+### Option의 as_ref 메소드
 
 마지막으로 주의해야 할 점이 하나 있는데 바로 map을 호출하면 객체가 해지된다는 것입니다. 영어로는 consume이라고 표현하는데, 그 의미는 자기 자신의 값을 소비해서 없애버리고 반환값을 생성한다는 것입니다.
 
@@ -2131,6 +2133,27 @@ println!("{:?}", maybe_some_string);
 ```
 
 as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다.
+
+### Option의 as_deref, as_deref_mut 메소드
+
+이번에는 또 다른 경우를 보겠습니다. 아마 가장 자주 접하게 되는 경우일텐데 Option안에 있는 객체를 수정하는 것입니다.
+
+```rust
+maybe_some_string
+    .as_deref_mut()
+    .map(|x| x.make_ascii_uppercase());
+println!("{:?}", maybe_some_string)
+```
+
+as_deref_mut 메소드는 Option은 그대로 유지한채 그 안의 객체를 수정할 수 있도록 &mut 레퍼런스를 넘겨줍니다. 이 예제 코드에서 map메소드에서 받은 x의 타입은 &mut str 타입이 되서 "Hello, World!"라는 스트링 자체를 수정할 수 있게 됩니다. 
+
+참고로 Option을 그대로 유지한 채 그 안의 객체에 대한 레퍼런스를 얻을 수 있는 as_deref라는 메소드도 있습니다.
+
+```rust
+    let ref_to_string: Option<&str> = maybe_some_string.as_deref();
+```
+
+as_deref 메소드는 객체에 대한 레퍼런스가 필요할 때 사용됩니다. 예를 들어 값을 그대로 다른 함수나 쓰레드 등에 전달하는게 비효율적이니 레퍼런스를 만들어서 전달하는데 그럴때 사용됩니다.
 
 ### Result의 map_err 메소드
 
