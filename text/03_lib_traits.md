@@ -14,13 +14,13 @@
 
 String타입의 매뉴얼 https://doc.rust-lang.org/std/vec/struct.Vec.html 을 열어보시면 페이지 오른쪽 위에 소스를 볼 수 있는 링크 source가 있습니다.
 
-그림 lib_trait_vec1.png
+<img src="lib_trait_vec1.png">
 
 source를 클릭하면 해당 타입의 소스 코드로 넘어갑니다.
 
 특정 메소드의 코드를 보고 싶다면 마찬가지로 매뉴얼에서 해당 메소드에 대한 항목을 보면 source 버튼이 있습니다.
 
-그림 lib_trait_vec2.png
+<img src="lib_trait_vec2.png">
 
 ---
 
