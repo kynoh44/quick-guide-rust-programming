@@ -24,6 +24,9 @@ fn fizzbuzz_3(max: i32) {
 }
 
 fn main() {
+    fizzbuzz_2(37);
+    fizzbuzz_3(41);
+
     let some_number = Some(5);
     let none_number: Option<i32> = None;
 
@@ -33,6 +36,14 @@ fn main() {
     println!("Double Some: {:?}", double_some); // Double Some: Some(10)
     println!("Double None: {:?}", double_none); // Double None: None
 
-    fizzbuzz_2(37);
-    fizzbuzz_3(41);
+    let mut maybe_some_string = Some(String::from("Hello, World!"));
+    // `Option::map` takes self *by value*, consuming `maybe_some_string`
+    let maybe_some_len = maybe_some_string.as_ref().map(|s| s.len());
+    assert_eq!(maybe_some_len, Some(13));
+    println!("{:?}", maybe_some_string);
+
+    maybe_some_string
+        .as_deref_mut()
+        .map(|x| x.make_ascii_uppercase());
+    println!("{:?}", maybe_some_string);
 }
