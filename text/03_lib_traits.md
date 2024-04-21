@@ -1244,11 +1244,13 @@ grep 함수는 전달된 파일 경로를 이용하여 파일을 열고 파일�
 
 여기서 잠깐 어떤 구조체 타입이 어느 트레이트를 구현하고 있는지를 확인하는 방법을 알아보겠습니다. 우선 std::fs::File 구조체의 매뉴얼을 열어보겠습니다. https://doc.rust-lang.org/std/fs/struct.File.html 링크를 열면 페이지 왼쪽에 다음과 같이 자체 메소드와 구현된 트레이트의 리스트가 보입니다.
 
-파일 lib_trait_file1.png
+<img src="lib_trait_file1.png">
+
 
 create나 open은 File 구조체의 자체 메소드입니다. 그리고 아까 이야기했던 Read 트레이트가 리스트에 있을 것입니다. 클릭해보면 다음과 같이 read나 read_to_string() 메소드가 있다고 나옵니다. 트레이트 리스트에 Read가 2개가 있는데 자세히 보면 하나는 &File을 위한 트레이트 구현이고 다른 하나는 File을 위한 트레이트 구현입니다. 참조를 사용하냐 변수 그대로 사용하냐에 따라서 구현된 트레이트가 달라집니다. 트레이트의 메소드의 인자에 &self가 있을지 Self가 있을지에 따라 다른 것입니다. &self인 경우 객체의 데이터가 바뀔 수 없고, Self인 경우 객체의 데이터가 바뀌거나 객체가 해지될 수도 있습니다. read()나 read_to_string()은 양쪽에 다 존재합니다.
 
-파일 lib_trait_file2.png
+<img src="lib_trait_file2.png">
+
 
 예제에서 read_to_string()을 사용하니까 read_to_string() 메소드의 설명 부분에서 Read more를 클릭해봅시다. 페이지가 Trait std::io::Read로 넘어가게됩니다. 따라서 우리는 read_to_string() 메소드를 사용하기 위해서는 use std::io::Read라는 선언을 추가해줘야한다는 것을 알게됩니다.
 
