@@ -122,3 +122,35 @@ path = "src/lifetime/main.rs"
 [[bin]]
 name = "error"
 path = "src/error/main.rs"
+
+[[bin]]
+name = "std_library_vec"
+path = "src/std_library_vec/main.rs"
+
+[[bin]]
+name = "std_trait_display_debug"
+path = "src/std_trait_display_debug/main.rs"
+
+[[bin]]
+name = "std_trait_partialeq_eq"
+path = "src/std_trait_partialeq_eq/main.rs"
+
+[[bin]]
+name = "std_trait_ordering"
+path = "src/std_trait_ordering/main.rs"
+
+[[bin]]
+name = "std_trait_iterator"
+path = "src/std_trait_iterator/main.rs"
+
+[[bin]]
+name = "std_library_hashmap"
+path = "src/std_library_hashmap/main.rs"
+
+[[bin]]
+name = "std_library_file"
+path = "src/std_library_file/main.rs"
+
+[[bin]]
+name = "std_trait_tryfrom"
+path = "src/std_trait_tryfrom/main.rs"
