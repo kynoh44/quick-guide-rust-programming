@@ -1,5 +1,7 @@
 
-# How to run an example
+# A tour of Rust for C programmer
+
+How to run an example
 
 Each example is added in Cargo.toml as below.
 ```
