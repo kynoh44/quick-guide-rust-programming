@@ -10,9 +10,10 @@ fn main() {
         51..=100 => "A",
         _ => "?",
     };
+    println!("generation={}", gen);
 
     let num = 45;
-    let var = if num % 3 == 0 {
+    let _var = if num % 3 == 0 {
         3
     } else {
         if num % 5 == 0 {
@@ -23,7 +24,7 @@ fn main() {
     };
 
     let x = 9;
-    let y = {
+    let _y = {
         let x_squared = x * x;
         let x_cube = x_squared * x;
 
