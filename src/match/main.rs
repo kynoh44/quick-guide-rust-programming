@@ -10,6 +10,8 @@ fn fizzbuzz_2(max: i32) {
 }
 
 fn main() {
+    fizzbuzz_2(15);
+
     let age = 44;
     let gen = match age {
         0..=20 => "MZ",
@@ -17,8 +19,9 @@ fn main() {
         51..=100 => "A",
         _ => "?",
     };
+    println!("generation={}", gen);
 
-    for i in 1..=100 {
+    for i in 1..=30 {
         let msg = match i {
             n if n % 15 == 0 => format!("{} - FizzBizz", n),
             n if n % 3 == 0 => format!("{} - Fizz", n),
