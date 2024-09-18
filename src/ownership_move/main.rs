@@ -3,7 +3,7 @@ fn make_greeting(name: &mut String) {
 }
 
 fn main() {
-    let mut user = "아이유".to_string();
+    let mut user = "페리스".to_string();
     make_greeting(&mut user);
     println!("{}", user);
 
