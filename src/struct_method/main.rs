@@ -33,13 +33,17 @@ impl Rectangle {
 fn main() {
     let rect = Rectangle::new();
 
-    let point1: Point = Point { x: 10.3, y: 0.4 };
-    let point2: Point = Point { x: 22.5, y: 2.4 };
-    let rect = Rectangle {
-        top_left: point1,
-        bottom_right: point2,
-    };
+    {
+        let point1: Point = Point { x: 10.3, y: 0.4 };
+        let point2: Point = Point { x: 22.5, y: 2.4 };
+        let rect2 = Rectangle {
+            top_left: point1,
+            bottom_right: point2,
+        };
+        rect2.destroy();
+
+        //println!("area size={} {:?}", rect2.area(), rect2); // compile error!!!
+    }
 
     println!("area size={} {:?}", rect.area(), rect);
-    rect.destroy();
 }
