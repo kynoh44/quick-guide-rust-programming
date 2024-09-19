@@ -8,4 +8,9 @@ fn main() {
         println!("{}", c);
     }
     println!("{:?}", user);
+
+    let a = String::from("Hello");
+    let t = a + ",world";
+    println!("{}", t);
+    //println!("{}", a); // compile error!!!
 }

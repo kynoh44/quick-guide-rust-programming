@@ -1443,40 +1443,6 @@ fn main() {
 
 이렇게 바꾸면 컴파일 에러 없이 잘 동작합니다. clone은 말 그대로 데이터를 똑같이 복사해서 사본을 만드는 것입니다. Deep copy를 한다고 생각할 수도 있습니다. 위에서는 루프를 돌기전에 user의 이름없는 복사본을 만들고 그 복사본의 into_iter 메소드를 호출해서 인터레이터를 만듭니다. 그래서 user 객체는 그대로 존재하고, 복사본만 해지됩니다. 하지만 실제 제품을 이렇게 만드는 경우는 별로 없겠지요. iter메소드를 사용하는게 더 현실적입니다.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=============================== 2024 09 18 =========================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ### 변수가 저장되는 위치와 소유권의 관계
 
 지금 단계에서 중요한 내용은 아니지만 러스트의 내부를 이해하기 위한 약간의 추가 설명을 해보겠습니다.
@@ -1503,15 +1469,15 @@ fn fib(mut index: i32) -> i32 {
 }
 ```
 
-t = a+b라는 코드가 있는데요 t변수는 a와 b중 어느 변수의 소유권을 가지게되는 것일까요? 
+t = a+b라는 코드에서 t변수는 a와 b중 어느 변수의 소유권을 가지게되는 것일까요?
 
-사실 정수 타입의 변수는 소유권 이동이 일어나지 않습니다. 정수나 부동 소수점 타입등과 Boolean타입은 소유권의 이동도 일어나지않습니다. 함수 호출에 인자로 전달되면 값이 복사됩니다. 또 위 코드와 같이 대입이 될때도 값이 복사됩니다.
+사실 정수 타입의 변수는 소유권 이동이 일어나지 않습니다. 정수나 부동 소수점 타입등과 Boolean타입은 소유권의 이동이 일어나지않습니다. 함수 호출에 인자로 사용되면 값이 복사됩니다. 또 위 코드와 같이 대입이 될때도 값이 복사됩니다.
 
-그럼 소유권 이동이 일어나는 타입과 그런 규칙에서 예외되는 타입의 구분은 무엇일까요? 변수의 할당에 대해서 직접 신경써야되는 로우레벨 언어에 경험이 있으신 분들은 금방 눈치챘을 것입니다. 바로 스택에 할당되는 변수이나 힙에 할당되는 영역이냐의 차이입니다.
+그럼 소유권 이동이 일어나는 타입과 그런 규칙에서 예외되는 타입의 구분은 무엇일까요? 바로 변수가 스택에 할당되는가 힙에 할당되는가에 따라 결정됩니다. 스택에 할당되는 변수는 소유권 이동이 일어나지않고 대신 복사가 됩니다. 힙에 할당되는 변수는 (명시적으로 복사를 하도록 강제하지않으면) 소유권이 이동됩니다. 그럼 어떤 변수가 스택에 할당되고 어떤 변수는 힙에 할당될까요?
 
-일반적인 숫자 (정수와 부동 소수점)과 참/거짓의 Boolean 타입은 메모리 크기가 정해져있습니다. i32이면 4바이트이고 u8이면 1바이트입니다. 이렇게 컴파일 시점에 이미 메모리 크기가 정해진 변수는 스택에 할당됩니다. 세부적인 것 까지 이야기할 수는 없지만 스택 메모리에 할당하는 것이 빠르고 관리가 쉽기 때문입니다. 스택에 저장된 변수들은 함수가 종료될 때 스택 영역 전체를 해지하면서 한꺼번에 해지됩니다. 따라서 메모리 누수에 대한 염려도 없고 메모리 크기가 작으므로 복사하는데도 시간이 오래 걸리지 않습니다. 따라서 굳이 소유권을 설정하지 않아도 되는 것입니다.
+일반적인 숫자 (정수와 부동 소수점)과 참/거짓의 Boolean 타입은 메모리 크기가 정해져있습니다. i32이면 4바이트이고 u8이면 1바이트입니다. 이렇게 컴파일 시점에 이미 메모리 크기가 정해진 변수는 스택에 할당됩니다. 스택 메모리에 할당하는 것이 빠르고 관리가 쉽기 때문입니다. 스택에 저장된 변수들은 함수가 종료될 때 스택 영역 전체를 해지하면서 한꺼번에 해지됩니다. 따라서 메모리 누수에 대한 염려도 없고 메모리 크기가 작으므로 복사하는데도 시간이 오래 걸리지 않습니다. 따라서 굳이 소유권을 설정하지 않아도 되는 것입니다.
 
-그와 다른게 String과 같은 구조체 타입을 들 수 있습니다. 구조체 타입과 크기에 따라 메모리를 할당해서 객체를 만드는 것은 힙 영역의 메모리를 사용합니다. malloc같은 메모리 할당 함수를 내부적으로 호출해서 메모리 영역을 할당하는 것입니다. 왜냐면 컴파일 시점에 String 객체의 어떤 데이터를 넣을지 모르기 때문입니다. 리터럴로 String 객체를 만들 때는 데이터 크기를 알 수 있겠지만, 사용자 입력을 받아서 String 객체를 만들거나 네트워크에서 받은 데이터로 객체를 만들 때는 프로그램이 실행 중일 때만 데이터의 크기를 알 수 있습니다.
+그와 다른게 String과 같은 구조체 타입을 들 수 있습니다. 구조체의 크기만큼 힙 영역에 메모리를 할당해서 객체를 만듭니다. malloc같은 메모리 할당 함수를 내부적으로 호출해서 메모리 영역을 할당하는 것입니다. 왜냐면 컴파일 시점에 String 객체에 얼마만큼의 문자데이터를 넣을지 모르기 때문입니다. 리터럴로 String 객체를 만들 때는 데이터 크기를 알 수 있겠지만, 나중에 데이터를 추가할 수 있습니다. 또 사용자 입력을 받아서 String 객체를 만들거나 네트워크에서 받은 데이터로 객체를 만들 때도 프로그램이 실행 중일 때만 데이터의 크기를 알 수 있습니다.
 
 ```rust
 fn main() {
@@ -1519,12 +1485,12 @@ fn main() {
 }
 ```
 
-위와 같이 s라는 변수를 만들었습니다. 이 s는 스택에 생성된 포인터 변수입니다. 64비트 CPU를 가진 시스템에서 동작한다면 스택에 8바이트 메모리 영역을 할당하고, 힙 영역에 String객체를 생성한 후 스택 메모리 영역에 힙 영역의 주소를 저장한 것입니다. 우리가 s라는 변수를 통해 객체에 저장된 데이터를 읽으면
+위와 같이 s라는 변수를 만들었습니다. 이 s는 스택에 생성된 포인터 변수입니다. 64비트 CPU를 가진 시스템에서 동작한다면 스택에 8바이트 메모리 영역을 할당하고, 힙 영역에 String객체를 생성한 후 스택에 있는 8바이트 메모리 영역에 힙 영역의 주소를 저장한 것입니다. 우리가 s라는 변수를 통해 객체에 저장된 데이터를 읽으면
 
 1. s라는 변수에서 힙 영역의 주소 값을 읽음
 2. 힙 영역에서 데이터를 읽음
 
-이와 같이 2번의 메모리 접근이 일어납니다. 따라서 아래와 같이 변수 대입이나 함수 호출을 통해 소유권을 전달한다는 것은 물리적으로 따지면 포인터 값 (64비트 정수 값)을 복사하는 것 뿐입니다. 컴파일러가 변수 대입이나 함수 호출 등 소유권 규칙에 따른 동작이 일어날 때마다 소유권의 이동을 감시하고 규칙에 부합하는지를 따지는 것 뿐입니다. 그러므로 컴파일러가 많은 일을 하지만, 최종 생성되는 프로그램 코드가 늘어나거나 하지 않고, 결과적으로 메모리 관리가 안정적인 프로그램을 만들 수 있는 것입니다.
+이와 같이 2번의 메모리 접근이 일어납니다. String객체를 변수 대입이나 함수 호출을 통해 소유권이 이동된다는 것은 물리적으로 따지면 포인터 값 (64비트 정수 값)을 복사하는 것 뿐입니다. 컴파일러가 변수 대입이나 함수 호출 등 소유권 규칙에 따른 동작이 일어날 때마다 포인터 값의 이동을 감시하고 규칙에 부합하는지를 따지는 것 뿐입니다. 결과적으로 안정적인 메모리 관리를 할 수 있으면서도 성능 감소가 없는 프로그램을 만들 수 있는 것입니다.
 
 정리를 하자면 러스트에서 원시 타입 Primitive type으로 분류된 타입들은 이동이 아니라 복사가 일어나입니다. 어떤 타입들이 원시 타입인지는 Rust의 Standard Library 메뉴얼을 참고하시기 바랍니다.
 
@@ -1532,23 +1498,30 @@ https://doc.rust-lang.org/std/#primitives
 
 C나 예전 C++을 사용해본 개발자라면 이렇게 생각하면 쉽습니다.
 
+>
 > malloc/new 등으로 할당하고 free로 해지해줘야되는 메모리나 객체를 자동으로 해지해주는 대신 소유권을 관리해줘야 한다. Primitive type은 복사가 일어나고 그 외는 이동이 발생한다.
 > 
 
 모던 C++을 아는 개발자는 이렇게 생각하면 더 이해하기 쉬울 것입니다.
 
+>
 > RAII가 권장이 아니라 강제 사항이다. 모든 포인터는 스마트 포인터이다.
 > 
 
-나중에 Copy trait라는게 나오는데, 미리 간단하게 말씀드리면 데이터 타입의 크기를 컴파일러가 알기 때문에 데이터의 이동이 아니라 복사를 해주는 데이터 타입들의 속성이라고 생각하면 됩니다. 컴파일러가 크기를 안다는 것은 Primitive type은 기본적으로 Copy trait를 구현하고 있다는 말입니다. 그 외의 타입들은 동적으로 크기가 바뀔 수도 있으므로 컴파일러가 Copy trait를 자동으로 구현해주지 못합니다.
+나중에 Copy trait라는게 나오는데, 미리 간단하게 말씀드리면 데이터 타입의 크기를 컴파일러가 알기 때문에 데이터의 이동이 아니라 복사를 해주는 데이터 타입들의 속성이라고 생각하면 됩니다. 컴파일러가 크기를 안다는 것은 Primitive type은 기본적으로 Copy trait를 구현하고 있다는 말입니다. 그 외의 타입들은 동적으로 크기가 바뀔 수도 있으므로 컴파일러가 Copy trait를 자동으로 구현해주지 못합니다. 동적으로 크기가 바뀌거나 또다른 객체를 포함하고있는 등의 데이터는 Clone을 사용해야합니다.
 
 ## 구조체
 
-러스트에는 클래스가 없고 구조체만 있습니다. 상속 기능이 없기 때문에 완전한 OOP언어는 아닙니다.
+러스트에는 클래스가 없고 구조체만 있습니다. 구조체에 메소드를 추가할 수 있지만, 상속 기능이 없기 때문에 완전한 OOP언어는 아닙니다. 구조체는 형태는 C 언어와 크게 다를게 없습니다.
 
-구조체는 형태는 C 언어와 크게 다를게 없습니다. 아래 예제에 구조체 정의에 대한 모든 케이스가 모여있다고 생각됩니다.
+아래 예제는 다양한 구조체의 형태들을 소개하고 있습니다.
 
 ```rust
+// src/struct/main.rs
+// An attribute to hide warnings for unused code.
+#![allow(dead_code)]
+
+#[derive(Debug)]
 struct Person {
     name: String,
     age: u8,
@@ -1623,24 +1596,22 @@ fn main() {
 ```
 출처: https://doc.rust-lang.org/rust-by-example/custom_types/structs.html
 
-딱히 설명할 것도 없이 흔하게 사용하는 구조체, 튜플입니다.
+조금이라도 프로그래밍을 해보신 분들이라면 이미 잘 알고계실만한 구조체와 튜플의 모습 그대로입니다. 그나마 유닛 구조체라는게 좀 특이합니다. 아무런 내부 데이터가 없는 구조체입니다. 이건 나중에 트레이트Trait라는 클래스의 메소드와 같은 것을 사용하기 위한 구조체입니다. 클래스인데 내부 변수는 없고 메소드만 있는 클래스라고 생각할 수도 있습니다.
 
-유닛 구조체라는게 좀 특이합니다. 아무런 변수도 없는 구조체입니다. 이건 나중에 트레이트Trait라는 클래스의 메소드와 같은 것을 사용하기 위한 구조체입니다. 클래스인데 내부 변수는 없고 메소드만 있는 클래스라고 생각하면 편합니다.
-
-다른 언어와 확실히 다른게 있다면 구조체를 만들 때 인자로 사용된 객체의 소유권이 이동한다는 것입니다.
+다른 언어와 확실히 다른게 있다면 구조체를 만들 때 인자로 사용된 객체의 소유권이 이동한다는 것입니다. 다음 예제를 실행해보겠습니다.
 
 ```rust
+struct Person {
+    name: String,
+    age: u8,
+}
+
 fn main() {
     let name = String::from("Peter");
     let age = 27;
     let peter = Person { name, age };
     println!("{}", peter.name);
     println!("{}", name);
-}
-
-struct Person {
-    name: String,
-    age: u8,
 }
 ```
 
@@ -1664,16 +1635,18 @@ help: consider cloning the value if the performance cost is acceptable
   |                              ++++++++
 ```
 
-이전에 소유권의 이동에 대해서 설명하면서 소유권이 없는 변수에 접근했을 때 보여드린 에러 메세지와 거의 동일한 형태의 에러 메세지를 다시 보게 됩니다.
+이전에 소유권의 이동에 대해서 설명하면서 소유권이 없는 변수에 접근했을 때 보여드린 에러 메세지와 거의 동일한 형태의 에러 메세지를 다시 보게 됩니다. 각 에러 메세지가 어떤 의미인지 보겠습니다.
 
-- move occurs because `name` has type `String`, which does not implement the `Copy` trait: String 타입은 Copy trait라는걸 구현하지 않습니다. 컴파일러가 String타입의 메모리 크기가 얼마인지 알 수 없습니다. 지금 예제 코드는 “Peter”라는 리터럴을 String으로 만들기 때문에 메모리 크기를 알 수 있는 것처럼 보이지만, 동적으로 String을 만드는 경우를 생각하면 얼마나 긴 문자열을 생성할 지 알 수 없습니다.
-- value moved here: name 변수의 소유권이 구조체 Person을 만들 때 이동했습니다.
-- value borrowed here after move: println으로 소유권이 없는 변수에 접근했으므로 에러가 발생한 것입니다.
-- consider cloning the value if the performance cost is acceptable: name.clone()으로 복사본을 만들어서 Person에 전달하는 것도 하나의 해결책이긴합니다만 불필요하게 메모리를 더 사용하게됩니다.
+1. move occurs because `name` has type `String`, which does not implement the `Copy` trait: String 타입은 Copy trait라는걸 구현하지 않습니다. 컴파일러가 String타입의 메모리 크기가 얼마인지 알 수 없습니다. 지금 예제 코드는 “Peter”라는 리터럴을 String으로 만들기 때문에 메모리 크기를 알 수 있는 것처럼 보이지만, 동적으로 String을 만드는 경우를 생각하면 얼마나 긴 문자열을 생성할 지 알 수 없습니다.
+2. value moved here: name 변수의 소유권이 구조체 Person을 만들 때 이동했습니다.
+3. value borrowed here after move: println으로 소유권이 없는 변수에 접근했으므로 에러가 발생한 것입니다.
+4. consider cloning the value if the performance cost is acceptable: name.clone()으로 복사본을 만들어서 Person에 전달하는 것도 하나의 해결책이긴합니다만 불필요하게 메모리를 더 사용하게됩니다.
+
+요약하자면 Person이라는 객체를 만들기 위해 name이라는 String 객체를 사용했는데, name의 소유권이 peter라는 변수로 넘어갔다는 것입니다. 그래서 peter변수가 생성된 이후로는 name이라는 변수를 사용할 수 없게되었습니다.
 
 ### 메소드 정의
 
-구조체의 메소드를 정의하는 예제를 보겠습니다.
+구조체를 만드는 방법을 봤으니 이번에는 구조체의 메소드를 정의하는 예제를 보겠습니다.
 
 ```rust
 struct Point {
@@ -1705,23 +1678,26 @@ fn main() {
 }
 ```
 
-impl 키워드와 구조체 이름을 쓰고 하나의 블럭을 만듭니다. 그리고 &self를 첫번째 인자로 받는 함수를 만들면 메소드가 됩니다. 다른 언어들의 클래스 메소드를 만드는 것과 비슷합니다.
+Point와 Rectangle이라는 구조체를 만듭니다. 그 다음 Rectangle 구조체의 메소드를 정의하는 impl 구문이 있습니다. 메소드를 정의할 때는 impl 키워드와 구조체 이름을 쓰고 하나의 블럭을 만듭니다. 그리고 그 블럭 안에서 &self를 첫번째 인자로 받는 함수를 만들면 메소드가 됩니다. 다른 언어들의 클래스 메소드를 만드는 것과 비슷합니다.
 
-하나 눈여겨 별몬한건 f32라는 타입의 절대값을 구하는 abs라는 메소드가 2가지 형태로 사용된다는 것입니다.
+하나 눈여겨 볼만한건 f32라는 타입의 절대값을 구하는 abs라는 메소드가 2가지 형태로 사용된다는 것입니다.
 
 1. 타입::메소드이름(..인자..)
 2. 변수.메소드이름(..인자..)
 
-1번은 보통 정적 메소드라고 하거나 연관 함수 Associated function 라고 부르는 것입니다. 구조체 타입에 종속되는 함수라서 구조체의 객체를 만들지 않아도 호출할 수 있습니다. 2번 동적 메소드는 객체를 반드시 만든 후에 객체를 이용해서 호출할 수 있는 메소드입니다. 그래서 첫번째 인자가 항상 &self가 됩니다.
+1번 타입::메소드이름 형태는 보통 정적 메소드라고 하거나 연관 함수 Associated function 라고 부르는 것입니다. 구조체 타입에 종속되는 함수라서 구조체의 객체를 만들지 않아도 호출할 수 있습니다. 2번 변수.메소드이름 형태는 동적 메소드라고해서 객체를 반드시 만든 후에 객체를 이용해서 호출할 수 있는 메소드입니다. 그래서 첫번째 인자가 항상 &self가 됩니다.
 
-메소드의 첫번째 인자에 &self만 사용할 수 있는게 아니라 &mut self를 쓸 수 있습니다. 구조체 내부 값을 변경하는 메소드라면 &mut self를 써야겠지요. 그리고 자기 자신의 메모리를 해지하는 메소드라면 self 인자를 갖을 것입니다.
+메소드의 첫번째 인자에 &self만 사용할 수 있는게 아니라 &mut self를 쓸 수 있습니다. 구조체 내부 값을 변경하는 메소드라면 &mut self를 써야합니다. 그리고 자기 자신의 메모리를 해지하는 (원문으로는 consume이라고 표현합니다.) 메소드라면 self 인자를 갖을 것입니다. self앞에 &표시가 붙지 않으니 메소드가 자기 자신의 소유권을 전달받을거라는 표시입니다.
 
 ```rust
+// src/struct_method/main.rs
+#[derive(Debug)]
 struct Point {
     x: f32,
     y: f32,
 }
 
+#[derive(Debug)]
 struct Rectangle {
     top_left: Point,
     bottom_right: Point,
@@ -1730,8 +1706,8 @@ struct Rectangle {
 impl Rectangle {
     fn new() -> Rectangle {
         Rectangle {
-            top_left: Point { x: 0.0, y: 0.0},
-            bottom_right: Point { x: 0.0, y: 0.0},
+            top_left: Point { x: 0.0, y: 0.0 },
+            bottom_right: Point { x: 0.0, y: 0.0 },
         }
     }
 
@@ -1749,59 +1725,93 @@ impl Rectangle {
 
 fn main() {
     let rect = Rectangle::new();
-    rect.destroy();
-    println!("{}", rect.area());
+
+    {
+        let point1: Point = Point { x: 10.3, y: 0.4 };
+        let point2: Point = Point { x: 22.5, y: 2.4 };
+        let rect2 = Rectangle {
+            top_left: point1,
+            bottom_right: point2,
+        };
+        rect2.destroy();
+
+        //println!("area size={} {:?}", rect2.area(), rect2); // compile error!!!
+    }
+
+    println!("area size={} {:?}", rect.area(), rect);
 }
 ```
-
-```rust
-error[E0382]: borrow of moved value: `rect`
-  --> src/main.rs:34:20
-   |
-32 |     let rect = Rectangle::new();
-   |         ---- move occurs because `rect` has type `Rectangle`, which does not implement the `Copy` trait
-33 |     rect.destroy();
-   |          --------- `rect` moved due to this method call
-34 |     println!("{}", rect.area());
-   |                    ^^^^^^^^^^^ value borrowed here after move
-   |
-note: `Rectangle::destroy` takes ownership of the receiver `self`, which moves `rect`
-  --> src/main.rs:25:16
-   |
-25 |     fn destroy(self) {
-   |                ^^^^
+```bash
+$ cargo run --bin struct_method
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/struct_method`
+destroyer
+area size=0 Rectangle { top_left: Point { x: 0.0, y: 0.0 }, bottom_right: Point { x: 0.0, y: 0.0 } }
 ```
 
 new라는 이름의 메소드는 러스트의 코딩 관례상 빈 객체를 생성하는 메소드의 이름으로 많이 쓰입니다. 그래서 보통 정적 메소드로 구현됩니다.
 
-destroy라는 메소드는 인자를 self로 받아오므로 객체의 소유권을 가져옵니다. 따라서 메소드가 종료된 후부터는 객체를 더 이상 쓸 수 없습니다. new같이 특별히 정해진 이름이 있는 것은 아닙니다. 그리고 destroy와 같이 명시적으로 객체를 해지하는 메소드를 만드는건 특별한 일이 아니라면 잘 쓰지 않는 방법입니다. 예시로 보여드리기 위해서 제가 실험해본 것입니다.
+destroy라는 메소드는 인자를 self로 받아오므로 객체의 소유권을 가져옵니다. 따라서 메소드가 종료된 후부터는 객체를 더 이상 쓸 수 없습니다. new같이 특별히 정해진 이름이 있는 것은 아닙니다. 그리고 destroy와 같이 명시적으로 객체를 해지하는 메소드를 만드는건 특별한 일이 아니라면 잘 쓰지 않는 방법입니다. 
+
+메소드에서 self를 이용해서 소유권을 받아오는 것을 확인해보기위해 주석 처리된 부분을 다시 코드로 바꾸고 빌드해보겠습니다.
+
+
+```rust
+......
+
+fn main() {
+    let rect = Rectangle::new();
+
+    {
+        let point1: Point = Point { x: 10.3, y: 0.4 };
+        let point2: Point = Point { x: 22.5, y: 2.4 };
+        let rect2 = Rectangle {
+            top_left: point1,
+            bottom_right: point2,
+        };
+        rect2.destroy();
+
+        println!("area size={} {:?}", rect2.area(), rect2); // compile error!!!
+    }
+
+    println!("area size={} {:?}", rect.area(), rect);
+}
+```
+
+```bash
+gkim@gkim-laptop:~/study/my-rust-book$ cargo run --bin struct_method
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+error[E0382]: borrow of moved value: `rect2`
+  --> src/struct_method/main.rs:45:39
+   |
+39 |         let rect2 = Rectangle {
+   |             ----- move occurs because `rect2` has type `Rectangle`, which does not implement the `Copy` trait
+...
+43 |         rect2.destroy();
+   |               --------- `rect2` moved due to this method call
+44 |
+45 |         println!("area size={} {:?}", rect2.area(), rect2); // compile error!!!
+   |                                       ^^^^^ value borrowed here after move
+   |
+note: `Rectangle::destroy` takes ownership of the receiver `self`, which moves `rect2`
+  --> src/struct_method/main.rs:27:16
+   |
+27 |     fn destroy(self) {
+   |                ^^^^
+
+For more information about this error, try `rustc --explain E0382`.
+error: could not compile `my-rust-book` (bin "struct_method") due to 1 previous error
+```
+
+이제는 조금 익숙해진 에러 메세지들이 보입니다.
+
 
 ### 구조체 디버깅 방법
 
-구조체의 각 필드에 어떤 값이 저장된 상태인지 확인할 일이 자주 있습니다. C언어에서는 구조체마다 출력 함수를 만들기도 하고, 자바 등에서는 클래스에 출력 메소드를 만들기도 합니다. 러스트에서는 간단한 방법이 있습니다.
+이전 예제를 보면 Point 구조체와 Rectangle 구조체의 정의 윗줄에 #[derive(Debug)]라는 코드가 있습니다.
 
 ```rust
-#[derive(Debug)]
-struct Point {
-    x: f32,
-    y: f32,
-}
-
-fn main() {
-    let p = Point { x: 1.1, y:2.2 };
-    println!("{:?}", p);
-}
-```
-
-```rust
-Point { x: 1.1, y: 2.2 }
-```
-
-구조체 이름과 각 필드의 이름과 값까지 출력해줘서 굉장히 편리합니다.
-
-#[derive(Debug)]라는 구문은 std::fmt::Debug (Standard library에 속한 fmt라는 모듈에 정의된)라는  trait를 자동으로 구현하라는 의미입니다. 나중에 Trait에 대해서 설명할 때 정확한 의미를 알아보겠지만, 지금은 일단 “{:?}”라는 표현식을 써서 구조체의 각 필드의 값을 출력한다고 생각하면 됩니다. 구조체의 필드가 String같은 std에 정의된 타입이면 대부분 동작합니다. 만약 구조체의 한 필드가 또 다른 구조체 타입이라면, 그 다른 구조체도 #[derive(Debug)]를 선언해주면 됩니다.
-
-```rust
+// src/struct_method/main.rs
 #[derive(Debug)]
 struct Point {
     x: f32,
@@ -1814,24 +1824,45 @@ struct Rectangle {
     bottom_right: Point,
 }
 
-impl Rectangle {
-    fn area(&self) -> f32 {
-        let width = f32::abs(self.top_left.x - self.bottom_right.x);
-        let height = (self.top_left.y - self.bottom_right.y).abs();
-        width * height
-    }
-}
+......
 
 fn main() {
-    let point1: Point = Point { x: 10.3, y: 0.4 };
-    let point2: Point = Point { x: 22.5, y: 2.4 };
-    let rect = Rectangle {
-        top_left: point1,
-        bottom_right: point2,
-    };
+    let rect = Rectangle::new();
+
+......
+
     println!("area size={} {:?}", rect.area(), rect);
 }
 ```
+
+이 예제를 실행하면 구조체 이름과 각 필드의 이름과 값까지 출력해줘서 굉장히 편리합니다.
+
+```bash
+$ cargo run --bin struct_method
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.31s
+     Running `target/debug/struct_method`
+destroyer
+area size=0 Rectangle { top_left: Point { x: 0.0, y: 0.0 }, bottom_right: Point { x: 0.0, y: 0.0 } }
+```
+
+#[derive(Debug)]라는 구문은 std::fmt::Debug (Standard library에 속한 fmt라는 모듈에 정의된 Debug라는  trait)를 자동으로 구현하라는 의미입니다. 나중에 Trait에 대해서 설명할 때 정확한 의미를 알아보겠지만, 지금은 일단 “{:?}”라는 표현식을 써서 구조체의 각 필드의 값을 출력한다고 생각하면 됩니다. 구조체의 필드가 String같은 std에 정의된 타입이면 대부분 동작합니다. 만약 구조체의 한 필드가 또 다른 구조체 타입이라면, 그 다른 구조체도 #[derive(Debug)]를 선언해주면 됩니다. Rectangle에만 #[derive(Debug)]을 사용한게 아니라 Point에도 #[derive(Debug)]를 선언한 이유가 Rectangle의 디버깅 메세지를 출력할 때 Point의 디버깅 메세지도 같이 출력되어야하기 때문입니다.
+
+
+
+
+
+
+
+
+
+========================= 2024.09.19 ========================================
+
+
+
+
+
+
+
 
 ## 열거형 Enums
 
