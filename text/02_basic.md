@@ -1847,38 +1847,22 @@ area size=0 Rectangle { top_left: Point { x: 0.0, y: 0.0 }, bottom_right: Point 
 
 #[derive(Debug)]라는 구문은 std::fmt::Debug (Standard library에 속한 fmt라는 모듈에 정의된 Debug라는  trait)를 자동으로 구현하라는 의미입니다. 나중에 Trait에 대해서 설명할 때 정확한 의미를 알아보겠지만, 지금은 일단 “{:?}”라는 표현식을 써서 구조체의 각 필드의 값을 출력한다고 생각하면 됩니다. 구조체의 필드가 String같은 std에 정의된 타입이면 대부분 동작합니다. 만약 구조체의 한 필드가 또 다른 구조체 타입이라면, 그 다른 구조체도 #[derive(Debug)]를 선언해주면 됩니다. Rectangle에만 #[derive(Debug)]을 사용한게 아니라 Point에도 #[derive(Debug)]를 선언한 이유가 Rectangle의 디버깅 메세지를 출력할 때 Point의 디버깅 메세지도 같이 출력되어야하기 때문입니다.
 
-
-
-
-
-
-
-
-
-========================= 2024.09.19 ========================================
-
-
-
-
-
-
-
-
 ## 열거형 Enums
 
 ### 기본 열거형
 
-열거형도 패턴 매칭과 마찬가지로 러스트를 처음 접한 C/C++개발자들이 낯설어하는 특징 중에 하나입니다. 하지만 조금만 쓰다보면 너무나 편리하고 강력(강력하다 Powerful하다는건 아무데나 막 갖다써도 잘 동작한다는 뜻입니다)하기 때문에 자주 쓰게됩니다.
+열거형도 패턴 매칭과 마찬가지로 러스트를 처음 접한 C/C++개발자들이 낯설어하는 특징 중에 하나입니다. 하지만 조금만 쓰다보면 너무나 편리하고 하기 때문에 자주 쓰게됩니다.
 
 러스트 언어다운 프로그래밍을 하려면 이 열거형를 잘 활용하는게 중요합니다.
 
-보통 C/C++에서 열거형를 쓰는 이유는 주로 특정 값만을 가지는 타입을 새로 만들기 위해서입니다.
+보통 C에서 열거형를 쓰는 이유는 주로 특정 값만을 가지는 타입을 새로 만들기 위해서입니다.
 
 ```c
+// src/enum_basic/enum.c
 #include <stdio.h>
 
-enum DayOfWeek {    // 열거형 정의
-    Sunday = 0,         // 초깃값 할당
+enum WEEK {
+    Sunday,
     Monday,
     Tuesday,
     Wednesday,
@@ -1889,28 +1873,147 @@ enum DayOfWeek {    // 열거형 정의
 
 int main()
 {
-    enum DayOfWeek week;    // 열거형 변수 선언
-
-    week = Tuesday;    // 열거형 값 할당
-
-    printf("%d\n", week);   // 2: Tuesday의 값 출력
-
+    enum WEEK today;
+    today = Sunday;
+    printf("%d\n", today);
+    today = 22;
+    printf("%d\n", today);
     return 0;
 }
 ```
 
-출처: https://dojang.io/mod/page/view.php?id=480
-
-위와 같이 DayOfWeek이라는 새로운 타입을 만들고, 이 타입의 변수는 Sunday부터  Saturday라는 값만을 갖도록 만드는게 열거형을 쓰는 이유입니다.
+위와 같이 WEEK이라는 새로운 타입을 만들었습니다. WEEK 타입의 변수는 Sunday부터  Saturday라는 값만을 갖도록 만드는게 목표입니다. 하지만 사실 C의 대부분의 타입이 그렇듯이 Sunday부터 Saturday가 사실상 모두 정수값이기 때문에, today 변수에 아무 정수값이나 넣어도 문제가 없습니다. today변수에 22라는 아무 정수값이나 저장하고 사용해도 컴파일에러도 없고 잘 동작합니다. 에러를 방지할 수 있는 방법이 전혀 없습니다.
 
 러스트의 열거형도 마찬가지로 가장 기본적인 사용법은 특정 값만을 갖는 새로운 타입을 만드는 것입니다.
 
 ```rust
-enum IpAddrKind {
-    V4,
-    V6,
+// src/enum_basic/main.rs
+#[derive(Debug)]
+enum WEEK {
+    Sunday,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday
+}
+
+fn main() {
+    let today: WEEK = WEEK::Sunday;
+    //println!("{}", today); // compile error!!!
+    println!("{:?}", today);
+    //let tomorrow: WEEK = 22; // compile error!!!
+
+    match today {
+        WEEK::Sunday => println!("Sleep"),
+        _ => println!("Study"), // try again after removing this line
+    }
 }
 ```
+
+```bash
+$ cargo run --bin enum_basic
+warning: variants `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`, and `Saturday` are never constructed
+ --> src/enum_basic/main.rs:4:5
+  |
+2 | enum WEEK {
+  |      ---- variants in this enum
+3 |     Sunday,
+4 |     Monday,
+  |     ^^^^^^
+5 |     Tuesday,
+  |     ^^^^^^^
+6 |     Wednesday,
+  |     ^^^^^^^^^
+7 |     Thursday,
+  |     ^^^^^^^^
+8 |     Friday,
+  |     ^^^^^^
+9 |     Saturday
+  |     ^^^^^^^^
+  |
+  = note: `WEEK` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` on by default
+
+warning: `my-rust-book` (bin "enum_basic") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running `target/debug/enum_basic`
+Sunday
+Sleep
+```
+
+정의하고 사용하는 방법은 C언어와 거의 유사합니다. 하지만 가장 큰 차이는 WEEK타입의 변수에 정말로 WEEK타입의 값인 WEEK::Sunday부터 WEEK::Saturday값 외의 값을 저장하려고하면 컴파일 에러가 발생한다는 것입니다. WEEK타입의 인자를 받는 함수를 사용할 때도 WEEK타입의 값 외에 잘못된 값을 전달할 수 없습니다. 의도하지않은 잘못된 값을 사용하는 것을 방지해줍니다.
+
+그리고 컴파일러가 주는 경고 메세지를 보면 WEEK타입의로 선언된 값들 중에 사용되지 않는 값이 있는 것도 알려줍니다. 또 아주 중요한 기능이 있는데 패턴 매칭에서 처리가 안되는 경우가 있으면 컴파일 에러가 난다는 것입니다.
+
+```rust
+......
+    match today {
+        WEEK::Sunday => println!("Sleep"),
+        _ => println!("Study"), // try again after removing this line
+    }
+......
+```
+
+예제에있는 패턴 매칭을 보면 오직 WEEK:Sunday만을 처리하고 있습니다. 그 외의 모든 값은 "Study"라는 메세지를 출력합니다. 만약에 나머지 모든 패턴을 의미하는 "_" 케이스를 제거하면 어떻게 될까요?
+
+```bash
+$ cargo run --bin enum_basic
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+error[E0004]: non-exhaustive patterns: `WEEK::Monday`, `WEEK::Tuesday`, `WEEK::Wednesday` and 3 more not covered
+  --> src/enum_basic/main.rs:18:11
+   |
+18 |     match today {
+   |           ^^^^^ patterns `WEEK::Monday`, `WEEK::Tuesday`, `WEEK::Wednesday` and 3 more not covered
+   |
+note: `WEEK` defined here
+  --> src/enum_basic/main.rs:2:6
+   |
+2  | enum WEEK {
+   |      ^^^^
+3  |     Sunday,
+4  |     Monday,
+   |     ------ not covered
+5  |     Tuesday,
+   |     ------- not covered
+6  |     Wednesday,
+   |     --------- not covered
+7  |     Thursday,
+   |     -------- not covered
+8  |     Friday,
+   |     ------ not covered
+   = note: the matched value is of type `WEEK`
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern as shown, or multiple match arms
+   |
+19 ~         WEEK::Sunday => println!("Sleep"),
+20 ~         _ => todo!(),
+   |
+
+For more information about this error, try `rustc --explain E0004`.
+error: could not compile `my-rust-book` (bin "enum_basic") due to 1 previous error
+```
+
+위와 같이 WEEK타입에 여러가지 값들이 있는데 그런 값들이 처리되지않고 있다는 에러 메세지를 보여줍니다. 저는 프로젝트가 거대해지고, 다른 사람이 만든 코드를 유지보수할 경우에 실수로 모든 경우에 대한 처리를 하지 않아서 잘 드러나지않는 에러가 나는 경우를 많이 겪어봤습니다. 해결하기에 어려운 문제는 아닙니다만 릴리즈된 후에 이런 문제를 발견하면 새로운 버전을 출시해야하는 번거로움이 있고, 사용자에게 새로운 버전을 설치하라고 안내해야되는 등 후속 처리가 쉽지 않습니다. 이렇게 개발자의 실수를 컴파일러가 방지하는 것이 러스트의 디자인 철학입니다. 사람은 사람이 잘하는 것을 하고 기계는 기계가 잘하는 것을 할 수 있어서 정말 마음에 듭니다.
+
+
+
+
+
+
+
+
+
+
+============================= 2024.09.21 =========================================
+
+
+
+
+
+
+
+
 
 ### 데이터를 포함하는 열거형
 

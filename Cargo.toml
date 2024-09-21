@@ -60,6 +60,10 @@ name = "struct_method"
 path = "src/struct_method/main.rs"
 
 [[bin]]
+name = "enum_basic"
+path = "src/enum_basic/main.rs"
+
+[[bin]]
 name = "enum"
 path = "src/enum/main.rs"
 
