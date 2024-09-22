@@ -1,4 +1,3 @@
-#[derive(Debug)]
 enum WEEK {
     Sunday,
     Monday,
@@ -6,17 +5,22 @@ enum WEEK {
     Wednesday,
     Thursday,
     Friday,
-    Saturday
+    Saturday,
 }
 
 fn main() {
     let today: WEEK = WEEK::Sunday;
-    //println!("{}", today); // compile error!!!
-    println!("{:?}", today);
-    //let tomorrow: WEEK = 22; // compile error!!!
+    //let tomorrow: WEEK = 1; // compile error!!!
 
     match today {
-        WEEK::Sunday => println!("Sleep"),
-        //_ => println!("Study"), // try again after removing this line
+        WEEK::Sunday => println!("Sunday: Sleep for 10 hours"),
+        WEEK::Monday => println!("Monday: Work"),
+        WEEK::Tuesday => println!("Tuesday: Work"),
+        WEEK::Wednesday => println!("Wednesday: Work"),
+        WEEK::Thursday => println!("Thursday: Work"),
+        WEEK::Friday => println!("Friday: Work"),
+        WEEK::Saturday => {
+            println!("Saturday: Party at Club from 22")
+        }
     }
 }
