@@ -28,11 +28,11 @@ fn duplicated_names() {
 fn main() {
     internal_scope();
     duplicated_names();
-    
+
     println!("main starts");
     {
         println!("inner-scope starts");
-        let _my: MyStruct = MyStruct{};
+        let _my: MyStruct = MyStruct {};
         println!("inner-scope ends");
     }
     println!("main ends");

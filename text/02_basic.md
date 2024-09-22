@@ -1030,6 +1030,7 @@ The Rust Programming Language(https://doc.rust-lang.org/book/ch04-01-what-is-own
 함수가 대표적인 하나의 스코프입니다. 몇가지 스코프를 실험하는 예제를 만들어봤습니다.
 
 ```rust
+// src/ownership_scope/main.rs
 struct MyStruct {}
 
 impl Drop for MyStruct {
@@ -1060,11 +1061,11 @@ fn duplicated_names() {
 fn main() {
     internal_scope();
     duplicated_names();
-    
+
     println!("main starts");
     {
         println!("inner-scope starts");
-        let _my: MyStruct = MyStruct{};
+        let _my: MyStruct = MyStruct {};
         println!("inner-scope ends");
     }
     println!("main ends");
@@ -1649,6 +1650,7 @@ help: consider cloning the value if the performance cost is acceptable
 구조체를 만드는 방법을 봤으니 이번에는 구조체의 메소드를 정의하는 예제를 보겠습니다.
 
 ```rust
+// src/struct_define_main.rs
 struct Point {
     x: f32,
     y: f32,
@@ -1888,7 +1890,6 @@ int main()
 
 ```rust
 // src/enum_basic/main.rs
-#[derive(Debug)]
 enum WEEK {
     Sunday,
     Monday,
@@ -1896,215 +1897,200 @@ enum WEEK {
     Wednesday,
     Thursday,
     Friday,
-    Saturday
+    Saturday,
 }
 
 fn main() {
     let today: WEEK = WEEK::Sunday;
-    //println!("{}", today); // compile error!!!
-    println!("{:?}", today);
-    //let tomorrow: WEEK = 22; // compile error!!!
+    // let tomorrow: WEEK = 1; // compile error!!!
 
     match today {
-        WEEK::Sunday => println!("Sleep"),
-        _ => println!("Study"), // try again after removing this line
+        WEEK::Sunday => println!("Sunday: Sleep for 10 hours"),
+        WEEK::Monday => println!("Monday: Work"),
+        WEEK::Tuesday => println!("Tuesday: Work"),
+        WEEK::Wednesday => println!("Wednesday: Work"),
+        WEEK::Thursday => println!("Thursday: Work"),
+        WEEK::Friday => println!("Friday: Work"),
+        WEEK::Saturday => {
+            println!("Saturday: Party at Club from 22")
+        }
     }
 }
 ```
 
 ```bash
-$ cargo run --bin enum_basic
+/my-rust-book$ cargo run --bin enum_basic
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
 warning: variants `Monday`, `Tuesday`, `Wednesday`, `Thursday`, `Friday`, and `Saturday` are never constructed
- --> src/enum_basic/main.rs:4:5
+ --> src/enum_basic/main.rs:3:5
   |
-2 | enum WEEK {
+1 | enum WEEK {
   |      ---- variants in this enum
-3 |     Sunday,
-4 |     Monday,
+2 |     Sunday,
+3 |     Monday,
   |     ^^^^^^
-5 |     Tuesday,
+4 |     Tuesday,
   |     ^^^^^^^
-6 |     Wednesday,
+5 |     Wednesday,
   |     ^^^^^^^^^
-7 |     Thursday,
+6 |     Thursday,
   |     ^^^^^^^^
-8 |     Friday,
+7 |     Friday,
   |     ^^^^^^
-9 |     Saturday
+8 |     Saturday,
   |     ^^^^^^^^
   |
-  = note: `WEEK` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
   = note: `#[warn(dead_code)]` on by default
 
 warning: `my-rust-book` (bin "enum_basic") generated 1 warning
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
      Running `target/debug/enum_basic`
-Sunday
-Sleep
+Sunday: Sleep for 10 hours
 ```
 
-정의하고 사용하는 방법은 C언어와 거의 유사합니다. 하지만 가장 큰 차이는 WEEK타입의 변수에 정말로 WEEK타입의 값인 WEEK::Sunday부터 WEEK::Saturday값 외의 값을 저장하려고하면 컴파일 에러가 발생한다는 것입니다. WEEK타입의 인자를 받는 함수를 사용할 때도 WEEK타입의 값 외에 잘못된 값을 전달할 수 없습니다. 의도하지않은 잘못된 값을 사용하는 것을 방지해줍니다.
+정의하고 사용하는 방법은 C언어와 거의 유사합니다. 하지만 가장 큰 차이는 WEEK타입의 변수에 정말로 WEEK타입의 값인 WEEK::Sunday부터 WEEK::Saturday값 외의 값을 저장하려고하면 컴파일 에러가 발생한다는 것입니다. WEEK타입의 인자를 받는 함수를 사용할 때도 WEEK타입의 값 외에 잘못된 값을 전달할 수 없습니다. 의도하지않은 잘못된 값을 사용하는 것을 방지해줍니다. 주석처리된 13번째 줄을 코드로 바꾸고 빌드해보겠습니다.
 
-그리고 컴파일러가 주는 경고 메세지를 보면 WEEK타입의로 선언된 값들 중에 사용되지 않는 값이 있는 것도 알려줍니다. 또 아주 중요한 기능이 있는데 패턴 매칭에서 처리가 안되는 경우가 있으면 컴파일 에러가 난다는 것입니다.
+```rust
+......
+fn main() {
+    let today: WEEK = WEEK::Sunday;
+    let tomorrow: WEEK = 1; // compile error!!!
+......
+```
+```bash
+$ cargo run --bin enum_basic
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+error[E0308]: mismatched types
+  --> src/enum_basic/main.rs:13:26
+   |
+13 |     let tomorrow: WEEK = 1; // compile error!!!
+   |                   ----   ^ expected `WEEK`, found integer
+   |                   |
+   |                   expected due to this
+
+For more information about this error, try `rustc --explain E0308`.
+error: could not compile `my-rust-book` (bin "enum_basic") due to 1 previous error
+```
+
+WEEK타입의 변수에 WEEK타입이 아닌 정수값을 저장할 수 없으므로 에러가 발생합니다. 타입을 확실히 구분하기 때문에 에러가 나는 것입니다.
+
+그리고 컴파일러가 주는 경고 메세지를 보면 WEEK타입의로 선언된 값들 중에 사용되지 않는 값이 있는 것도 알려줍니다. 또 아주 중요한 기능이 있는데 패턴 매칭에서 처리가 안되는 경우가 있으면 컴파일 에러가 난다는 것입니다. 예제에있는 패턴 매칭을 보면 현재는 컴파일이 잘 되도록 만들기위해서 모든 요일을 다 처리하고 있습니다만 그중 하나라도 지우면 어떻게 될까요?
 
 ```rust
 ......
     match today {
-        WEEK::Sunday => println!("Sleep"),
-        _ => println!("Study"), // try again after removing this line
+        WEEK::Sunday => println!("Sunday: Sleep for 10 hours"),
+        //WEEK::Monday => println!("Monday: Work"),
+        WEEK::Tuesday => println!("Tuesday: Work"),
+        WEEK::Wednesday => println!("Wednesday: Work"),
+        WEEK::Thursday => println!("Thursday: Work"),
+        WEEK::Friday => println!("Friday: Work"),
+        WEEK::Saturday => {
+            println!("Saturday: Party at Club from 22")
+        }
     }
 ......
 ```
-
-예제에있는 패턴 매칭을 보면 오직 WEEK:Sunday만을 처리하고 있습니다. 그 외의 모든 값은 "Study"라는 메세지를 출력합니다. 만약에 나머지 모든 패턴을 의미하는 "_" 케이스를 제거하면 어떻게 될까요?
-
 ```bash
 $ cargo run --bin enum_basic
    Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
-error[E0004]: non-exhaustive patterns: `WEEK::Monday`, `WEEK::Tuesday`, `WEEK::Wednesday` and 3 more not covered
-  --> src/enum_basic/main.rs:18:11
+error[E0004]: non-exhaustive patterns: `WEEK::Monday` not covered
+  --> src/enum_basic/main.rs:15:11
    |
-18 |     match today {
-   |           ^^^^^ patterns `WEEK::Monday`, `WEEK::Tuesday`, `WEEK::Wednesday` and 3 more not covered
+15 |     match today {
+   |           ^^^^^ pattern `WEEK::Monday` not covered
    |
 note: `WEEK` defined here
-  --> src/enum_basic/main.rs:2:6
+  --> src/enum_basic/main.rs:1:6
    |
-2  | enum WEEK {
+1  | enum WEEK {
    |      ^^^^
-3  |     Sunday,
-4  |     Monday,
-   |     ------ not covered
-5  |     Tuesday,
-   |     ------- not covered
-6  |     Wednesday,
-   |     --------- not covered
-7  |     Thursday,
-   |     -------- not covered
-8  |     Friday,
+2  |     Sunday,
+3  |     Monday,
    |     ------ not covered
    = note: the matched value is of type `WEEK`
-help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern as shown, or multiple match arms
+help: ensure that all possible cases are being handled by adding a match arm with a wildcard pattern or an explicit pattern as shown
    |
-19 ~         WEEK::Sunday => println!("Sleep"),
-20 ~         _ => todo!(),
+24 ~         },
+25 +         WEEK::Monday => todo!()
    |
 
 For more information about this error, try `rustc --explain E0004`.
 error: could not compile `my-rust-book` (bin "enum_basic") due to 1 previous error
 ```
 
-위와 같이 WEEK타입에 여러가지 값들이 있는데 그런 값들이 처리되지않고 있다는 에러 메세지를 보여줍니다. 저는 프로젝트가 거대해지고, 다른 사람이 만든 코드를 유지보수할 경우에 실수로 모든 경우에 대한 처리를 하지 않아서 잘 드러나지않는 에러가 나는 경우를 많이 겪어봤습니다. 해결하기에 어려운 문제는 아닙니다만 릴리즈된 후에 이런 문제를 발견하면 새로운 버전을 출시해야하는 번거로움이 있고, 사용자에게 새로운 버전을 설치하라고 안내해야되는 등 후속 처리가 쉽지 않습니다. 이렇게 개발자의 실수를 컴파일러가 방지하는 것이 러스트의 디자인 철학입니다. 사람은 사람이 잘하는 것을 하고 기계는 기계가 잘하는 것을 할 수 있어서 정말 마음에 듭니다.
+위와 같이 WEEK타입에 여러가지 값들이 있는데 그 중에 WEEK::Monday가 처리되지않고있다는 에러 메세지를 보여줍니다. 친절하게 어떻게 케이스를 추가하라고도 알려줍니다.
 
-
-
-
-
-
-
-
-
-
-============================= 2024.09.21 =========================================
-
-
-
-
-
-
-
-
+저는 프로젝트가 거대해지고, 다른 사람이 만든 코드를 유지보수할 경우에 실수로 모든 경우에 대한 처리를 하지 않아서 잘 드러나지않는 에러가 나는 경우를 많이 겪어봤습니다. 해결하기에 어려운 문제는 아닙니다만 릴리즈된 후에 이런 문제를 발견하면 새로운 버전을 출시해야하는 번거로움이 있고, 사용자에게 새로운 버전을 설치하라고 안내해야되는 등 후속 처리가 쉽지 않습니다. 이렇게 개발자의 실수를 컴파일러가 방지하는 것이 러스트의 디자인 철학입니다. 사람은 사람이 잘하는 것을 하고 기계는 기계가 잘하는 것을 할 수 있어서 정말 편리합니다.
 
 ### 데이터를 포함하는 열거형
 
 Rust 언어의 열거형(Enums)은 다음과 같이 데이터를 포함할 수도 있습니다.
 
-별도의 쓰레드나 비동기 함수에서 특정 디렉토리를 감시하다가 이런 이벤트를 전달하고, 메인 쓰레드에서 각 이벤트에 맞게 처리하는 프로그램을 상상해보겠습니다.
+이전에 만든 열거형 예제에서는 각 요일마다 해야할 일이 사용자에게 출력할 메세지안에 저장되어있어서 동적으로 바꿀 수 없게되어있었습니다. 다음과 같이 각 용일마다 해야할 일 등의 정보를 저장하도록 바꿀 수 있습니다.
 
 ```rust
-enum MyEvent {
-    NewFile(String),
-    NewData { path: String, contents: String },
-    Close,
-}
-
-fn events_handler(events: Vec<MyEvent>) {
-    for ev in events.into_iter() {
-        // ownership is moved!!
-        match ev {
-            MyEvent::NewFile(path) => println!("New file {} is created", path),
-            MyEvent::NewData { path, contents } => {
-                println!("New data \"{}\" in file {}", contents, path)
-            }
-            MyEvent::Close => println!("Event monitor is closed"),
-        }
-    }
+// src/enum_data/main.rs
+#[derive(Debug)]
+enum WEEK {
+    Sunday(String, i32),
+    Monday(String),
+    Tuesday(String),
+    Wednesday(String),
+    Thursday(String),
+    Friday(String),
+    Saturday {
+        what: String,
+        place: String,
+        when: i32,
+    },
 }
 
 fn main() {
-    let create_file = MyEvent::NewFile("/root/conf.ini".to_string());
-    let write_data = MyEvent::NewData {
-        path: "/root/conf.init".to_string(),
-        contents: "Hello!".to_string(),
-    };
-    let close_monitoring = MyEvent::Close;
-    let mut events: Vec<MyEvent> = Vec::new();
-    events.push(create_file);
-    events.push(write_data);
-    events.push(close_monitoring);
-    events_handler(events);
+    let schedule: [WEEK; 2] = [
+        WEEK::Sunday("Sleep".to_string(), 10),
+        WEEK::Saturday {
+            what: "Party".to_string(),
+            place: "Club".to_string(),
+            when: 22,
+        },
+    ];
+
+    for day in schedule.into_iter() {
+        match day {
+            WEEK::Sunday(todo, hours) => println!("Sunday: do {} for {} hours", todo, hours),
+            WEEK::Monday(todo) => println!("Monday: do {}", todo),
+            WEEK::Tuesday(todo) => println!("Tuesday: do {}", todo),
+            WEEK::Wednesday(todo) => println!("Wednesday: do {}", todo),
+            WEEK::Thursday(todo) => println!("Thursday: do {}", todo),
+            WEEK::Friday(todo) => println!("Friday: do {}", todo),
+            WEEK::Saturday { what, place, when } => {
+                println!("Saturday: do {} at {} from {}", what, place, when)
+            }
+        }
+    }
 }
 ```
 
-이벤트를 표현하는 MyEvent라는 열거형을 만듭니다. 각 이벤트는 다음과 같습니다.
+이제 각 요일에 해당하는 타입은 각기 요일마다 해야할 일에 대한 정보를 String타입으로 저장할 수 있습니다. 토요일, 일요일에는 추가 정보를 저장할 수 있습니다. 각 요일에 할 일을 동적으로 지정할 수 있게 되었습니다.
 
-- NewFile: 새로 파일이 생성되는 것을 알리는 이벤트, 파일 이름을 데이터로 전달함
-- NewData: 어느 파일에 어떤 데이터가 새로 추가되었는지를 알리는 이벤트, 파일 이름과 추가된 데이터를 전달함
-- Close: 이벤트 모니터링을 끝내라는 명령을 전달함
+일요일에는 String과 i32 두가지 데이터를 저장했습니다. 튜플처럼 각 데이터는 이름을 가지지 않습니다. 매턴 매칭에서 todo, hours라고 임시로 이름을 지어서 각 데이터를 지정해줬습니다만 아무 이름이나 사용할 수 있습니다. 하지만 토요일에는 할일, 장소, 시간을 저장하는데 마치 구조체처럼 각 필드마다 이름을 지정했습니다. 패턴 매칭에서 토요일을 패턴 매칭할때 WEEK::Saturday에서 정의된 각 필드 이름 what, place, when을 그대로 똑같이 사용해야한다는 것을 주의하세요.
 
-열거형에 특정 타입의 값들 뿐 아니라 각 값에 추가 데이터를 저장할 수 있도록 지원하기 때문에 이렇게 간단하게 처리가 되는 것입니다.
+한가지 더 생각해볼 것은 schedule 배열을 순회할때 into_iter 메소드를 사용했다는 것입니다. C언어였으면 각 요일마다 메세지 출력 후에 내부 데이터를 해지하고, 배열을 해지하는 등 메모리를 일일이 신경써줘야되었지만, 러스트에서는 그냥 이렇게 소유권을 가져가서 처리하고 스코프를 닫기만 하면 사용한 모든 데이터가 다 자동으로 해지됩니다. 여러 쓰레드간에 메세지를 주고받는 경우를 생각해보세요. 최종적으로 메세지를 해지해야되는 쓰레드는 그냥 데이터를 소유권을 전달받으면됩니다. 다른 쓰레드에는 참조만 전달하면 절대로 데이터를 해지할 수 없습니다. 이렇게하면 개발자가 잘못된 쓰레드에서 데이터를 해지하는 실수도 방지되고, 반대로 데이터를 해지해야하는데 해지하지 않는 실수도 방지할 수 있습니다. 소유권을 전달할지, 참조를 전달할지, 참조를 전달하는데 가변 참조를 전달할지 불변 참조를 전달할지 설계단계에서만 잘 결정하면 구현단계에서는 잘못될 일이 없어지는 것입니다.
 
-주의할 점은 match에서 MyEvent::NewData {path, contents}와 같이 열거형에 정의된 변수 이름을 똑같이 써줘야 한다는 것입니다.
 
-그리고 events.into_iter를 사용했으므로 이벤트 처리가 끝나면 이벤트에 속한 데이터들이 모두 해지됩니다. 따로 이벤트 안에 데이터가 있는지 없는지 검사하고, 해지하는 등의 처리가 필요없습니다. 만약에 다른 쓰레드로부터 이벤트를 전달받았다고해도, 이벤트의 소유권을 넘겨받았으므로 메모리를 해지하는데 아무런 문제가 없습니다. 이벤트를 생성한 쓰레드는 소유권을 넘기고 다시는 접근하지 못하게 되었으므로, 이벤트를 처리하는 쓰레드에서는 간편하게 아무런 확인작업없이 메모리를 해지할 수 있는 것입니다.
 
-만약 나중에 다른 개발자가 실수로 이벤트 전달 후에 이벤트에 접근하려고하는 코드를 작성하려고해도 쉽게 에러를 찾아낼 수 있습니다. 만약 C같은 언어였으면 동기화 문제를 찾아내는데 얼마나 시간과 노력이 소모될지 알 수 없었을 것입니다.
 
-만약 C나 다른언어였으면 대략 아래와 같은 방식으로 구현했을 것입니다.
+============================== 2024 09 22============================================
 
-```rust
-type enum {
-    NEWFILE,
-    NEWDATA,
-    CLOSE,
-} EventType;
 
-struct MyEvent {
-    EventType type,
-    char *path,
-    char *data,
-};
 
-...skip
-if (ev->type == NEWFILE) {
-    printf("%s\n", ev->path);
-} else if (ev->type == NEWDATA) {
-    printf("%s, %s\n", ev->path, ev->data);
-} else if (ev->type = CLOSE) {
-    call_close_handler();
-} else {
-    call_error_handler();
-}
-...
-```
 
-이런 처리 방법에는 2가지 문제가 있습니다.
 
-첫번째로 type 필드에 NEWFILE, NEWDATA, CLOSE 외에 다른 정수값이 들어가는 것을 막을 수 없습니다. 따라서 항상 에러처리를 해야합니다.
 
-둘째로 이벤트마다 갖는 path, data라는 메모리가 이벤트 처리와는 별개로 할당되고 해지된다는 것입니다. 이벤트를 처리한다고해도 메모리 해지는 별개입니다. 혹시라도 메모리 처리를 잘못하면 메모리 릭이 발생하게되거나, use-after-free 에러가 발생할 수도 있습니다.
 
-러스트에서는 이벤트가 해지될 때 이벤트에 속한 데이터도 모두 해지해주므로 메모리 릭이 발생할 위험을 없앨 수 있습니다. 소유권 개념을 이해하는게 정말 중요합니다.
+
+
 
 ## 에러 처리를 위한 Result
 

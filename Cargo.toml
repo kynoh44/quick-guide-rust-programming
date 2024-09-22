@@ -64,8 +64,8 @@ name = "enum_basic"
 path = "src/enum_basic/main.rs"
 
 [[bin]]
-name = "enum"
-path = "src/enum/main.rs"
+name = "enum_data"
+path = "src/enum_data/main.rs"
 
 [[bin]]
 name = "result_enum"
