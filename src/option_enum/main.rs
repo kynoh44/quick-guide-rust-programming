@@ -1,3 +1,11 @@
+fn second(s: &[i32]) -> Option<i32> {
+    if s.len() == 0 {
+        None
+    } else {
+        Some(s[1])
+    }
+}
+
 fn main() {
     let x: Option<i32> = Some(5);
     let y: Option<i32> = None;
@@ -23,10 +31,10 @@ fn main() {
     }
 
     let x: Option<i32> = Some(5);
-    let y: Option<i32> = None;
+    let _y: Option<i32> = None;
 
     println!("x is {}", x.unwrap());
-    println!("y is {}", y.unwrap());
+    //println!("y is {}", _y.unwrap()); // panic!!!
 
     let x: Option<i32> = Some(5);
     let y: Option<i32> = None;
@@ -34,8 +42,7 @@ fn main() {
     println!("x is {}", x.unwrap_or(-1));
     println!("y is {}", y.unwrap_or_default());
 
-    let x: Option<i32> = Some(5);
-    let y: Option<i32> = None;
-
-    let item = y.expect("slice should not be empty");
+    let y: Option<i32> = second(&[]);
+    let item = y.expect("An argument of second should not be empty");
+    println!("This line is not reachable because item is {}", item);
 }
