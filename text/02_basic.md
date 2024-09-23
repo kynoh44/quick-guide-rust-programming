@@ -2078,25 +2078,11 @@ fn main() {
 
 한가지 더 생각해볼 것은 schedule 배열을 순회할때 into_iter 메소드를 사용했다는 것입니다. C언어였으면 각 요일마다 메세지 출력 후에 내부 데이터를 해지하고, 배열을 해지하는 등 메모리를 일일이 신경써줘야되었지만, 러스트에서는 그냥 이렇게 소유권을 가져가서 처리하고 스코프를 닫기만 하면 사용한 모든 데이터가 다 자동으로 해지됩니다. 여러 쓰레드간에 메세지를 주고받는 경우를 생각해보세요. 최종적으로 메세지를 해지해야되는 쓰레드는 그냥 데이터를 소유권을 전달받으면됩니다. 다른 쓰레드에는 참조만 전달하면 절대로 데이터를 해지할 수 없습니다. 이렇게하면 개발자가 잘못된 쓰레드에서 데이터를 해지하는 실수도 방지되고, 반대로 데이터를 해지해야하는데 해지하지 않는 실수도 방지할 수 있습니다. 소유권을 전달할지, 참조를 전달할지, 참조를 전달하는데 가변 참조를 전달할지 불변 참조를 전달할지 설계단계에서만 잘 결정하면 구현단계에서는 잘못될 일이 없어지는 것입니다.
 
-
-
-
-============================== 2024 09 22============================================
-
-
-
-
-
-
-
-
-
-
 ## 에러 처리를 위한 Result
 
-열거형의 기본 정의에 대해서 알아봤으니 열거형 타입의 데이터 구조 중에 가장 많이 쓰일만한 Result에 대해서 이야기하겠습니다.
+열거형의 기본 정의에 대해서 알아봤으니 열거형 타입의 데이터 구조 중에 가장 많이 사용되는 Result에 대해서 이야기하겠습니다.
 
-Result의 소스 코드부터 보겠습니다.
+Result가 실제로 어떻게 정의된 것인지 소스 코드부터 보겠습니다.
 
 ```rust
 enum Result<T, E> {
@@ -2104,14 +2090,14 @@ enum Result<T, E> {
    Err(E),
 }
 ```
+출처: https://doc.rust-lang.org/std/result/
 
-https://doc.rust-lang.org/std/result/
-
-Result는 프로그램 실행 중 발생한 에러를 표현하는 타입입니다. 그 중 가장 대표적인 예가 함수의 반환값입니다.  Result에는 2개의 타입이 존재합니다. (variant라고 부르지만 마땅한 한글 단어가 없어서 타입이라고 부르겠습니다.) Ok는 성공했을 때의 값을 내장하는 타입이고, Err는 실패했을 때의 값을 내장하는 타입입니다. 에러메세지가 될 수도 있고, 에러 상태를 나타내는 데이터가 될 수도 있겠지요.
+Result는 프로그램 실행 중 발생한 에러를 표현하는 타입입니다. 그 중 가장 대표적인 예가 함수의 반환값입니다.  Result에는 2개의 타입이 존재합니다. (영어로는 variant라고 부르지만 이 책에서는 타입이라고 부르겠습니다.) Ok는 함수가 동적에 성공했을 때, 함수가 반환하는 값을 내장하는 타입이고, Err는 함수가 실패했음을 나타내는 값을 내장하는 타입입니다. 함수의 실패를 나타내는 에러메세지가 될 수도 있고, 에러 상태를 나타내는 데이터가 될 수도 있겠지요.
 
 아주 간단한 예제부터 보겠습니다.
 
 ```rust
+// src/result_enum/main.rs
 fn divide(numerator: i32, denominator: i32) -> Result<i32, String> {
     if denominator == 0 {
         return Err(String::from("denominator cannot be zero"));
@@ -2126,34 +2112,23 @@ fn main() {
         Err(message) => println!("Error: {}", message),
     }
 }
-
 ```
 
-나눗셈이 정상적이면 Ok안에 결과 값을 전달하고, 나눗셈을 실행할 수 없으면 Err타입에 에러 메세지를 넣어서 전달합니다. main함수는 반환값의 타입을 보고, 정상적인 결과인지 문제가 발생한 상황인지를 알 수 있습니다. 타입을 확인하는 것은 패턴 매칭을 이용하면 항상 모든 에러 값을 놓치지 않고 처리할 수 있습니다. 여기서 패턴 매칭의 편리함과 강력함을 다시 느끼게 됩니다.
-
-```rust
-fn say_hello() -> Result<String, String> {
-    Ok(String::from("hello"))
-}
-    
-fn main() {
-    let result = say_hello();
-    match result {
-        Ok(message) => println!("Say: {}", message),
-        Err(message) => println!("Error: {}", message),
-    }
-}
+```bash
+$ cargo run --bin result_enum
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.53s
+     Running `target/debug/result_enum`
+Error: denominator cannot be zero
 ```
 
-위와 같이 에러 상황이나 정상 상황에서나 반환되는 값이 같은 경우에 Ok나 Err 타입을 가지고 에러 상황을 판단할 수 있어서 쓸모가 있습니다. 사실 C/C++언어에서 포인터를 반환하는 함수들이 에러 상황에 NULL (사실은 정수 0을 다른 이름으로 바꾸기만 한 것)을 반환하는게 보통인데 이게 에러 상황인 것은 나타낼 수 있지만, 왜 에러가 발생했는지를 표현할 수도없고, 실수하기도 쉬운 불편한 방식이었습니다.
+divide함수는 나눗셈이 정상적으로 처리되었으면 Ok안에 결과 값을 전달하고, 나눗셈을 실행할 수 없는 에러 상황을 만나면 Err타입에 에러 메세지를 넣어서 전달합니다. main함수는 반환값의 타입을 보고, divide함수가 반환한 값이 정상적인 결과인지 문제가 발생한 상황인지를 알 수 있습니다. 타입을 확인하는 것은 패턴 매칭을 이용하면 항상 모든 에러 값을 놓치지 않고 처리할 수 있습니다. 여기서 패턴 매칭의 편리함과 강력함을 다시 느끼게 됩니다.
 
-NULL이라는 개념을 처음 만들었다는 Tony Hoare님의 후회한다고(https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare/) 이야기한 것도 그렇고 모던C++ (C++ 17)에서 optional, expected 등을 도입하는 것 등을 보면 Result를 잘 활용하는 것이 얼마나 프로그램의 안정성에 필수적인지 알 수 있습니다.
+사실 C/C++언어에서 포인터를 반환하는 함수들이 에러 상황에 NULL (사실은 정수 0을 다른 이름으로 바꾸기만 한 것)을 반환하는게 보통인데 이게 에러 상황인 것은 나타낼 수 있지만, 왜 에러가 발생했는지를 표현할 수도없고, 실수하기도 쉬운 불편한 방식이었습니다. NULL이라는 개념을 처음 만들었다는 Tony Hoare님의 후회한다고(https://www.infoq.com/presentations/Null-References-The-Billion-Dollar-Mistake-Tony-Hoare/) 이야기한 것도 그렇고 모던C++ (C++ 17)에서 optional, expected 등을 도입하는 것 등을 보면 Result를 잘 활용하는 것이 얼마나 프로그램의 안정성에 필수적인지 알 수 있습니다.
 
-반드시 반환값을 갖는 함수는 최대한 전부 Result타입으로 반환하도록 작성하려고 노력해보세요.
+반드시 반환값을 갖는 함수는 최대한 전부 Result타입으로 반환하도록 작성하려고 노력해보세요. 참고로 Result에서는 한가지 타입의 에러만 반환할 수 있습니다. divide함수에서 반환할 수 있는 에러는 String타입 뿐입니다. 만약에 좀더 긴 함수를 작성하고있고, 이 함수가 몇가지 라이브러리를 호출하는데, 각 라이브러리마다 반환하는 에러의 타입이 다르다면 어떻게 해야할까요? 각 라이브러리마다 자신의 에러를 표현하기 위한 구조체를 만들어서 사용한다면, 모든 에러 값들을 하나의 타입으로 또다시 바꿔야할까요? 뒤에나올 trait라는 것을 사용해서 다양한 에러 타입들을 하나의 타입으로 표현할 수 있습니다. 지금은 어떤 상황에서도 Result를 사용할 수 있다는 것만 기억하시기 바랍니다.
 
-참고로 Result에서는 한가지 타입의 에러만 반환할 수 있습니다. say_hello에서 반환할 수 있는 에러는 String타입 뿐입니다. 만약에 좀더 긴 함수를 작성하고있고, 이 함수가 몇가지 라이브러리를 호출하는데, 각 라이브러리마다 반환하는 에러의 타입이 다르다면 어떻게 해야할까요? 각 라이브러리마다 자신의 에러를 표현하기 위한 구조체를 만들어서 사용한다면, 모든 에러 값들을 하나의 타입으로 또다시 바꿔야할까요? 뒤에나올 trait라는 것을 사용해서 다양한 에러 타입들을 하나의 타입으로 표현할 수 있습니다. 지금은 어떤 상황에서도 Result를 사용할 수 있다는 것만 기억하시기 바랍니다.
-
-### 반환값이 없는 함수
+### 반환값이 없는 함수에서 Result를 사용하는 방법
 
 그럼 반환값이 없는 함수는 Result를 쓸 필요가 없을까요? 다음과 같은 경우를 생각해보겠습니다.
 
@@ -2166,15 +2141,29 @@ fn check_command_valid(cmd: &str) -> Result<(), String> {
         _ => Err("Wierd command".to_owned()),
     }
 }
+
+fn main() {
+    match check_command_valid("blabla") {
+        Ok(_) => (),
+        Err(error_msg) => println!("Command failed because it is a {}", error_msg),
+    }
+}
+```
+```bash
+$ cargo run --bin result_noreturn
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running `target/debug/result_noreturn`
+Command failed because it is a Wierd command
 ```
 
-cmd로 전달받은 명령어에 문제가 있다면 에러 메세지를 반환하는 함수입니다. 그리고 문제가 없을 때는 아무 반환값도 없습니다. 이렇게 반환값이 없는 함수라 하더라도 에러 상황에 대한 정보를 전달해야할 때가 많습니다. 이럴 때는 위 예제와 같이 비어있는 값 ()를 반환하도록 하면 됩니다.
+cmd로 전달받은 명령어에 문제가 있다면 에러 메세지를 반환하는 함수입니다. 그리고 문제가 없을 때는 아무 반환값도 없습니다. 이렇게 반환값이 없는 함수라 하더라도 성공했는지 실패했는지, 실패했으면 어떤 에러 상황인지 등의 정보를 전달해야할 때가 많습니다. 이럴 때는 위 예제와 같이 비어있는 값 ()를 반환하도록 하면 됩니다. 그리고 패턴 매칭에서는 ()와 매칭되도록하면 아무런 처리도 하지 않게됩니다.
 
 ## 함수 결과값 반환을 위한 Option
 
-Result는 특정 처리가 성공했냐 실패했냐를 표현할 수 있었습니다. 그런데 모든게 다 성공과 실패로 판단되는 것은 아닙니다. 예를 들어 이전에 처리한 결과 파일을 읽는 경우 처음 실행되는 경우에는 파일이 없을 수 있습니다. 그런 경우는 실패도 아니고 에러 상황도 아닙니다. 굳이 따지자면 에러 상황으로 처리할 수도 있지만 러스트는 보다 더 명확한 처리를 위해 Option이라는 열거형 타입을 제공합니다.
+Result는 특정 처리가 성공했냐 실패했냐를 표현할 수 있었습니다. 그런데 모든게 다 성공과 실패로 판단되는 것은 아닙니다. 예를 들어 어떤 프로그램이 이전에 기록했던 파일을 다시 읽는 경우를 생각해보겠습니다. 프로그램이 종료될때마다 어디까지 실행했었고, 결과값이 뭐였었는지 등을 기록합니다. 그리고 프로그램을 다시 시작하면 이전 결과 파일을 읽어서 이어서 처리를 하게됩니다. 그런데 프로그램이 설치된 후 최초로 실행되를 경우는 어떡할까요? 프로그램이 처음으로 실행되는 경우에는 파일이 없을 수 있습니다. 그런 경우는 실패도 아니고 에러 상황도 아닙니다. 굳이 따지자면 에러 상황으로 처리할 수도 있지만 좋은 방법은 아닙니다. 왜냐면 프로그램의 설치가 잘못되어서 파일시스템을 못읽거나 다른 에러때문에 파일이 있어도 못읽는 것과는 다른 것이기 때문입니다. 이와같이 에러는 아니지만 예외적인 경우가 있을 수 있습니다. 러스트는 이런 경우의 처리를 위해 Option이라는 열거형 타입을 제공합니다.
 
-Option의 정의는 값이 있고 없고를 표현하는 타입입니다. 소스 코드를 먼저 확인해보겠습니다.
+Option의 정의는 값이 있고 없고를 표현하는 타입입니다. 실제로 어떻게 정의된 것인지 소스 코드를 먼저 확인해보겠습니다.
 
 ```rust
 enum Option<T> {
@@ -2183,61 +2172,137 @@ enum Option<T> {
 }
 
 ```
+출처: https://doc.rust-lang.org/std/option/enum.Option.html
 
-https://doc.rust-lang.org/std/option/enum.Option.html
-
-값이 있을 때는 Some타입 안에 존재하는 값을 저장하고, 값이 없을 때는 None으로 표현합니다. 특히 함수 반환 값을 Option으로 반환한다면, 함수를 호출 한 후에는 반드시 제대로 된 값이 있는지 없는지를 확인해야하므로 에러 처리를 확실하게 할 수 밖에 없게됩니다. 보다 안정적인 코드가 될 수 밖에 없습니다.
-
-Result와 마찬가지로 되도록 모든 함수의 반환값을 Option으로 처리할 수 있도록 노력해야합니다.
+값이 있을 때는 Some타입 안에 존재하는 값을 저장하고, 값이 없을 때는 None으로 표현합니다. 가장 많이 사용하는 경우가 함수 반환 값을 Option으로 반환하는 것입니다. Result와 마찬가지로 되도록 모든 함수의 반환값을 Option으로 처리할 수 있도록 노력해야합니다.
 
 이제 사용 예제를 한번 보겠습니다.
 
 ```rust
-let x: Option<i32> = Some(5);
-let y: Option<i32> = None;
-
-match x {
-    Some(n) => println!("x is {}", n),
-    None => println!("x is not present"),
+fn second(s: &[i32]) -> Option<i32> {
+    if s.len() == 0 {
+        None
+    } else {
+        Some(s[1])
+    }
 }
 
-match y {
-    Some(n) => println!("y is {}", n),
-    None => println!("y is not present"),
-}
+fn main() {
+    let x: Option<i32> = Some(5);
+    let y: Option<i32> = None;
 
-if let Some(n) = x {
-    println!("x is {}", n);
-}
+    match x {
+        Some(n) => println!("x is {}", n),
+        None => println!("x is not present"),
+    }
 
-if let Some(n) = y {
-    println!("y is {}", n);
-} else {
-    println!("y is not present");
-}
+    match y {
+        Some(n) => println!("y is {}", n),
+        None => println!("y is not present"),
+    }
 
+    if let Some(n) = x {
+        println!("x is {}", n);
+    }
+
+    if let Some(n) = y {
+        println!("y is {}", n);
+    } else {
+        println!("y is not present");
+    }
+
+    let x: Option<i32> = Some(5);
+    let y: Option<i32> = None;
+
+    println!("x is {}", x.unwrap());
+    //println!("y is {}", y.unwrap()); // panic!!!
+
+    let x: Option<i32> = Some(5);
+    let y: Option<i32> = None;
+
+    println!("x is {}", x.unwrap_or(-1));
+    println!("y is {}", y.unwrap_or_default());
+
+    let y: Option<i32> = second(&[]);
+    let item = y.expect("An argument of second should not be empty");
+    println!("This line is not reachable because item is {}", item);
+}
+```
+```bash
+$ cargo run --bin option_enum
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.28s
+     Running `target/debug/option_enum`
+x is 5
+y is not present
+x is 5
+y is not present
+x is 5
+x is 5
+y is 0
+thread 'main' panicked at src/option_enum/main.rs:46:18:
+An argument of second should not be empty
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+사용법 자체는 크게 어렵지 않습니다. 패턴 매칭을 사용해서 결과 값을 확인하는 것도 Result에서 해본 방식입니다. 패턴 매칭을 해서 Some타입이면 내부 데이터를 꺼내서 사용하면 됩니다. 만약에 None이면 아무런 데이터도 없는 것이므로, 데이터가 없는 경우에 대한 처리를 하면 됩니다.
+
+```rust
+......
+    match x {
+        Some(n) => println!("x is {}", n),
+        None => println!("x is not present"),
+    }
+
+    match y {
+        Some(n) => println!("y is {}", n),
+        None => println!("y is not present"),
+    }
+......
 ```
 
-사용법 자체는 크게 어렵지 않습니다. 패턴 매칭을 사용해서 결과 값을 확인하는 것도 Result에서 해본 방식입니다.
+x는 Some타입이면서 5라는 값을 내장하고 있습니다. 그러므로 5를 출력하면 됩니다. y는 아무런 값도 없는 None타입입니다. 어떤 값도 들어있지 않으므로, 값이 없다는 안내 메세지를 출력합니다.
+
+>
+> C언어를 오래 사용하다보면 에러 값과 값이 없는 것이 혼동될 수도 있습니다. C언어에는 초기화되지 않는 변수라해도 0이나 쓰레기값이 들어있을 수밖에 없습니다. 하지만 그것이 실제 데이터가 있는 것인지, 아니면 초기화되지 않은 상태인건지 구분할 수 없다는 것은 이해하실 것입니다. 러스트는 초기화되지 않은 변수를 허용하지않습니다. 만약 데이터가 없는 상태일 수도 있는 변수나 함수의 결과값을 저장할 때는 Option을 사용하면 됩니다.
+> 저는 이와 관련해서 인터넷에 떠도는 화장실 유머가 가장 이런 상태를 잘 표현한다고 생각합니다. 화장실에 갔는데 화장지가 1칸 남아있다면 결과 값은 1입니다. 만약 화장지를 앞사람이 다 써서 화장지 심만 남아있다면 결과 값은 0입니다. 만약에 화장지 심도 없고 심지어 화장지 걸이도 없다면? 결과값은 None입니다. C언어에서는 화장지 걸이가 없는 상태를 나타낼 수 있는 값이 없습니다. NULL은 사실상 정수 0입니다. 0은 0이라는 값이고요. 흔하게 에러를 표시할 때 쓰는 -1은 화장지라는 물질을 나타낼 수 없으므로 사용할 수 없는 값입니다. 이런 상태를 가장 정확하게 표현하는 것은 None뿐입니다.
+>
 
 그 외에 처음 소개되는 방법이 if let을 사용해서 값을 확인하는 방법입니다. if let 을 사용하면 값이 존재할 때의 처리를 할 수 있고, else에서는 값이 없을 때의 처리를 할 수 있습니다.
+
+```rust
+    if let Some(n) = x {
+        println!("x is {}", n);
+    }
+
+    if let Some(n) = y {
+        println!("y is {}", n);
+    } else {
+        println!("y is not present");
+    }
+```
+
+x는 값이 있을때만을 처리할 때 사용합니다. 값이 없다면 무시합니다. y는 값이 들어있다면 그 값을 출력하고, 없다면 값이 없다는 메세지를 출력합니다. if let 구문에서 Some안에 있는 값을 n으로 표시하게되므로 내부 스코프에서 n은 i32타입입니다. n이라는 변수는 언제나 반드시 어떠한 값을 가집니다. 또다시 None인지 확인할 필요가 없이 확실하게 데이터를 가지는 변수가 됩니다. 
 
 ### Option이 제공하는 메소드들
 
 제가 처음 러스트를 접하면서 겪은 바로는 처음에 Option을 사용하면 값을 여러번 읽을 때마다 매번 if let이나 패턴 매칭을 사용해서 값이 있는지 없는지를 확인하게되는게 번거로웠습니다. 그래서 저는 간단한 코드를 만들 때는 unwrap이라는 메소드를 자주 사용했었습니다.
 
-unwrap 메소드는 Option 안에 존재하는 값을 꺼내주는 일을 합니다. 만약 Some안에 값이 있다면 값을 반환해주는데, None이라면 패닉을 발생시키고 프로그램을 멈춥니다. 따라서 반드시 값이 있는 상황에서만 사용해야 합니다.
+>
+> 열거형도 구조체와 같이 메소드를 가질 수 있습니다. C언어에서는 열거형을 그다지 많이 사용하지 않지만, 러스트언어에서는 최대한 자신만의 타입을 만들어서 데이터를 표현하도록 권하고있고, 열거형도 아주 자주 사용됩니다.
+>
+
+unwrap 메소드는 Option 안에 존재하는 값을 꺼내주는 일을 합니다. 만약 Some안에 값이 있다면 값을 반환해주는데, None이라면 패닉을 발생시키고 프로그램을 멈춥니다. 따라서 반드시 값이 있는 상황에서만 사용해야 합니다. C언어의 assert와 같은 일을 한다고도 생각할 수 있습니다. 하지만 assert를 너무 많이 사용하거나 실제품에 사용하는건 좋지 않겠지요.
 
 ```rust
 let x: Option<i32> = Some(5);
-let y: Option<i32> = None;
+let _y: Option<i32> = None;
 
 println!("x is {}", x.unwrap());
-println!("y is {}", y.unwrap());
+//println!("y is {}", y.unwrap()); // panic!!!
 
 ```
 
-사용법은 간단합니다. unwrap이라는 메소드를 호출하기만 하면 됩니다. 물론 실제 제품을 개발하는데 unwrap을 사용하면 안됩니다. 굳이 Option에서 값을 꺼내는게 필요하다면 unwrap_or나 unwrap_or_default 등을 사용하면 됩니다.
+사용법은 간단합니다. unwrap이라는 메소드를 호출하기만 하면 됩니다. 물론 실제 제품을 개발하는데 unwrap을 사용하면 안됩니다. 사용한다고해도 최대한 가장 상위 레이어나 main함수에서만 사용하는게 좋습니다. 그리고 굳이 Option에서 값을 꺼내는게 필요하다면 unwrap_or나 unwrap_or_default 등을 사용하면 됩니다.
 
 ```rust
 let x: Option<i32> = Some(5);
@@ -2260,6 +2325,25 @@ let item = y.expect("slice should not be empty");
 ```
 
 unwrap은 패닉만 발생시킵니다. 패닉이 발생한 소스 코드 위치는 알 수 있지만 어떤 상황인지 판단할 정보가 부족할 때가 많습니다. expect를 사용하면 직접 에러 메세지를 추가할 수 있습니다. 여기에 다양한 정보를 추가한다면 문제 해결에 큰 도움이 될 수 있습니다.
+
+>
+> 제가 굳이 Option에서 값을 꺼내야한다면이라고 표현한 것은 거의 모든 경우에 Option에서 값을 꺼낼 필요가 없기 때문입니다. 그냥 변수에 Option이 들어있는 그대로 사용하지면 됩니다. 내부 값을 읽을때는 if let이나 패턴 매칭으로 값을 읽으면 됩니다. 하지만 나중에 설명한 map같은 메소드를 사용해서 내부값을 가지고 연산을 한 후 다시 결과값을 Option으로 저장하면 됩니다. 최대한 많은 변수들이 i32, String같은 객체를 직접 저장하는게 아니라 Some이나 Ok타입의 내부에 값을 갖도록 관리하는게 좀더 러스트다운 프로그램입니다.
+>
+
+
+
+
+=========================================== 2024 09 23 ===================================
+
+
+
+
+
+
+
+
+
+
 
 
 ## ? 연산자
@@ -2313,7 +2397,7 @@ fn foobar() -> Result<i32, String> {
 
 이렇게 하위 레이어에서 발생한 에러를 상위 레이러로 전달하는게 어쩔 수 없는 필요악이라고 생각했습니다. 단지 개발자가 실수하면 안된다고 생각해서 모든 책임이 개발자에게 있다고만 생각했었습니다.
 
-그런데 러스트 언어에서는 try 연산자라고 부르기도하는 ? 연산자를 제공해줘서, Result나 Option에서의 에러값(Err나 None 모두)를 전달하는 것을 편리하게 해줬습니다. 러스트같이 함수의 반환값을 암묵적으로 무시하지 못하는 언어에서는 정말 필수적인 연산자라고 생각합니다.
+그런데 러스트 언어에서는 try 연산자나 물음표(question mark) 연산자라고 부르기도하는 ? 연산자를 제공해줘서, Result나 Option에서의 에러값(Err나 None 모두)를 전달하는 것을 편리하게 해줬습니다. 러스트같이 함수의 반환값을 암묵적으로 무시하지 못하는 언어에서는 정말 필수적인 연산자라고 생각합니다.
 
 그래서 위의 예제는 아래와 같이 바뀔 수 있습니다.
 

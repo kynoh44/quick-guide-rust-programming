@@ -72,6 +72,10 @@ name = "result_enum"
 path = "src/result_enum/main.rs"
 
 [[bin]]
+name = "result_noreturn"
+path = "src/result_noreturn/main.rs"
+
+[[bin]]
 name = "option_enum"
 path = "src/option_enum/main.rs"
 
