@@ -88,6 +88,10 @@ name = "function_pointer"
 path = "src/function_pointer/main.rs"
 
 [[bin]]
+name = "closure"
+path = "src/closure/main.rs"
+
+[[bin]]
 name = "map"
 path = "src/map/main.rs"
 

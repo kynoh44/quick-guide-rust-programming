@@ -20,5 +20,5 @@ fn buzzcheck(n: i32) -> bool {
 
 fn main() {
     fizzbuzz_fn(fizzcheck, buzzcheck);
-    fizzbuzz_fn(|i| i % 3 == 0, |k| k % 5 == 0);
+    fizzbuzz_fn(|x| x % 3 == 0, |y| y % 5 == 0);
 }
