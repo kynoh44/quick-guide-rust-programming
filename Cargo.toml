@@ -96,6 +96,14 @@ name = "map"
 path = "src/map/main.rs"
 
 [[bin]]
+name = "map_option"
+path = "src/map_option/main.rs"
+
+[[bin]]
+name = "map_result"
+path = "src/map_result/main.rs"
+
+[[bin]]
 name = "project"
 path = "src/project/main.rs"
 
