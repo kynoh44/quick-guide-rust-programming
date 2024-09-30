@@ -2635,7 +2635,6 @@ fn main() {
 ```
 ```bash
 $ cargo run --bin closure
-   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.29s
      Running `/home/gkim/study/my-rust-book/target/debug/closure`
 Fizz
@@ -2656,50 +2655,18 @@ fn이라는 타입이 아니라 Fn이라는 타입을 사용했습니다. Fn 타
 
 그리고 위 예제에서 처음보는 문법이 나왔습니다. <FA, FB>와 where등의 표현식이 처음 소개되었습니다. 이것은 나중에 트레이트trait를 소개할 때 다시 이야기하겠습니다.
 
-
-
-
-
-====================== 2024 09 26 =====================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## map 메소드
 
-클로저를 사용하는 방법중에 가장 많이 사용하게 되는게 배열이나 벡터의 이터레이터의  map 메소드와 사용하는 방법일 것입니다. 그리고 Option과 사용하는 것도 자주 사용되는 방식이니까 이 두가지 경우를 이야기해보려고 합니다. 
+클로저를 사용하는 방법중에 가장 많이 사용하게 되는게 이터레이터의 map 메소드와 같이 사용하는 경우입니다. 배열이나 백터의 이터레이터를 만들고, 이레이터의 map 메소드에 클로저를 사용하는 것입니다. 그리고 Option의 map 메소드와 사용하는 것도 자주 사용되는 방식이니까 이 두가지 경우를 이야기해보려고 합니다. 
 
-### 배열과 collect
+### 이터레이터의 map 메소드 사용 방법
 
-배열이나 range, 벡터등에서 각 데이터에 접근하기 위한 방법으로 for 루프대신 map을 사용하는게 더 편리할 때가 많습니다. 그리고 많은 경우에 map을 이용하는게 처리 속도가 더 빠르기도 합니다.
+배열이나 range, 벡터등에서 각 데이터에 접근하기 위한 방법으로 이터레이터를 만들고 for 루프와 같이 사용하는 경우가 많습니다. 그런데 for루프 대신에 map을 사용하는게 더 편리할 때가 많습니다. 그리고 많은 경우에 map을 이용하는게 처리 속도가 더 빠르기도 합니다.
 
-가장 간단한 예를 가지고 시작해보겠습니다. 다음 예제는 이전에 패턴 매칭의 예제로 만들어봤던 fizzbuzz 함수를 이터레이터와 map으로 다시 만들어본 예제입니다.
+가장 간단한 예를 가지고 시작해보겠습니다.
 
 ```rust
+// src/map/main.rs
 fn fizzbuzz_2(max: i32) {
     for i in 1..=max {
         match (i % 3, i % 5) {
@@ -2724,19 +2691,64 @@ fn fizzbuzz_3(max: i32) {
         .join("");
     println!("{}", ret);
 }
+
+fn main() {
+    fizzbuzz_2(37);
+    fizzbuzz_3(41);
+}
+```
+```bash
+$ cargo run --bin map
+   Compiling my-rust-book v0.1.0 (/Users/user/study/my-rust-book)
+    Finished dev [unoptimized + debuginfo] target(s) in 5.44s
+     Running `target/debug/map`
+3 - Fizz
+5 - Buzz
+6 - Fizz
+9 - Fizz
+10 - Buzz
+12 - Fizz
+15 - FizzBuzz
+18 - Fizz
+20 - Buzz
+21 - Fizz
+24 - Fizz
+25 - Buzz
+27 - Fizz
+30 - FizzBuzz
+33 - Fizz
+35 - Buzz
+36 - Fizz
+3 - Fizz
+5 - Buzz
+6 - Fizz
+9 - Fizz
+10 - Buzz
+12 - Fizz
+15 - FizzBuzz
+18 - Fizz
+20 - Buzz
+21 - Fizz
+24 - Fizz
+25 - Buzz
+27 - Fizz
+30 - FizzBuzz
+33 - Fizz
+35 - Buzz
+36 - Fizz
+39 - Fizz
+40 - Buzz
 ```
 
-1부터 max까지의 각 숫자들에 대해 한번씩 map에 지정된 클로저를 호출하는 것입니다. 프로그래밍 언어와 상관없이 조금의 개발 경험만 있다면 이해할 수 있을 것입니다.
+fizzbuzz_2함수는 이전에 match에 대한 설명을 위해서 만들어본 예제입니다. fizzbuzz_2에서 for루프와 match구문을 대신해서 이터레이터와 map메소드를 사용하도록 만든게 fizzbuzz_3함수입니다. 가장 먼저 1부터 max까지의 각 숫자들 반환하는 이터레이터를 만듭니다. 그리고 이터레이터의 map 메소드를 호출합니다. map메소드의 인자로는 이터레이터가 값을 반환할때마다 그 값을 인자로 받아서 실행되는 함수가 들어갑니다. 우리는 함수 대신에 클로저를 전달한 것입니다. 함수형 언어를 경험해보신 분들은 많이 보시던 패턴일 것입니다. 러스트는 함수형 언어의 장점들을 많이 적용한 언어입니다.
 
-하지만 러스트 언어를 사용하기 위해 주의해야할 점이 있는데 collect 메소드를 호출해야한다는 것입니다. map메소드는 반환값으로 이터레이터를 반환합니다. 즉 이터레이터를 받아서 처리하고 또 다른 이터레이터를 반환하는 것이 map이 하는 일입니다. 그러면 ret 변수에 저장되는 값은 이터레이터가 됩니다. 이터레이터를 최종적으로는 값의 집합으로 바꿔서 벡터를 만들어야 map에 지정된 클로저가 호출됩니다.
-
-언어마다 이터레이터의 연산이 실행되는 시점이 다릅니다만, 러스트에서는 collect메소드가 호출되었을 때 최종적으로 map에 지정된 연산을 실행하여 결과값을 생성합니다. 위의 fizzbuzz_3함수에서는 최종적으로 생성하는 값이 문자열의 벡터이기 때문에 collect에게 다음과 같이 반환값의 타입을 알려줍니다.
+일반적인 함수형 언어에 비해 러스트 언어를 사용하기 위해 주의해야할 점이 있는데 마지막에 반드시 collect 메소드를 호출해야한다는 것입니다. map메소드는 반환값으로 이터레이터를 반환합니다. 즉 이터레이터를 받아서 처리하고 또 다른 이터레이터를 반환하는 것이 map이 하는 일입니다. 만약에 collect메소드를 호출하지 않으면 ret 변수에 저장되는 값은 이터레이터가 됩니다. 이터레이터 자체는 사실상 아직 실행이 안된 상태입니다. collect가 호출되는 시점에서 이터레이터가 한단계씩 실행되면서 이제서야 map에 전달된 함수가 실행됩니다. collect는 그렇게 이터레이터에 의해 실행된 함수의 결과 값들을 모아서 벡터를 만들어서  ret변수에 저장하는 것입니다. 위의 fizzbuzz_3함수에서는 최종적으로 생성하는 값이 문자열의 벡터이기 때문에 collect에게 다음과 같이 collect가 반환해서 ret에 저장되어야 할 값의 타입이 문자열의 벡터라는 것을 알려줍니다.
 
 ```rust
 collect::<Vec<String>>()
 ```
 
-<Vec<String>> 부분이 바로 반환값이 타입을 지정하는 부분입니다.
+<Vec<String>> 부분이 바로 반환값의 타입을 지정하는 부분입니다. collect라는 메소드는 대부분 벡터를 반환하겠지만, 그 벡터안에 무엇이 들어가야될지는 모릅니다. 개발자가 이렇게 코드레벨에서 직접 지정을 해주어야 벡터안에 들어갈 데이터의 타입에 맞게 실행할 수 있습니다. 가끔은 컴파일러가 자동으로 벡터에 들어가는 데이터의 타입을 추론할 수도 있습니다. 그래서 타입을 지정하지 않아도 빌드가 될 때도 있습니다. 하지만 타입을 지정해주어야하는 경우가 더 많습니다.
 
 러스트 언어의 매뉴얼에는 다음과 같은 예제 코드가 있습니다.
 
@@ -2750,42 +2762,20 @@ assert_eq!(iter.next(), Some(4));
 assert_eq!(iter.next(), Some(6));
 assert_eq!(iter.next(), None);
 ```
-
 https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.map
 
-이 예제가 보여주는 것이 바로 map 메소드가 호출되는 순간에 클로저가 호출되고 연산이 발생하지 않는다는 것입니다. next 메소드가 호출되면 그때 한번의 연산이 발생하고 하나의 값을 반환하는 것입니다. 물론 연산에 필요한 입력 데이터가 있을 수도 있고 없을 수도 있습니다. 그럴때 사용하는 것이 바로 Option 타입입니다. 따라서 next메소드는 Option 타입의 값을 반환하는 것입니다. next 메소드가 호출되면 입력 데이터를 하나씩 하나씩 클로저에 넘겨서 처리를 하고 마지막으로 남은 입력데이터가 없으면 None을 반환합니다.
+참고로 assert_eq!는 2개의 인자를 받아서 서로 같지 않으면 프로그램을 종료시키는 매크로입니다. 1, 2, 3이 들어있는 벡터의 이터레이터를 만든 후 map 메소드를 실행한 결과값을 iter라는 변수에 저장했습니다. iter라는 변수가 처음 만들어졌을때는 아직 클로저를 실행하지 않은 것입니다. 하지만 최초로 이터레이터의 next 메소드가 호출되었을 때야 처음으로 1을 클로저에 전달해서 Some(2)라는 값을 얻게 됩니다. 그리고 다음 next 메소드가 호출될때 각각 2와 3을 클로저에 전달해서 Some(4)와 Some(6)이라는 값을 얻게 됩니다. 그리고 마지막으로 이터레이터에 남은 데이터가 없으면 클로저가 실행되지 못하고, 반환값도 None을 반환합니다.
 
-그렇게 한번씩 호출되는 연산을 한꺼번에 모두 실행하고 모든 결과값을 벡터에 담아서 전달하는 메소드가 collect 입니다.
+왜 next의 결과값이 Option이 되었는지 이해가 되시나요? 이터레이터가 모든 값을 다 처리하고 더 이상 처리할 값이 없을때를 알려주기 위해 Option을 반환값으로 사용하게되었습니다. 이렇게 결과값이 있을때도 있고 없을 때도 있는 경우를 처리하기 위해 Option이 있는 것입니다. 결과값이 에러가 났기 때문에 없는 것이 아닙니다. 그냥 더 이상 처리할 데이터가 없는 정상적인 경우입니다. 그것이 Result와의 차이점입니다.
 
-상황에 따라서 next를 사용할 수도 있고 collect를 사용할 수도 있습니다.
+이터레이터의 가장 대표적인 메소드 next와 collect를 알아봤습니다. next메소드는 위와같이 이터레이터를 한번씩 실행해주는 메소드이고, 모든 연산을 한꺼번에 실행하고 모든 결과값을 벡터에 담아서 반환하는 메소드가 collect 입니다. 벡터에 데이터가 아주 많은 경우를 생각해보면, 꼭 모든 데이터를 다 처리해야될 필요가 없을 때도 있습니다. 조금씩 나눠서 처리해도되는 경우가 있다면 next를 사용하면 됩니다.
 
-다시한번 주의해서 생각해야할 것이 바로 이터레이터를 생성할 때 iter 메소드를 사용할 것인지, into_iter를 사용할 것인지 판단하는 것입니다. 아래 예제를 가지고 다양하게 실험해보면서 연습해보시기 바랍니다.
-
-```rust
-fn ownership(nums: Vec<i32>) {
-    // What happens if switch .iter and .into_iter?
-    // What are the types of first i and the second i?
-    let ret = nums
-        .iter()
-        .map(|i| format!("{}", i))
-        .collect::<Vec<String>>()
-        .join("");
-    println!("{}", ret);
-
-    let ret = nums
-        .into_iter()
-        .map(|i| format!("{}", i))
-        .collect::<Vec<String>>()
-        .join("");
-    println!("{}", ret);
-}
-```
-
-### Option와 map
+### Option의 map 메소드 사용 방법
 
 이터레이터뿐 아니라 Option 타입도 map메소드를 가지고 있습니다.
 
 ```rust
+// src/map_option/main.rs
 fn main() {
     let some_number = Some(5);
     let none_number: Option<i32> = None;
@@ -2797,14 +2787,76 @@ fn main() {
     println!("Double None: {:?}", double_none); // Double None: None
 }
 ```
+```bash
+$ cargo run --bin map_option
+   Finished dev [unoptimized + debuginfo] target(s) in 0.40s
+    Running `target/debug/map_option`
+Double Some: Some(10)
+Double None: None
+```
 
-보통 함수의 반환값으로 Option타입의 값을 받겠지만 이 예제에서는 일단 Some타입과 None타입의 2가지 변수를 만들었습니다. 그리고 각각 map메소드를 호출해주었습니다.
+Some(5)라는 값을 가진 변수와 None 값을 가진 변수가 있습니다. 그리고 각각 map메소드를 호출해주었습니다. 이 예제 소스는 워낙 간단하니까 우리 눈에 변수가 Some타입일지 None타입일지 알 수 있지만, 당연히 보통의 경우에는 어떤 함수의 반환값이 어느 타입일지는 알 수 없습니다. 그러면 매번 패턴 매칭이나 if let을 사용해서 값을 꺼내서 필요한 연산을 해주게 되면 코드가 길어질 것입니다. 코드가 길어진다는 것은 읽기 힘들어지고, 에러가 날 경우도 많아진다는 것입니다. 단순히 성능의 최적화를 위해 코드를 짧게 유지하는게 필요한게 아니라, 읽기 좋고 버그가 적은 코드를 만들기 위해서도 코드를 짧게 유지하는게 좋습니다.
 
-이 예제 소스는 워낙 간단하니까 우리 눈에 변수가 Some타입일지 None타입일지 알 수 있지만, 당연히 보통의 경우에는 어떤 함수의 반환값이 어느 타입일지는 알 수 없습니다. 그러면 매번 패턴 매칭이나 if let을 사용해서 값을 꺼내서 필요한 연산을 해주게 되면 코드가 길어질 것입니다. 코드가 길어진다는 것은 읽기 힘들어지고, 에러가 날 경우도 많아진다는 것입니다. 단순히 성능의 최적화를 위해 코드를 짧게 유지하는게 필요한게 아니라, 읽기 좋고 버그가 적은 코드를 만들기 위해서도 코드를 짧게 유지하는게 좋습니다.
+Option의 메소드인 map은 타입이 Some일때는 Some안에 있는 값을 꺼내서 클로저의 인자로 넘겨주고, 클로저의 결과값을 Option타입으로 반환해줍니다. None 타입의 map 메소드는 아무런 처리도 하지않고 None을 그대로 반환해줍니다. 따라서 어떤 변수의 값이 Option타입일때, if let이나 match를 사용할 필요없이, 그 변수를 그대로 다른 함수나 클로저에 전달할 수 있게됩니다.
 
-Option의 메소드인 map은 타입이 Some일때는 값을 꺼내서 클로저를 호출해주고 결과값을 Option타입으로 반환해줍니다. None 타입을 위해 호출되면 아무런 처리도 하지않고 None을 그대로 반환해줍니다.
+참고로 Some이나 None 값을 출력하기 위해서 “{:?}” 리터럴을 사용하면 Some인지 None인지를 출력해주니까 디버깅할때 편리합니다.
 
-그리고 Some이나 None 값을 출력하기 위해서 “{:?}” 리터럴을 사용하는 것도 알아두시면 좋습니다.
+## Result의 map 메소드 사용 방법
+
+Option과 마찬가지로 Result 또한 map 메소드를 가지고 있습니다.
+
+```rust
+// src/map_result/main.rs
+fn divide(numerator: i32, denominator: i32) -> Result<i32, String> {
+    if denominator == 0 {
+        return Err(String::from("denominator cannot be zero"));
+    }
+    Ok(numerator / denominator)
+}
+
+fn main() {
+    let ok_number = divide(10, 2);
+    let error_number = divide(10, 0);
+
+    let double_ok = ok_number.map(|x| x * 2);
+    let double_error = error_number.map(|x| x * 2);
+
+    println!("Double Ok: {:?}", double_ok); // Double Some: Ok(5)
+    println!("Double Error: {:?}", double_error); // Double Error: Error
+}
+```
+```bash
+$ cargo run --bin map_result
+    Finished dev [unoptimized + debuginfo] target(s) in 0.00s
+     Running `target/debug/map_result`
+Double Ok: Ok(10)
+Double Error: Err("denominator cannot be zero")
+```
+
+하는 일도 거의 동일합니다. 값이 있는 경우, 즉 Ok 타입인 경우에는 그 안의 값을 꺼내서 전달받은 클로저를 호출합니다. 만약 값이 Err 타입인 경우에는 아무일도 하지 않고, 자기 자신을 반환합니다. if let이나 match 패턴에서 처리 코드가 간단하다면 map을 사용하는게 더 좋겠지요.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+================2024 09 30 =========================
+
+
+
+
+
+
+
+## Option과 Result를 잘 사용하는 방법
 
 ### Option의 as_ref 메소드
 
@@ -2873,6 +2925,22 @@ as_deref_mut 메소드는 Option은 그대로 유지한채 그 안의 객체를 
 
 as_deref 메소드는 객체에 대한 레퍼런스가 필요할 때 사용됩니다. 예를 들어 값을 그대로 다른 함수나 쓰레드 등에 전달하는게 비효율적이니 레퍼런스를 만들어서 전달하는데 그럴때 사용됩니다.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Result의 map_err 메소드
 
 map_err은 map과 반대로 Result의 값이 에러일때 실행할 코드를 지정하는 것입니다.
@@ -2893,11 +2961,6 @@ let new_value = serde_json::to_string(&row).map_err(|e| {
 하지만 serde_json::to_string 메소드가 에러를 반환하면 그것을 MyError::StorageMsg라는 타입으로 변환합니다. 결국 map_err은 Err(MyError::StorageMsg)타입의 에러를 반환하고 ? 연산자는 에러 값을 상위 함수로 전달합니다.
 
 이렇게 에러 상황일때만 실행될 코드를 지정할 때 map_err을 사용합니다.
-
-### 연습문제
-
-1. Option의 메소드 중에는 map외에 map_or와 map_or_else가 있습니다. 지금까지의 예제들을 map_or나 map_or_else 로 바꿔보세요.
-2. 이터레이터의 메소드중에 for_each라는 메소드가 있습니다. map과 for_each는 어떤 차이가 있을까요? 힌트는 for_each호출에는 collect가 필요하지 않다는 점입니다. 왜 필요하지 않을까요?
 
 ## 프로젝트 관리
 

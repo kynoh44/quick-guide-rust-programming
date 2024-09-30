@@ -27,14 +27,6 @@ fn main() {
     fizzbuzz_2(37);
     fizzbuzz_3(41);
 
-    let some_number = Some(5);
-    let none_number: Option<i32> = None;
-
-    let double_some = some_number.map(|x| x * 2);
-    let double_none = none_number.map(|x| x * 2);
-
-    println!("Double Some: {:?}", double_some); // Double Some: Some(10)
-    println!("Double None: {:?}", double_none); // Double None: None
 
     let mut maybe_some_string = Some(String::from("Hello, World!"));
     // `Option::map` takes self *by value*, consuming `maybe_some_string`
