@@ -2833,34 +2833,13 @@ Double Ok: Ok(10)
 Double Error: Err("denominator cannot be zero")
 ```
 
-하는 일도 거의 동일합니다. 값이 있는 경우, 즉 Ok 타입인 경우에는 그 안의 값을 꺼내서 전달받은 클로저를 호출합니다. 만약 값이 Err 타입인 경우에는 아무일도 하지 않고, 자기 자신을 반환합니다. if let이나 match 패턴에서 처리 코드가 간단하다면 map을 사용하는게 더 좋겠지요.
+하는 일도 거의 동일합니다. 값이 있는 경우, 즉 Ok 타입인 경우에는 그 안의 값을 꺼내서 전달받은 클로저를 호출합니다. 만약 값이 Err 타입인 경우에는 아무일도 하지 않고, 자기 자신을 반환합니다. if let이나 match 패턴은 클로저로 처리할 수 없을만큼 코드가 길때 사용하고, 코드가 간단하다면 map을 사용하는게 더 좋겠지요.
 
+## Option과 Result를 더 잘 사용하는 방법
 
+map이 편리하지만 반드시 주의해야 할 점이 하나 있는데 바로 map을 호출하면 객체가 해지된다는 것입니다. 영어로는 consume이라고 표현하는데, 그 의미는 자기 자신의 값을 소비해서 없애버리고 반환값을 생성한다는 것입니다.
 
-
-
-
-
-
-
-
-
-
-
-
-================2024 09 30 =========================
-
-
-
-
-
-
-
-## Option과 Result를 잘 사용하는 방법
-
-### Option의 as_ref 메소드
-
-마지막으로 주의해야 할 점이 하나 있는데 바로 map을 호출하면 객체가 해지된다는 것입니다. 영어로는 consume이라고 표현하는데, 그 의미는 자기 자신의 값을 소비해서 없애버리고 반환값을 생성한다는 것입니다.
+다음은 Option의 매뉴얼에 있는 예제 코드입니다.
 
 ```rust
 let maybe_some_string = Some(String::from("Hello, World!"));
@@ -2869,12 +2848,15 @@ let maybe_some_len = maybe_some_string.map(|s| s.len());
 assert_eq!(maybe_some_len, Some(13));
 //println!("{:?}", maybe_some_string); // error
 ```
+출처: https://doc.rust-lang.org/std/option/enum.Option.html#method.map
 
-https://doc.rust-lang.org/std/option/enum.Option.html#method.map
+maybe_some_string은 소비consume되어버렸으니 map연산을 호출한 이후에는 다시 사용할 수 없는 변수가 됩니다. 마지막줄에서 maybe_some_string의 값을 확인해보려고한다면 빌드 에러가 발생합니다.  map 메소드는 Some(x)에 들어있는 값을 해지하고 Some(y)라는 새로운 값으로 바꾸고 이전 값은 다시 사용할 필요가 없을 때 사용합니다. maybe_some_string이라는 객체가 더 이상 필요하지 않으면 괜찮지만 만약 계속 써야하는 데이터라면 객체가 해지되지 않도록 해야합니다.
 
-maybe_some_string은 소비consume되어버렸으니 map연산을 호출한 이후에는 다시 사용할 수 없는 변수가 됩니다. 따라서 map 메소드를 호출하는 것은 이 값을 Some(x) 값을 Some(y) 값으로 바꾸고 이전 값은 다시 사용할 필요가 없을 때 사용합니다. 대부분의 값들이 최종 값을 얻기 위한 중간 결과물이니까 이런 방식의 처리를 하도록 디자인되었을 것입니다. maybe_some_string이라는 객체가 더 이상 필요하지 않으면 괜찮지만 만약 계속 써야하는 데이터라면 객체가 해지되지 않도록 해야합니다.
+다음에는 Option이나 Result의 내부에 있는 값을 해지하지않고 접근하거나 수정할 수 있는 메소드들을 소개하겠습니다.
 
-그럼 map을 써도 원본 객체가 해지되지 않으려면 어떡해야할까요? 답은 컴파일러가 이미 알려주고 있습니다. 아래는 위 예제의 마지막 줄을 주석처리하지않고 빌드했을 경우 에러 메세지입니다.
+### Option의 as_ref 메소드
+
+먼저 map을 써도 원본 객체가 해지되지 않으려면 어떡해야할까요? 답은 컴파일러가 이미 알려주고 있습니다. 아래는 위 예제의 마지막 줄을 주석처리하지않고 빌드했을 경우 에러 메세지입니다.
 
 ```rust
 error[E0382]: borrow of moved value: `maybe_some_string`
@@ -2892,58 +2874,32 @@ error[E0382]: borrow of moved value: `maybe_some_string`
      |                      ^^^^^^^^^^^^^^^^^ value borrowed here after move
 ```
 
-중간에보면 as_ref 메소드를 호출해서 객체의 레퍼런스를 만든 후에 map 메소드를 호출하라고 알려줍니다. 객체의 값으로 map을 호출하면 객체가 해지되니, 레퍼런스를 통해서 map 메소드를 호출하면 객체가 해지되지 않는다는 것을 알려줍니다.
+중간에보면 as_ref이나 as_mut 메소드를 호출해서 객체의 레퍼런스를 만든 후에 map 메소드를 호출하라고 알려줍니다. 객체의 값으로 map을 호출하면 객체가 해지되니, 레퍼런스를 통해서 map 메소드를 호출하면 객체가 해지되지 않는다는 의미입니다. 함수를 호출할때도 객체의 값을 전달하면 소유권이 이동되서 객체를 더 이상 사용할 수 없었습니다. map 메소드도 마찬가지로 객체의 값으로 메소드를 호출하면 소유권이 map 메소드로 이동되서, 그 이후로는 원본 객체를 사용할 수 없습니다. 함수에서 객체의 값을 전달하는 대신에 레퍼런스틀 전달한 것처럼 메소드를 호출할때도 레퍼런스로 바꾼 후 메소드를 호출하면 소유권이 이동하는 것을 막을 수 있습니다.
 
 ```rust
 let maybe_some_string = Some(String::from("Hello, World!"));
-// `Option::map` takes self *by value*, consuming `maybe_some_string`
 let maybe_some_len = maybe_some_string.as_ref().map(|s| s.len());
 assert_eq!(maybe_some_len, Some(13));
 println!("{:?}", maybe_some_string);
 ```
 
-as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다.
+as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다. s는 &String타입이 됩니다. 따라서 map의 호출이 끝난 뒤에도 계속 maybe_some_string을 사용할 수 있습니다.
 
-### Option의 as_deref, as_deref_mut 메소드
-
-이번에는 또 다른 경우를 보겠습니다. 아마 가장 자주 접하게 되는 경우일텐데 Option안에 있는 객체를 수정하는 것입니다.
+컴파일러가 알려준 두번째 메소드는 as_mut메소드입니다. 이름에서 알 수 있듯이 단순히 불변 레퍼런스를 전달하는게 아니라 가변 레퍼런스를 전달해서 객체의 값을 수정할 수도 있게 해주는 메소드입니다.
 
 ```rust
-maybe_some_string
-    .as_deref_mut()
-    .map(|x| x.make_ascii_uppercase());
-println!("{:?}", maybe_some_string)
+let mut maybe_some_string = Some(String::from("Hello, World!"));
+maybe_some_string.as_mut().map(|s| s.push_str(" Again!"));
+println!("{:?}", maybe_some_string);
 ```
 
-as_deref_mut 메소드는 Option은 그대로 유지한채 그 안의 객체를 수정할 수 있도록 &mut 레퍼런스를 넘겨줍니다. 이 예제 코드에서 map메소드에서 받은 x의 타입은 &mut str 타입이 되서 "Hello, World!"라는 스트링 자체를 수정할 수 있게 됩니다. 
+위와같이 map의 s라는 인자에 maybe_some_string의 가변 레퍼런스 &mut String을 전달합니다. 그래서 객체를 수정할 수 있습니다.
 
-참고로 Option을 그대로 유지한 채 그 안의 객체에 대한 레퍼런스를 얻을 수 있는 as_deref라는 메소드도 있습니다.
-
-```rust
-    let ref_to_string: Option<&str> = maybe_some_string.as_deref();
-```
-
-as_deref 메소드는 객체에 대한 레퍼런스가 필요할 때 사용됩니다. 예를 들어 값을 그대로 다른 함수나 쓰레드 등에 전달하는게 비효율적이니 레퍼런스를 만들어서 전달하는데 그럴때 사용됩니다.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Result도 마찬가지로 as_ref와 as_mut을 사용할 수 있습니다.
 
 ### Result의 map_err 메소드
 
-map_err은 map과 반대로 Result의 값이 에러일때 실행할 코드를 지정하는 것입니다.
+Result의 map 메소드는 값이 에러일때는 실행되지 않았습니다. 하지만 map_err은 map과 반대로 Result의 값이 에러일때 실행할 코드를 지정하는 것입니다.
 
 하나의 예를 들면 아래처럼 serde_json에서 전달된 에러를, 자신이 정의한 에러 타입으로 변환할 때 사용할 수 있습니다.
 
@@ -2956,11 +2912,34 @@ let new_value = serde_json::to_string(&row).map_err(|e| {
                         })?;
 ```
 
-위의 예제에서 만약 serde_json::to_string메소드의 반환값이 에러가 아니라면 ? 연산자는 Ok()안에 있는 문자열의 값을 Ok밖으로 꺼내서 new_value에 저장합니다.
+map에 대해서 기본적인 설명을 했으니 이번에는 제가 실제로 프로젝트를 하면서 작성한 코드에서 예제를 가져와봤습니다. serde_json은 JSON포맷을 처리하는 라이브러리입니다. to_string을 JSON포맷의 데이터를 문자열로 바꾸는 라이브러리 함수입니다. row라는 객체에 JSON포맷 바이너리 데이터가 들어있는데, 이것을 문자열로 바꾸려는 코드입니다.
 
-하지만 serde_json::to_string 메소드가 에러를 반환하면 그것을 MyError::StorageMsg라는 타입으로 변환합니다. 결국 map_err은 Err(MyError::StorageMsg)타입의 에러를 반환하고 ? 연산자는 에러 값을 상위 함수로 전달합니다.
+위의 예제에서 만약 serde_json::to_string메소드의 반환값이 에러가 아니라면 ? 연산자는 Ok()안에 있는 문자열의 값을 Ok밖으로 꺼내서 new_value에 저장합니다. 하지만 serde_json::to_string 메소드가 row안에 있는 바이너리 데이터의 포맷에 문제를 발견하고 에러를 반환하면 그것을 MyError::StorageMsg라는 타입으로 변환합니다. 그러면 map_err은 Err(MyError::StorageMsg)타입의 에러를 반환하고 ? 연산자는 에러 값을 상위 함수로 전달합니다.
 
-이렇게 에러 상황일때만 실행될 코드를 지정할 때 map_err을 사용합니다.
+map은 Ok나 Some타입의 메소드로 호출되어서 Ok나 Some타입을 반환하지만, map_err은 Err타입의 메소드로 호출되어서 Err타입을 반환하는 차이가 있습니다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=================== 2024 10 01 ======================
+
+
+
+
 
 ## 프로젝트 관리
 
