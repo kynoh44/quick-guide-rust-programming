@@ -2874,7 +2874,9 @@ error[E0382]: borrow of moved value: `maybe_some_string`
      |                      ^^^^^^^^^^^^^^^^^ value borrowed here after move
 ```
 
-중간에보면 as_ref이나 as_mut 메소드를 호출해서 객체의 레퍼런스를 만든 후에 map 메소드를 호출하라고 알려줍니다. 객체의 값으로 map을 호출하면 객체가 해지되니, 레퍼런스를 통해서 map 메소드를 호출하면 객체가 해지되지 않는다는 의미입니다. 함수를 호출할때도 객체의 값을 전달하면 소유권이 이동되서 객체를 더 이상 사용할 수 없었습니다. map 메소드도 마찬가지로 객체의 값으로 메소드를 호출하면 소유권이 map 메소드로 이동되서, 그 이후로는 원본 객체를 사용할 수 없습니다. 함수에서 객체의 값을 전달하는 대신에 레퍼런스틀 전달한 것처럼 메소드를 호출할때도 레퍼런스로 바꾼 후 메소드를 호출하면 소유권이 이동하는 것을 막을 수 있습니다.
+중간에보면 as_ref이나 as_mut 메소드를 호출해서 객체의 레퍼런스를 만든 후에 map 메소드를 호출하라고 알려줍니다. as_ref는 &Option<T> (Option의 내부에 T타입의 데이터가 저장된 enum타입을 의미합니다. C++의 템플릿이라고 생각하면 이해가 쉬울 수 있습니다.)을 Option<&T>으로 바꾸는 일을 합니다.
+
+일단 한번 고쳐서 실행해보겠습니다.
 
 ```rust
 let maybe_some_string = Some(String::from("Hello, World!"));
@@ -2885,6 +2887,13 @@ println!("{:?}", maybe_some_string);
 ```bash
 Some("Hello, World!")
 ```
+
+우리 눈에 직접적으로 보이지 않지만 다음과 같은 타입 변화가 일어나는 것입니다.
+1. Some(String<"Hello, World!">)가 &Some(String<"Hello, World!">)로 바뀜
+2. &Some(String<"Hello, World!">)가 Some(&String<"Hello, World!">)로 바뀜
+3. 결국 map 내부의 인자 s는 &String<"Hello, World!">가 됨
+
+함수를 호출할때도 객체의 값을 전달하면 소유권이 이동되서 객체를 더 이상 사용할 수 없었습니다. map 메소드도 마찬가지로 객체의 값으로 메소드를 호출하면 소유권이 map 메소드로 이동되서, 그 이후로는 원본 객체를 사용할 수 없습니다. 함수에서 객체의 값을 전달하는 대신에 레퍼런스틀 전달한 것처럼 map 메소드를 호출할때도 레퍼런스를 전달하면 소유권이 이동하는 것을 막을 수 있습니다.
 
 as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다. s는 &String타입이 됩니다. 따라서 map의 호출이 끝난 뒤에도 계속 maybe_some_string을 사용할 수 있습니다.
 
@@ -2899,9 +2908,32 @@ println!("{:?}", maybe_some_string);
 Some("Hello, World! Again!")
 ```
 
-위와같이 map의 s라는 인자에 maybe_some_string의 가변 레퍼런스 &mut String을 전달합니다. 그래서 객체를 수정할 수 있습니다.
+위와같이 map의 s라는 인자에 &mut String을 전달합니다. 그래서 객체를 수정할 수 있습니다.
 
 Result도 마찬가지로 as_ref와 as_mut을 사용할 수 있습니다.
+
+### Option과 Result의 실체 확인
+
+Option과 Result는 enum타입입니다. 간단하게 아래 실험을 통해 enum타입이라는게 뭔지 그리고 as_ref라는게 무엇인지를 확인해보려고 합니다.
+
+```rust
+fn main() {
+    let mut maybe_some_string = Some(String::from("Hello, World!"));
+    println!("{:p}", &maybe_some_string);
+    maybe_some_string.as_ref().map(|s| println!("{:p}", s));
+    maybe_some_string.as_mut().map(|s| println!("{:p}", s));
+}
+```
+```bash
+0x7ffc8810d420
+0x7ffc8810d420
+0x7ffc8810d420
+```
+
+첫번째로 Some<String>타입을 가지는 maybe_some_string가 메모리 어디에 존재하는지를 확인해봤습니다. 메모리 주소를 보니 main함수의 스택입니다. 그리고 as_ref/as_mut메소드와 map메소드를 통해 Some안에 있는 String객체의 포인터를 확인해보니 같은 주소가 나왔습니다. 우리는 이것으로 2가지를 확인할 수 있습니다.
+
+1. Some타입의 변수의 시작 주소와 String타입 객체의 시작 주소가 같습니다. 이것으로 우리는 Option이나 Result등의 타입은 실제로 메모리에 저장되는 데이터가 아니라는 것을 알 수 있습니다. enum타입은 컴파일러가 자체적으로 관리하는 가상의 타입입니다. 어느 변수가 Some타입으로 감싸여있다고하는 것은 실제로는 컴파일러가 그렇게 Some타입이 있는 것 같이 관리를 한다는 의미이지, 실제로 메모리에 Some이라는 객체가 존재하고 그 안에 다른 데이터가 존재하는 것은 아닙니다. 이것이 러스트 언어가 Zero Cost Abstraction (추가적인 성능 감소나 메모리 사용없이 추상화된 계층을 제공한다는 의미입니다)를 제공한다고 말하는 이유입니다. 지금 초급 단계에서 깊게 이야기할 수는 없지만, 다른 언어에 비해 러스트 컴파일러가 하는 일이 많다고 생각하셔도 좋습니다.
+2. 가변 레퍼런스나 불편 레퍼런스나 사실상 포인터 주소는 같습니다. 즉 이 메모리 주소를 읽기용으로만 써야할지 데이터를 바꿀 수도 있는지는 관리하는 것도 컴파일러입니다. 마찬가지로 성능 감소나 메모리 사용없이 컴파일러가 제공해주는 기능인 것입니다.
 
 ### Result의 map_err 메소드
 
