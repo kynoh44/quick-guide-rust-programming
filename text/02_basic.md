@@ -2882,6 +2882,9 @@ let maybe_some_len = maybe_some_string.as_ref().map(|s| s.len());
 assert_eq!(maybe_some_len, Some(13));
 println!("{:?}", maybe_some_string);
 ```
+```bash
+Some("Hello, World!")
+```
 
 as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다. s는 &String타입이 됩니다. 따라서 map의 호출이 끝난 뒤에도 계속 maybe_some_string을 사용할 수 있습니다.
 
@@ -2891,6 +2894,9 @@ as_ref 메소드를 사용한 후에는 정상적으로 빌드됩니다. s는 &S
 let mut maybe_some_string = Some(String::from("Hello, World!"));
 maybe_some_string.as_mut().map(|s| s.push_str(" Again!"));
 println!("{:?}", maybe_some_string);
+```
+```bash
+Some("Hello, World! Again!")
 ```
 
 위와같이 map의 s라는 인자에 maybe_some_string의 가변 레퍼런스 &mut String을 전달합니다. 그래서 객체를 수정할 수 있습니다.
