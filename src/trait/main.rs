@@ -21,7 +21,7 @@ impl Person {
 impl Printable for Person {
     type Age = u32;
     fn print(&self) {
-        println!("Name: {}, {} years old", self.name, self.age);
+        println!("Name: {}, {} years old", self.name, self.get_age());
     }
     fn get_age(&self) -> Self::Age {
         self.age
@@ -39,7 +39,9 @@ impl Printable for Book {
     fn print(&self) {
         println!(
             "Title: {}\nAuthor: {}\nPublished: {}",
-            self.title, self.author, self.published
+            self.title,
+            self.author,
+            self.get_age()
         );
     }
     fn get_age(&self) -> Self::Age {
