@@ -5,15 +5,15 @@ pub struct Point {
     pub y: f64,
 }
 
-impl fmt::Debug for Point {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "POINT [{} {}]", self.x, self.y)
-    }
-}
-
 impl fmt::Display for Point {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "POINT({} {})", self.x, self.y)
+    }
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "POINT [{} {}]", self.x, self.y)
     }
 }
 
