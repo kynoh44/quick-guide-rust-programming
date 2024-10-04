@@ -188,70 +188,46 @@ Trait1과 Trait2를 모두 구현한 타입의 레퍼런스를 인자로 받는 
 
 그리고 Person구조체에 있는 new 함수를 연관 함수라고 부릅니다. 자세히보면 함수의 인자에 self가 없습니다. 그러므로 특정 구조체 객체에 종속되서 동작하는게 아니라 객체가 없는 상태에서 Person::new와 같이 Person이라는 타입 이름으로만 호출할 수 있습니다. 보통 new라는 이름으로 객체를 생성하는 연관 함수를 만드는게 관례입니다.
 
+## 트레이트 객체(Trait object)
 
-
-
-
-
-
-
-
-
-========================== 2024 10 03 ================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Trait object 트레이트 객체
-
-dyn키워드는 트레이트 객체를 나타내는 키워드라고 설명했습니다. 이 트레이트 객체를 좀더 자세히 이해할 필요가 있습니다. 자연스럽게 dyn 키워드 다음에는 대부분 트레이트의 이름이 나오겠지요.
+dyn키워드는 트레이트 객체를 나타내는 키워드라고 설명했습니다. 이 트레이트 객체를 좀더 자세히 이해할 필요가 있습니다.
 
 ```rust
 dyn TraitName
 ```
 
-다음에 제너릭을 배우면 좀더 간단한 표현을 배우겠지만, 특정 트레이트를 구현한 객체를 가르키는 것은 동일합니다.
-
-위의 예제에서 print_info함수는 item이라는 트레이트 객체의 print함수를 호출합니다. 타입 이름이 없는데 어떻게 구현하는 함수를 호출할 수 있을까요?
-
-함수를 호출한다는 것은 사실 어떤 코드 지점으로 점프한다는 것입니다. 더 정확하게 말하면 어셈블리어 jmp등을 이용해서 특정 메모리 주소로 EIP레지스터의 값을 바꾸는 것입니다. 그리고 해당 메모리에 있는 코드가 하나씩 실행됩니다. item.print라는 코드에서 Book이라는 객체의 print함수의 주소를 찾아낼 수 있을까요? Person타입의 print함수는 0x1000_0000에 있고, Book타입의 print함수는 0x3000_0000에 있다고 생각해봅시다. 그럼 item은 Person객체의 주소가 될 것이니 print_info함수의 코드를 jmp 0x1000_0000으로 만들면 될까요?
-
-안되겠지요. 그러면 Book의 print함수를 호출할 수 없게됩니다. 컴피일러는 보통 vtable이라는 것을 만들어서 트레이트에서 구현된 함수들의 포인터를 관리합니다. (이것은 자바나 C++의 인터페이스와 동일합니다.)
+위에서본 print_info함수를 다시 보겠습니다. print_info함수는 item이라는 트레이트 객체의 print함수를 호출합니다. 타입 이름이 없는데 어떻게 구현하는 함수를 호출할 수 있을까요?
 
 ```rust
-book.vtable.print = 0x1000_0000;
-person.vtable.print = 0x3000_0000;
-
 fn print_info(item: &dyn Printable<Age = u32>) {
-    jmp item.vtable.print
+    item.print();
 }
 ```
 
-위와같이 트레이트를 구현하는 객체마다 vtable을 추가해서 트레이트 함수들의 포인터를 저장합니다. 그러면 같은 트레이트를 구현하는 객체마다 동일한 위치에 함수 포인터가 저장될 것이므로, 객체의 타입에 상관없이 트레이트 함수를 호출할 수 있게됩니다. 이것을 Dynamic dispatch라고 부릅니다만 용어보다는 공통된 특성 혹은 함수들의 구현을 위해 추가적인 데이터가 들어간다는 것을 알고있는게 중요할 것입니다.
+Person타입의 print함수는 0x1000_0000에 있고, Book타입의 print함수는 0x3000_0000에 있다고 생각해봅시다. 컴피일러는 vtable이라는 것을 만들어서 트레이트에서 구현된 함수들의 포인터를 관리합니다. (이것은 자바나 C++의 인터페이스와 동일합니다.)
 
-물론 변수를 한번 더 읽게되는 단점도 있습니다만 특별하게 CPU를 많이 사용하는 연산을 수행하는 부분에서 호출되지 않는한 별 차이는 없을 것입니다.
+```rust
+book.vtable = {
+    print = 0x1000_0000;
+    ... 다른 함수들의 시작 주소들도 들어갈 수 있음
+}
+person.vtable = {
+    print = 0x3000_0000;
+    ... 다른 함수들의 시작 주소들도 들어갈 수 있음
+}
 
-약간 내부 구현에 관해 생각해봤지만, 굳이 거기까지 이해할 필요는 없습니다. 특정 함수나 타입을 공통으로 구현하는 공통된 특성을 가진 타입들을 사용할 수 있다는 추상적인 의미를 이해하는 것으로도 충분합니다.
+fn print_info(item: &dyn Printable<Age = u32>) {
+    item.vtable.print()
+}
+```
+
+위와같이 트레이트를 구현하는 객체마다 vtable을 추가해서 트레이트 함수들의 포인터를 저장합니다. 이렇게 추가적인 테이블을 만들어서 함수 포인터를 저정하고, 요청받은 함수를 호출하는 방식을 Dynamic dispatch라고 부릅니다만 용어보다는 공통된 특성 혹은 함수들의 구현을 위해 추가적인 데이터가 들어간다는 것을 알고있는게 중요할 것입니다. 물론 메모리를 한번 더 읽게되는 단점도 있습니다만 특별하게 CPU를 많이 사용하는 연산을 수행하는 부분에서 호출되지 않는한 성능에 차이가 나지 않습니다.
 
 ## 표준 라이브러리에 포함된 트레이트
 
-트레이트를 직접 만들 수 있지만, 러스트의 표준 라이브러리에서 미리 정의해놓은 트레이트들이 있습니다. 그만큼 어떤 상황에서도 만들어놓으면 좋은 트레이트겠지요. 여러개가 있지만 그중에서 몇가지만 예제를 만들어보겠습니다.
+개발자들이 직접 필요한 트레이트를 만들 수 있지만, 러스트의 표준 라이브러리(The Rust Standard Library: https://doc.rust-lang.org/std/index.html)에서 미리 만들놓은 편리한 트레이트들이 있습니다. 표준 라이브러리라고 부르는 만큼 어떤 상황에서도 사용할 수 있을만큼 성능이나 범용적이 좋은 트레이트들입니다. 그중에서 초보 단계에서도 자주 사용하게되는 몇가지만 예제를 만들어보겠습니다.
 
-참고 링크: https://youtu.be/Nzclc6MswaI
-
-### Display 트레이트
-
-참고 링크: https://doc.rust-lang.org/std/fmt/trait.Display.html
+### Display와 Debug 트레이트
 
 Display라는 트레이트가 있습니다. 구조체 타입을 println! 등의 출력 함수에서 곧바로 출력할 수 있도록 만드는 트레이트입니다.
 
@@ -264,96 +240,54 @@ pub trait Display {
 }
 ```
 
-위에서 Printable이라는 트레이트를 만들어봤는데 동일한 일을 하는 트레이트입니다. Book타입의 Display트레이트를 구현해보겠습니다.
+위에서 Printable이라는 트레이트를 만들어봤는데 사실상 동일한 일을 하는 트레이트입니다. Book타입의 Display트레이트를 구현해보겠습니다.
 
 ```rust
+// src/std_trait_display_debug/main.rs
 use std::fmt;
 
-struct Book {
-    title: String,
-    author: String,
-    published: u32,
+pub struct Point {
+    pub x: f64,
+    pub y: f64,
 }
 
-impl fmt::Display for Book {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Title: {}\nAuthor: {}\nPublished: {}\n",
-            self.title, self.author, self.published
-        )
+impl fmt::Display for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "POINT({} {})", self.x, self.y)
+    }
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "POINT [{} {}]", self.x, self.y)
     }
 }
 
 fn main() {
-    let book = Book {
-        title: String::from("The Rust Programming Language"),
-        author: String::from("Steve Klabnik and Carol Nichols"),
-        published: 20230228,
-    };
-
-    println!("{}", book);
+    let dot: Point = Point { x: 1.2, y: 3.4 };
+    println!("{:?}", dot);
+    println!("{}", dot);
 }
 ```
+```bash
+$ cargo run --bin std_trait_display_debug
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.22s
+     Running `target/debug/std_trait_display_debug`
+POINT [1.2 3.4]
+POINT(1.2 3.4)
+```
 
-Display라는 트레이트는 fmt 하나의 함수로 이루어져있습니다. 함수 인자로 std::fmt에 선언된 Formatter라는 구조체가 들어가는데 아직은 자세하게 설명할 수 있는 것은 아닙니다. 그리고 굳이 자세히 알 필요도 없습니다. 그냥 잘 써먹으라고 충분히 추상화되어있는 것이니 사용법에 맞게 쓰기만 하면 됩니다.
+Display라는 트레이트는 fmt라는 하나의 메소드로 이루어져있습니다. fmt메소드의 구현도 간단합니다.
 
 ```rust
 write!(f, "내가 쓰고싶은 메세지{}", 출력할 데이터)
 ```
 
-이런 형태로 얼마든지 자유롭게 쓰기만하면 됩니다. 주의할 것은 write!호출 후에 “;” 세미콜론을 쓰지 않는 다는 점입니다. fmt함수의 반환값이 fmt::Result입니다. 그러므로 해당 타입의 값을 반환해야합니다. write! 매크로 함수가 fmt::Result 값을 반환하므로 “;” 세미콜론을 쓰면 안됩니다. 만약 쓰게되면 아무런 값도 반환하지 않게되서 컴파일 에러가 발생할 것입니다.
+이런 형태로 얼마든지 자유롭게 구현만하면 됩니다. fmt::Formatter라는 객체에 내가 지정한 메세지를 써주기만 하면 됩니다. 단지 주의할 것은 write!매크로 호출에서 “;” 세미콜론을 쓰지 않는 다는 점입니다. fmt함수의 반환값이 fmt::Result입니다. 그러므로 해당 타입의 값을 반환해야합니다. write! 매크로 함수가 fmt::Result 값을 반환하므로 “;” 세미콜론을 쓰면 안됩니다. 만약 ";"를 쓰게되면 아무런 값도 반환하지 않게되서 컴파일 에러가 발생할 것입니다.
 
-### Debug 트레이트
+사실상 같은 일을 하는 Debug트레이트라는 것도 있습니다. 구현된 코드를 보면 Display와 다를게 없어보입니다. 그럼 Display 트레이트와 뭐가 다른 걸까요? println에서 사용하는 포맷 문자열이 다릅니다. 보통 println에서 “{}”을 사용하면 Display 트레이트의 fmt메소드가 호출되고, “{:?}”를 사용하면 Debug의 fmt메소드가 호출됩니다
 
-참고링크: https://doc.rust-lang.org/std/fmt/trait.Debug.html
-
-Debug트레이트라는 것도 있습니다. 참고 링크를 보시면 Display와 다를게 없어보입니다.
-
-```rust
-use std::fmt;
-
-pub trait Debug {
-    // Required method
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>;
-}
-```
-
-그럼 Display 트레이트와 뭐가 다른 걸까요? 아래에 Debug트레이트를 직접 구현한 예제를 잘 보시면 다른 점이 하나 있습니다.
-
-```rust
-use std::fmt;
-
-struct Book {
-    title: String,
-    author: String,
-    published: u32,
-}
-
-impl fmt::Debug for Book {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "Title: {}\nAuthor: {}\nPublished: {}\n",
-            self.title, self.author, self.published
-        )
-    }
-}
-
-fn main() {
-    let book = Book {
-        title: String::from("The Rust Programming Language"),
-        author: String::from("Steve Klabnik and Carol Nichols"),
-        published: 20230228,
-    };
-
-    println!("{:?}", book); // USE {:?} for Debug trait
-}
-```
-
-예 println에서 사용하는 포맷이 다릅니다. 보통 println에서 사용하는 포맷은 “{}”입니다만 Debug 트레이트를 사용할 때는 “{:?}”가 됩니다.
-
-그리로 사실 Debug트레이트는 이전에 구조체를 설명하면서 한번 사용해봤었습니다. 그때는 지금처럼 직접 구현하지않아도 사용할 수 있었습니다. 지금 우리가 만든 Book 구조체에도 사실은 직접 구현할 필요없이 다음처럼 derive를 사용해서 트레이트를 구현할 수 있습니다.
+트레이트를 처음 설명하면서 만든 Book 구조체 구현 예제에서 Printable이라는 트레이트의 print함수를 만들었었지요. 사실 그렇게 특정 구조체의 값을 출력하는 트레이트나 함수를 직접 구현할 필요가 없습니다. 다음과 같이 #[derive(Debug)]라는 속성을 구조체에 추가해주면, 기본적인 Debug 트레이트 구현을 자동으로 만들어줍니다.
 
 ```rust
 #[derive(Debug)]
@@ -373,16 +307,35 @@ fn main() {
     println!("{:?}", book); // USE {:?} for Debug trait
 }
 ```
-
-이렇게 derive를 이용해서 자동으로 Debug 트레이트를 구현하면 좋은 점이 있습니다. 위 예제를 실행해보면 좀더 자세한 정보가 나오는 것을 알 수 있습니다.
-
-```rust
+```bash
 Book { title: "The Rust Programming Language", author: "Steve Klabnik and Carol Nichols", published: 20230228 }
 ```
 
-구조체의 이름과 각 필드의 이름이 자동으로 출력됩니다. 따라서 Debug트레이트는 직접 구현하는 것보다 derive를 이용하는 것을 추천합니다.
+위와같이 구조체의 이름과 각 필드의 이름이 자동으로 출력됩니다. 따라서 Debug트레이트는 직접 구현하는 것보다 derive로 Debug속성을 추가하는 것을 추천합니다.
 
-만약 굳이 구조체의 정보를 출력해야한다면 Display 트레이트를 구현하는 것을 추천합니다.
+Debug와 Display는 사실상 동일한 일을 합니다만, 사용하는 의도가 다른 것입니다. 일반적으로 특정 타입을 문자열로 변환해서 출력하고자할 때는 Display를 사용합니다. 서로 다른 모듈이나 객체들간의 통신 인터페이스로도 사용할 수 있습니다. 하지만 개발자가 임시로 디버깅 용도로 타입의 데이터를 출력하고자할 때나 에러 메세지 등에서는 Debug를 사용하는게 의도에 맞게 사용하는 것입니다. 의도에 맞게 사용하면 코드를 읽는 다른 개발자나 미래의 나 자신에게 더 읽기 쉬운 코드가 될 것입니다.
+
+>
+> 파이썬을 경험해보신 분들은 __repr__이나 __str__메소드과 유사한 것들이라고 생각하시면 이해하기 좋습니다.
+>
+
+
+
+
+
+
+
+
+
+
+
+======================================== 2024 10 04 =======================================
+
+
+
+
+
+
 
 ### Clone
 
