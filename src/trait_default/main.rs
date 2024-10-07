@@ -7,6 +7,6 @@ struct Book {
 
 fn main() {
     let book = Book::default();
-    let mut book_clone = book.clone();
+    let book_clone = book.clone();
     println!("{:?}", book_clone);
 }

@@ -128,8 +128,16 @@ name = "trait_default"
 path = "src/trait_default/main.rs"
 
 [[bin]]
-name = "trait_partialeq"
-path = "src/trait_partialeq/main.rs"
+name = "trait_partialeq_first"
+path = "src/trait_partialeq_first/main.rs"
+
+[[bin]]
+name = "trait_partialeq_second"
+path = "src/trait_partialeq_second/main.rs"
+
+[[bin]]
+name = "trait_partialeq_eq"
+path = "src/trait_partialeq_eq/main.rs"
 
 [[bin]]
 name = "generic_struct"

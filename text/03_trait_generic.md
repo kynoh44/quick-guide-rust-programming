@@ -381,6 +381,13 @@ fn main() {
     //print_info(&book);
 }
 ```
+```bash
+$ cargo run --bin trait_clone
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.25s
+     Running `target/debug/trait_clone`
+Book { title: "The Rust Programming Language", author: "Steve Klabnik and Carol Nichols", published: 20230228 }
+Book { title: "The another book", author: "Unknown", published: 20111111 }
+```
 
 clone함수의 내용을 보면 새로운 Book 객체를 만듭니다. title필드는 self.title을 그대로 복사해야합니다. self.title은 String타입의 객체이므로 String타입의 clone메소드를 호출하면 똑같은 객체를 만들 수 있습니다. String 타입의 clone 메소드 또한 Clone 트레이트를 구현한 것이겠지요. 표준 라이브러리에 정의된 타입들은 대부분 clone 메소드를 가지고 있습니다. 만약 clone메소드를 호출하지않고 다음과 같이 만든다면 어떻게될까요?
 
@@ -437,10 +444,10 @@ error[E0038]: the trait `Clone` cannot be made into an object
 러스트는 이와같이 메모리 안정성을 위해서 복잡해보이는 규칙들을 가지고 있습니다. 과하다싶을 때도 있지만, 이런 규칙들을 개발자가 생각하면서 개발해야하는 언어들의 문제점을 해결하는게 이토록 쉽지않은 일이라는 것을 알 수 있습니다. 처음에는 복잡해보이고 의미를 알 수 없는 규칙들이지만, 메모리 안정성을 염두해두고 연습을 해나간다면 이해할 수 있습니다. 시작단계에서는 모든 트레이트가 다 트레이트 객체를 만들 수 있지 않다는 것만 기억해두고 점차 익숙해지면서 더 이해하면 됩니다.
 
 >
-> Sized나 Copy 트레이트 등은 메모리를 세밀하게 제어할때 사용됩니다. 이 책의 수준을 넘어서기때문에 자세히 설명하지 않겠습니다.
+> Sized나 Copy 트레이트 등은 메모리를 세밀하게 제어할때 사용됩니다. 그 외 다양한 마커 트레이트가 있지만, 이 책의 수준을 넘어서기때문에 자세히 설명하지 않겠습니다.
 >
 
-지금까지 길게 Clone 트레이트의 구현을 설명했지만, 사실은 이렇게 직접 구현할 필요가 없습니다. derive를 쓰면 자동으로 생성됩니다.
+지금까지 길게 Clone 트레이트의 구현을 설명했지만, 사실은 이렇게 직접 구현할 필요가 없습니다. derive[Clone]속성을 추가해주면 자동으로 Clone트레이트의 구현이 생성됩니다.
 
 ```rust
 #[derive(Debug, Clone)]
@@ -449,56 +456,15 @@ struct Book {
     author: String,
     published: u32,
 }
-
-fn main() {
-    let book = Book {
-        title: String::from("The Rust Programming Language"),
-        author: String::from("Steve Klabnik and Carol Nichols"),
-        published: 20230228,
-    };
-
-    let another = Book {
-        title: String::from("The another book"),
-        author: String::from("Unknown"),
-        published: 20111111,
-    };
-
-    let mut book_clone = book.clone();
-    println!("{:?}", book_clone);
-    book_clone.clone_from(&another);
-    println!("{:?}", book_clone);
-}
+...
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-================================ 2024 10 07 ======================
-
-
-
-
-
-
-
-
-
-
-
 
 ### Default
 
-Default 트레이트는 구조체의 각 필드를 디폴트값을 초기화해서 객체를 생성해줍니다.
+Default 트레이트는 구조체의 각 필드를 디폴트값으로 초기화해서 객체를 생성해줍니다. 다음 예제는 Default 트레이트를 직접 구현하지않고 derive(Default) 속성을 추가해서 자동으로 생성된 코드를 사용한 예제입니다.
 
 ```rust
+// src/trait_default/main.rs
 #[derive(Debug, Clone, Default)]
 struct Book {
     title: String,
@@ -508,20 +474,25 @@ struct Book {
 
 fn main() {
     let book = Book::default();
-    let mut book_clone = book.clone();
+    let book_clone = book.clone();
     println!("{:?}", book_clone);
 }
 ```
+```bash
+gkim@gkim-laptop:~/study/my-rust-book$ cargo run --bin trait_default
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.13s
+     Running `target/debug/trait_default`
+Book { title: "", author: "", published: 0 }
+```
 
-새로운 객체를 만들 때 사용하므로 정적 메소드입니다. 따라서 “타입이름::default()” 형태로 호출합니다. 
-
-물론 러스트 언어에서 기본값으로 지정한 값이 개발자의 의도와 다를 때가 있습니다. 그럴때는 직접 구현하면 됩니다.
+Default트레이트는 default라는 메소드를 가지고 있습니다. default 메소드는 새로운 객체를 만들 때 사용하므로 정적 메소드입니다. 따라서 “타입이름::default()” 형태로 호출합니다. 간혹 자동으로 생성되는 값들이 개발자의 의도와 다를 때만 직접 구현해주면 됩니다.
 
 ### PartialEq
 
 PartialEq는 두 객체가 같은 값을 가지고 있는지를 확인하는 트레이트입니다.
 
 ```rust
+// src/trait_partialeq_first/main.rs
 #[derive(Debug, Clone, Default)]
 struct Book {
     title: String,
@@ -556,12 +527,19 @@ fn main() {
     }
 }
 ```
+```bash
+$ cargo run --bin trait_partialeq_first
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
+     Running `target/debug/trait_partialeq_first`
+Yes, this book is writtend by Person { name: "Steve Klabnik", age: 30 }
+```
 
 위와 같이 두 책이 같은 책인지 확인하려면 책 제목과 저자 이름을 확인하게 됩니다.
 
 트레이트 이름이 PartialEq라고해서 왜 Partial이라는 이름이 들어갔는지 의아하게 생각할 수도 있습니다. 하지만 완전하게 동일한 객체를 비교하는게 아니라 위와같이 좀더 넓은 의미에서 일부 같은 값을 가진 객체도 비교할 수 있다는 유연성을 갖는다고 이해하면 쉬울듯합니다. 바로 아래 예제를 생각해보면 됩니다.
 
 ```rust
+// src/trait_partialeq_second/main.rs
 #[derive(Debug)]
 struct Person {
     name: String,
@@ -608,10 +586,113 @@ fn main() {
     }
 }
 ```
+```bash
+$ cargo run --bin trait_partialeq_second
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running `target/debug/trait_partialeq_second`
+Yes, this book is writtend by Person { name: "Steve Klabnik", age: 30 }
+```
 
 Book 타입과 Person 타입은 동일한 객체가 될 수는 없습니다. 하지만 일부 같은 값을 갖는지를 비교할 수는 있겠지요. 아직 제너릭에 대한 이야기를 하지 않았지만, PartialEq에 어떤 타입 바인딩을 쓰는지에 따라서 비교할 대상의 타입을 지정할 수 있다는 것만 생각해보시면 되겠습니다.
 
 PartialEq 외에도 Eq 트레이트가 있습니다. 하지만 보통 우리가 == 연산자로 비교할 때는 PartialEq를 사용한다는 것을 기억하시기 바랍니다.
+
+#### PartialEq와 Eq 트레이트의 차이
+
+러스트에서 일반적으로 두 객체가 같은지 비교하는 트레이트가 PartialEq라는 것이 이상하게 느껴질 것입니다. 왜 이름에 일부분(Partial)이라는 의미가 들어가는지, 왜 Eq가 기본이 아닌지 이상합니다. 사실 정의만 놓고 본다면 PartialEq는 
+
+1. a=b일때 b=a를 만족하고
+2. a=b이고 b=c일때 a=c를 만족하는지를
+
+확인하는 것입니다. 그리고 Eq 트레이트는 a==a를 만족하는지를 확인하는 것입니다. 사실 이게 무슨 의미인지 쉽게 이해하기 어렵습니다. 그래서 위에 책과 저자를 비교하는 예제를 조금 더 확장해보면서 생각해보겠습니다.
+
+```rust
+//src/trait_partialeq_eq/main.rs
+#[derive(Debug)]
+struct Person {
+    name: String,
+    age: u32,
+}
+
+#[derive(Debug, Clone, Default)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
+
+impl PartialEq for Book {
+    fn eq(&self, other: &Self) -> bool {
+        self.title == other.title && self.author == other.author
+    }
+}
+
+impl PartialEq<Person> for Book {
+    fn eq(&self, other: &Person) -> bool {
+        if self.author.contains("Unknown") {
+            return false;
+        }
+        self.author.contains(&other.name)
+    }
+}
+
+impl PartialEq<Book> for Person {
+    fn eq(&self, other: &Book) -> bool {
+        if self.name.contains("Unknown") {
+            return false;
+        }
+        other.author.contains(&self.name)
+    }
+}
+
+fn main() {
+    let second = Book {
+        title: String::from("Necronomicon"),
+        author: String::from("Unknown"),
+        published: 20230228,
+    };
+    let unknown = Person {
+        name: "Unknown".to_string(),
+        age: 30,
+    };
+    if second == unknown {
+        println!("Yes, this book is writtend by {:?}.", unknown);
+    } else {
+        println!("No, we don't know who wrote it.")
+    }
+}
+```
+```bash
+$ cargo run --bin trait_partialeq_eq
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.18s
+     Running `/home/gkim/study/my-rust-book/target/debug/trait_partialeq_eq`
+No, we don't know who wrote it.
+```
+
+책의 저자도 Unknown이고, 사람의 이름도 Unknown입니다. 그럼 이 책 저자와 사람의 이름이 같은 것일까요? 이 책을 이 사람이 썼다고 생각할 수 없는 것입니다. 표기는 같지만 비교할 수 없는 값들이기 때문입니다. 예, 이런 경우가 있기 때문에 PartialEq이라는 이름을 사용하는 것입니다.
+
+그럼 Eq가 필요한 경우는 언제일까요? Eq는 항상 정확하게 비교할 수 있는 경우에 사용해야합니다. 바로 키와 값을 저장하는 HashMap같은 자료구조에서 키로 사용하는 타입은 반드시 Eq 트레이트가 구현되어야합니다. HashMap과 Eq트레이트에 대해서는 뒤에 HashMap의 사용법을 소개할 때 다시 이야기하겠습니다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+==================================== 2024 10 07 ===================================
+
+
+
+
 
 # Generic 프로그래밍
 
