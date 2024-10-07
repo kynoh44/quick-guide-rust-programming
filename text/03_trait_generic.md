@@ -229,7 +229,7 @@ fn print_info(item: &dyn Printable<Age = u32>) {
 
 ### Display와 Debug 트레이트
 
-Display라는 트레이트가 있습니다. 구조체 타입을 println! 등의 출력 함수에서 곧바로 출력할 수 있도록 만드는 트레이트입니다.
+Display라는 트레이트가 있습니다. 구조체 타입을 println! 등의 출력 함수에서 곧바로 출력할 수 있도록 만드는 트레이트입니다. 다음은 Display 트레이트의 정의를 매뉴얼에서 가져온 것입니다.
 
 ```rust
 use std::fmt;
@@ -319,29 +319,9 @@ Debug와 Display는 사실상 동일한 일을 합니다만, 사용하는 의도
 > 파이썬을 경험해보신 분들은 __repr__이나 __str__메소드과 유사한 것들이라고 생각하시면 이해하기 좋습니다.
 >
 
-
-
-
-
-
-
-
-
-
-
-======================================== 2024 10 04 =======================================
-
-
-
-
-
-
-
 ### Clone
 
-참고링크: https://doc.rust-lang.org/std/clone/trait.Clone.html
-
-Clone 트레이트는 clone이라는 메소드를 구현하는 것인데, 간단하게 설명하면 바로 deep copy를 수행하는 것입니다.
+Clone 트레이트는 clone이라는 메소드를 구현하는 것인데, 간단하게 설명하면 바로 deep copy를 수행하는 것입니다. 다음은 Clone 트레이트의 정의를 매뉴얼에서 가져온 것입니다.
 
 ```rust
 pub trait Clone: Sized {
@@ -353,11 +333,12 @@ pub trait Clone: Sized {
 }
 ```
 
-한가지 먼저 알아야되는게 있습니다. self와 Self의 차이입니다. &str과 String의 차이와 비슷합니다. self는 객체 자신을 가르키는 변수입니다. 그리고 Self는 객체의 타입입니다. &str이 스트링 객체의 참조이고, String이 문자열의 타입인것과 같습니다.
+한가지 먼저 알아야되는게 있습니다. self와 Self의 차이입니다. self는 객체 자신을 가르키는 변수입니다. 그리고 Self는 객체의 타입입니다. Self는 아무런 객체와 상관없은 단지 현재 트레이트를 구현하는 타입을 가르킵니다. 트레이트를 구현하는 것이 구조체이면 구조체의 이름이라고 생각할 수 있습니다.
 
-그래서 clone함수는 자기 자신을 참조하면서, 같은 타입을 반환하는 함수입니다. 그럼 한번 직접 만들어보겠습니다.
+그래서 clone함수는 자기 자신을 참조하면서, 같은 타입을 반환하는 함수입니다. 그럼 예제를 한번 만들어보겠습니다.
 
 ```rust
+// src/trait_clone/main.rs
 #[derive(Debug)]
 struct Book {
     title: String,
@@ -374,6 +355,10 @@ impl Clone for Book {
         }
     }
 }
+
+//fn print_info(item: &dyn Clone) {
+//    println!("item implements Clone trait");
+//}
 
 fn main() {
     let book = Book {
@@ -392,6 +377,8 @@ fn main() {
     println!("{:?}", book_clone);
     book_clone.clone_from(&another);
     println!("{:?}", book_clone);
+
+    //print_info(&book);
 }
 ```
 
@@ -419,16 +406,19 @@ error[E0507]: cannot move out of `self.title` which is behind a shared reference
    |                    ^^^^^^^^^^ move occurs because `self.title` has type `String`, which does not implement the `Copy` trait
 ```
 
-만약 Copy 트레이트가 구현되어있다면 clone 메소드를 호출해서 자동으로 객체 복사를 해주게되지만, String 타입은 Copy 트레이트를 구현하지않았으므로 위와같은 에러가 발생합니다.
+만약 String타입에 Copy 트레이트가 구현되어있다면 자동으로 copy 메소드를 호출해서 자동으로 객체 복사를 해주게되지만, String 타입은 Copy 트레이트를 구현하지않았으므로 위와같은 에러가 발생합니다.
 
 그리고 published는 u32타입의 변수이므로 clone이 필요없이 값이 복사됩니다.
 
+이전 예제에서 트레이트를 구현 후 트레이트 객체를 인자로 전달하는 함수를 만들어봤습니다. 그럼 Clone도 트레이트니까 비슷하게 Clone을 구현한 객체들을 인자로 받는 함수를 만들 수 있을까요? 예제에서 주석으로된 print_info 함수를 코드로 만들어서 다시 빌드해보겠습니다.
+
 ```rust
+...
 fn print_info(item: &dyn Clone) {
     println!("item implements Clone trait");
 }
+...
 ```
-
 ```rust
 error[E0038]: the trait `Clone` cannot be made into an object
   --> src/main.rs:50:22
@@ -440,15 +430,15 @@ error[E0038]: the trait `Clone` cannot be made into an object
    = note: for a trait to be "object safe" it needs to allow building a vtable to allow the call to be resolvable dynamically; for more information visit <https://doc.rust-lang.org/reference/items/traits.html#object-safety>
 ```
 
-컴파일러 메세지가 약간 이해하기 어렵지만 간단하게 생각해보면 이해할 수 있습니다. 트레이트 객체로 전달한다는 것은 원래의 타입이 뭔지를 숨기고 여러 타입이 공통으로 구현한 함수를 호출하는 것입니다. 만약 구현하는 함수가 clone 메소드처럼 Self를 반환한다면, 트레이트 객체의 원래 타입이 뭔지 알아야됩니다. 따라서 clone 메소드를 구현해야하는 Clone 트레이트는 트레이트 객체로 사용할 수 없는 것입니다. 
+컴파일러 메세지가 약간 이해하기 어렵지만 이렇게 생각해보면 힌트가 될 수 있습니다. 트레이트 객체로 전달한다는 것은 원래의 타입이 뭔지를 숨기고 여러 타입이 공통으로 구현한 함수를 호출하는 것입니다. 만약 구현하는 함수가 clone 메소드처럼 Self를 반환한다면, 트레이트 객체의 원래 타입이 뭔지 알아야됩니다. 따라서 clone 메소드를 구현해야하는 Clone 트레이트는 트레이트 객체로 사용할 수 없는 것입니다.
 
-Object safety(https://doc.rust-lang.org/reference/items/traits.html#object-safety) 라는 규칙들이 있는데 트레이트 오브젝트를 만들기 위한 규칙들입니다. 여기에 Sized 트레이트를 구현하면 안된다고 써있는데 Clone 트레이트는 상위 트레이트로 Sized 트레이트를 구현하고 있습니다. Sized 트레이트를 상위 트레이트로 가진다는 것은 바로 트레이트에서 사용하는 모든 타입들이 컴파일 시점에 어느 크기를 갖는지 알 수 있다는 제한을 부여하는 것입니다. 컴파일 타임에 Self 타입의 크기를 알아야 메모리 복사에서 안정성을 보장할 수 있기 때문입니다.
+에러 메세지에서 알려주는 Object safety(https://doc.rust-lang.org/reference/items/traits.html#object-safety) 라는 규칙들이 있는데 트레이트 오브젝트를 만들어서 쓸 수 있는 트레이트가 가져야하는 규칙들입니다. 여기에 Sized 트레이트를 구현하면 안된다고 써있는데 Clone 트레이트는 상위 트레이트로 Sized 트레이트를 구현하고 있습니다. 위에 Clone트레이트의 정의를 보면 Clone:Sized라고 써있는데 Sized 트레이트를 상위 트레이트로 가진다는 표시입니다. Sized 트레이느는 바로 트레이트에서 사용하는 모든 타입들이 컴파일 시점에 어느 크기를 갖는지 알 수 있다는 표시입니다 컴파일 타임에 Self 타입의 크기를 알아야 메모리 복사에서 안정성을 보장할 수 있기 때문입니다. 참고로 이와같이 어떤 메소드를 구현하고자하는 트레이트가 아니라, 속성만 부여하고자하는 트레이트도 있습니다. 그리고 그런 트레이트들을 Marker trait라고 부릅니다. 그래서 Sized트레이트가 정의된 위치가 std::marker입니다.
 
-참고로 이와같이 어떤 메소드를 구현하고자하는 트레이트가 아니라, 속성만 부여하고자하는 트레이트가 여러가지가 있습니다. 그리고 그런 트레이트들을 Marker trait라고 부릅니다. 그래서 Sized트레이트가 정의된 위치가 std::marker입니다.
+러스트는 이와같이 메모리 안정성을 위해서 복잡해보이는 규칙들을 가지고 있습니다. 과하다싶을 때도 있지만, 이런 규칙들을 개발자가 생각하면서 개발해야하는 언어들의 문제점을 해결하는게 이토록 쉽지않은 일이라는 것을 알 수 있습니다. 처음에는 복잡해보이고 의미를 알 수 없는 규칙들이지만, 메모리 안정성을 염두해두고 연습을 해나간다면 이해할 수 있습니다. 시작단계에서는 모든 트레이트가 다 트레이트 객체를 만들 수 있지 않다는 것만 기억해두고 점차 익숙해지면서 더 이해하면 됩니다.
 
-https://doc.rust-lang.org/std/marker/trait.Sized.html
-
-러스트는 이와같이 메모리 안정성을 위해서 복잡해보이는 규칙들을 가지고 있습니다. 과하다싶을 때도 있지만, 이런 규칙들을 개발자가 생각하면서 개발해야하는 언어들의 문제점을 해결하는게 이토록 쉽지않은 일이라는 것을 알 수 있습니다. 처음에는 복잡해보이고 의미를 알 수 없는 규칙들이지만, 메모리 안정성을 염두해두고 연습을 해나간다면 이해할 수 있습니다.
+>
+> Sized나 Copy 트레이트 등은 메모리를 세밀하게 제어할때 사용됩니다. 이 책의 수준을 넘어서기때문에 자세히 설명하지 않겠습니다.
+>
 
 지금까지 길게 Clone 트레이트의 구현을 설명했지만, 사실은 이렇게 직접 구현할 필요가 없습니다. derive를 쓰면 자동으로 생성됩니다.
 
@@ -479,6 +469,30 @@ fn main() {
     println!("{:?}", book_clone);
 }
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+================================ 2024 10 07 ======================
+
+
+
+
+
+
+
+
+
+
+
 
 ### Default
 

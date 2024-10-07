@@ -15,6 +15,10 @@ impl Clone for Book {
     }
 }
 
+//fn print_info(item: &dyn Clone) {
+//    println!("item implements Clone trait");
+//}
+
 fn main() {
     let book = Book {
         title: String::from("The Rust Programming Language"),
@@ -32,4 +36,6 @@ fn main() {
     println!("{:?}", book_clone);
     book_clone.clone_from(&another);
     println!("{:?}", book_clone);
+
+    //print_info(&book);
 }
