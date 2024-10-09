@@ -20,5 +20,5 @@ impl fmt::Debug for Point {
 fn main() {
     let dot: Point = Point { x: 1.2, y: 3.4 };
     println!("{:?}", dot);
-    println!("{}", dot);
+    println!("For your information: {}", dot);
 }

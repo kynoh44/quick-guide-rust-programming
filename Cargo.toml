@@ -112,12 +112,8 @@ name = "trait"
 path = "src/trait/main.rs"
 
 [[bin]]
-name = "trait_display"
-path = "src/trait_display/main.rs"
-
-[[bin]]
-name = "trait_debug"
-path = "src/trait_debug/main.rs"
+name = "std_trait_display_debug"
+path = "src/std_trait_display_debug/main.rs"
 
 [[bin]]
 name = "trait_clone"
@@ -136,8 +132,12 @@ name = "trait_partialeq_second"
 path = "src/trait_partialeq_second/main.rs"
 
 [[bin]]
-name = "trait_partialeq_eq"
-path = "src/trait_partialeq_eq/main.rs"
+name = "trait_partialeq_assert"
+path = "src/trait_partialeq_assert/main.rs"
+
+[[bin]]
+name = "trait_partialeq_eq_hashmap"
+path = "src/trait_partialeq_eq_hashmap/main.rs"
 
 [[bin]]
 name = "generic_struct"
@@ -162,10 +162,6 @@ path = "src/error/main.rs"
 [[bin]]
 name = "std_library_vec"
 path = "src/std_library_vec/main.rs"
-
-[[bin]]
-name = "std_trait_display_debug"
-path = "src/std_trait_display_debug/main.rs"
 
 [[bin]]
 name = "std_trait_partialeq_eq"

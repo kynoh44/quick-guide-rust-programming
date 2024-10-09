@@ -16,7 +16,7 @@ fn user_input() -> Result<Command, String> {
             Some("h") => return Ok(Command::Help),
             Some("q") => return Ok(Command::Quit),
             Some("r") => return Ok(Command::Run),
-            Some("e") => return Ok(Command::Execute(format!("asdf"))),
+            Some("e") => return Ok(Command::Execute(format!("NOT IMPLEMENTED YET!"))),
             _ => return Err(format!("Wrong input: {input}")),
         },
         Err(error) => return Err(format!("Wrong input: {error}")),
