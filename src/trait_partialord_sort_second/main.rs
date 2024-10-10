@@ -23,6 +23,18 @@ impl PartialOrd for Person {
     }
 }
 
+fn class_sorting(people: &mut Vec<Person>) {
+    let len = people.len();
+
+    for i in 0..(len - 1) {
+        for j in (i + 1)..len {
+            if people[i] > people[j] {
+                people.swap(i, j);
+            }
+        }
+    }
+}
+
 fn main() {
     let mut class: Vec<Person> = vec![
         Person {
@@ -47,7 +59,7 @@ fn main() {
         },
     ];
 
-    class.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    class_sorting(&mut class);
 
     for p in class.iter() {
         println!("{} is {}", p.name, p.height);

@@ -280,7 +280,7 @@ impl fmt::Debug for Point {
 이제 코드를 실행해보면 아래와같이 우리가 지정한 형태로 객체의 값이 출력됩니다.
 
 ```rust
-// src/std_trait_display_debug/main.rs
+// src/trait_display_debug/main.rs
 use std::fmt;
 
 pub struct Point {
@@ -307,10 +307,10 @@ fn main() {
 }
 ```
 ```bash
-$ cargo run --bin std_trait_display_debug
+$ cargo run --bin trait_display_debug
    Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.23s
-     Running `target/debug/std_trait_display_debug`
+     Running `target/debug/trait_display_debug`
 POINT [1.2 3.4]
 For your information: POINT(1.2 3.4)
 ```
@@ -336,7 +336,7 @@ fn main() {
 
 Debug와 Display는 사실상 동일한 일을 합니다만, 사용하는 의도가 다른 것입니다. 일반적으로 특정 타입을 문자열로 변환해서 사용자에게 보여주고자할 때는 Display를 사용합니다. 서로 다른 모듈이나 객체들간의 통신 인터페이스로도 사용할 수 있습니다. 하지만 개발자가 임시로 디버깅 용도로 타입의 데이터를 출력하고자할 때나 에러 메세지 등에서는 Debug를 사용하는게 의도에 맞게 사용하는 것입니다. 의도에 맞게 사용하면 코드를 읽는 다른 개발자나 미래의 나 자신에게 더 읽기 쉬운 코드가 될 것입니다.
 
-### Clone
+### 같은 객체를 만들어주는 Clone
 
 Clone 트레이트는 clone이라는 메소드를 구현하는 것인데, 간단하게 설명하면 바로 deep copy를 수행하는 것입니다. 다음은 Clone 트레이트의 정의를 매뉴얼에서 가져온 것입니다.
 
@@ -476,7 +476,7 @@ struct Book {
 ...
 ```
 
-### Default
+### 디폴트 값으로 객체를 생성하는 Default
 
 Default 트레이트는 구조체의 각 필드를 디폴트값으로 초기화해서 객체를 생성해줍니다. 다음 예제는 Default 트레이트를 직접 구현하지않고 derive(Default) 속성을 추가해서 자동으로 생성된 코드를 사용한 예제입니다.
 
@@ -504,7 +504,7 @@ Book { title: "", author: "", published: 0 }
 
 Default트레이트는 default라는 메소드를 가지고 있습니다. default 메소드는 새로운 객체를 만들 때 사용하므로 정적 메소드입니다. 따라서 “타입이름::default()” 형태로 호출합니다. 간혹 자동으로 생성되는 값들이 개발자의 의도와 다를 때만 직접 구현해주면 됩니다.
 
-### PartialEq
+### 값이 같은지 비교하는 PartialEq
 
 PartialEq는 두 객체가 같은 값을 가지고 있는지를 확인하는 트레이트입니다.
 
@@ -872,46 +872,17 @@ fn main() {
 MyKey는 점의 좌표를 나타냅니다. MyVal은 원점으로부터 점의 거리를 나타냅니다. 그래서 여러 점들의 원점으로부터 거리를 관리하는 해시맵을 만들어봤습니다. 만약 MyKey 구조체에 PartialEq와 Eq 트레이트의 구현이 없다면 빌드가 안됩니다. PartialEq는 Eq의 소집합이므로 Eq구현을 위해서는 PartialEq가 항상 같이 구현되어야합니다. 그리고 HashMap에서 키 값으로 사용된다는 표시를 하기위해 Hash 트레이트도 구현합니다.
 
 >
-> HashMap에 대해서는 다음에 다시 설명하겠습니다. 이 예제에서는 Eq의 구현만 봐주시기 바랍니다.
+> HashMap에 대해서는 다음에 다시 설명하겠습니다. 이 예제에서는 Eq만 봐주시기 바랍니다.
 >
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-### 두 객체를 비교하는 std::cmp::Ordering타입과 std::cmp::Ord트레이트
+### 크기를 비교하는 std::cmp::Ordering타입과 std::cmp::Ord트레이트
 
 두 객체가 동일한지를 판단하는 std::cmp::PartialEq 트레이트를 알아봤으니 이번에는 크기를 비교하는 std::cmp::PartialOrd 트레이트에 대해서 알아보겠습니다.
-
-그리고 PartialOrd 트레이트를 사용하기 위해 한가지 더 새롭게 알아야할 것이 있습니다. std::cmp::PartialOrd라는 트레이트의 partial_cmp 메소드의 반환값이 std::cmp::Ordering이라는 타입입니다. Ordering은 enum 타입으로 Greater, Less, Equal이라는 3가지 타입을 가지고 있습니다.
 
 그럼 간단하게 두 객체를 비교하는 예제를 보겠습니다.
 
 ```rust
+// src/trait_partialord/main.rs
 use std::cmp::Ordering;
 
 #[derive(PartialEq, Eq)]
@@ -959,21 +930,18 @@ fn main() {
 ```
 
 우리가 구현해야할 것은 PartialOrd 트레이트의 partial_cmp 메소드입니다. 이 메소드는 Option<Ordering>을 반환합니다. 왜 Option을 사용하는지는 예제 코드를 보면 알 수 있습니다. height 값이 0이거나 음수인 경우, 아직 객체가 제대로 초기화되지 않았거나 버그로 인해 객체의 데이터가 깨졌을 수 있습니다. 그렇게 단순히 비교만 하는게 아니라 비교할 수 없는 상황이 있을 수도 있기 때문에 그런 에러 상황을 처리하기위해 Option을 반환하도록 했습니다. Rust언어가 얼마나 에러 처리에 철저한지 알 수 있습니다.
+그리고 PartialOrd 트레이트를 사용하기 위해 한가지 더 새롭게 알아야할 것이 있습니다. 
 
-에러 처리 이후에는 실제로 비교해야할 데이터를 비교합니다. 메소드를 호출하는 객체가 더 크다면 Ordering::Greater를 반환합니다. 작으면 Ordering::Less, 같으면 Ordering::Equal을 반환합니다.
+partial_cmp메소드에서 가장 먼저 에러 상황을 확인한 이후에는 실제로 비교해야할 데이터를 비교합니다. std::cmp::PartialOrd라는 트레이트의 partial_cmp 메소드의 반환값이 std::cmp::Ordering이라는 타입입니다. Ordering은 enum 타입으로 Greater, Less, Equal이라는 3가지 타입을 가지고 있습니다. 메소드를 호출하는 객체가 더 크다면 Ordering::Greater를 반환합니다. 작으면 Ordering::Less, 같으면 Ordering::Equal을 반환합니다.
 
-main함수에서는 객체를 비교할 수 있는 2가지 방법을 보여주고 있습니다. 첫번째는 직관적으로 ‘>’ 연산자를 사용하는 것입니다. 당연히 PartialOrd 트레이트가 구현되었기 때문에 ‘>’와 ‘<’ 연산자를 사용하는 것이 가능합니다. 그리고 ‘==’ 연산자는 PartialEq 트레이트가 구현되었기 때문에 사용할 수 있습니다.
+main함수에서는 객체를 비교할 수 있는 2가지 방법을 보여주고 있습니다. 첫번째는 직관적으로 ‘>’ 연산자를 사용하는 것입니다. PartialOrd 트레이트가 구현되었기 때문에 객체간에 ‘>’와 ‘<’ 연산자를 사용하는 것이 가능합니다. 그리고 ‘==’ 연산자는 PartialEq 트레이트가 구현되었기 때문(derive(PartialEq)로 구현했습니다)에 사용할 수 있습니다.
 
-그 다음에는 메소드를 직접 호출하는 것을 보여줍니다. 직관적이지는 않지만 연산의 결과값을 변수에 저장하거나, 다른 함수에 전달해야할 때 ‘<’같은 연산자를 사용할 수 없으므로 이렇게 메소드를 직접 호출해서 결과값을 저장해야합니다.
+그 다음 마지막에는 partial_cmp 메소드를 직접 호출하는 것을 보여줍니다. '<', '>', '==' 연산자를 사용할 수 없는 경우가 있습니다. 대표적으로 연산의 결과값을 변수에 저장하거나, 다른 함수에 전달해야할 때 ‘<’같은 연산자를 사용할 수 없습니다. 그런 경우에는 이렇게 partial_cmp 메소드를 직접 호출해서 결과값을 저장해야합니다.
 
-```rust
-let compare = alpha.partial_cmp(&beta);
-who_is_taller(alpha, beta, compare);
-```
-
-두 객체를 비교할 수 있게 되었습니다. 비교하면 생각나는게 정렬 알고리즘이지요. 한반에 있는 학생들을 키에 따라 정렬하는 예제를 만들어보았습니다.
+이제 두 객체를 비교할 수 있게 되었습니다. 비교하면 생각나는게 정렬 알고리즘이지요. 한반에 있는 학생들을 키에 따라 정렬하는 예제를 만들어보았습니다.
 
 ```rust
+// src/trait_partialord_sort_first/main.rs
 use std::cmp::Ordering;
 
 #[derive(PartialEq, Eq)]
@@ -1042,10 +1010,23 @@ fn main() {
     }
 }
 ```
+```bash
+$ cargo run --bin trait_partialord_sort_first
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.45s
+     Running `target/debug/trait_partialord_sort_first`
+ddd is 90
+bbb is 100
+aaa is 110
+ccc is 120
+```
 
-그리고 모든 프로그래밍 언어의 라이브러리가 그렇듯이 Rust의 벡터 타입에도 정렬을 위한 메소드가 있습니다. 이때 벡터의 각 데이터들을 비교하는 클로저를 전달해야하므로 이때는 ‘>’같은 산술 연산자가 아니라 partial_cmp 메소드를 호출하는 클로저를 사용하게됩니다.
+그리고 대부분 프로그래밍 언어의 라이브러리가 그렇듯이 Rust의 벡터 타입에도 정렬을 위한 메소드가 있습니다. 이때 벡터의 각 데이터들을 비교하는 클로저를 전달해야하므로 이때는 ‘>’같은 산술 연산자가 아니라 partial_cmp 메소드를 호출하는 클로저를 사용하게됩니다.
+
+아래 에제는 백터의 sort_by 메소드와 PartialOrd 트레이트를 사용하는 예제입니다.
 
 ```rust
+// src/trait_partialord_sort_second/main.rs
 use std::cmp::Ordering;
 
 #[derive(PartialEq, Eq)]
@@ -1102,19 +1083,34 @@ fn main() {
     }
 }
 ```
+```bash
+$ cargo run --bin trait_partialord_sort_second
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.35s
+     Running `target/debug/trait_partialord_sort_second`
+ddd is 90
+bbb is 100
+aaa is 110
+ccc is 120
+```
 
+>
+> 벡터(Vector)는 다음에 다루겠습니다. 이 예제에서는 partial_cmp 메소드를 직접 호출해야하는 경우에 대해서만 봐주세요.
+>
 
-### 타입을 바꿔주는 From/Into와 TryFrom/TryInto 트레이트
+### 타입을 바꿔주는 From/Into 트레이트와 TryFrom/TryInto 트레이트
 
 #### From과 Into
 
 특정 타입을 다른 타입으로 바꿀때 사용하는 트레이트입니다. 
 
-이 트레이트가 저처럼 C/C++만 사용하시던 분들께는 필요성이 잘 이해가 안될 수 있습니다. 저도 처음에는 이게 굳이 왜 필요한가 생각했었습니다. 그런데 한번 사용해보니 왜 필요한지 이해가되서 점점 더 자주 사용하게되었습니다. 제가 C/C++로 프로그래밍하는 경우, 한 모듈에서 다른 모듈로 데이터를 전달할때 구조체의 각 필드를 쪼개서 전달하는게 보통이었습니다. 그리고 다른 모듈은 여러개의 데이터를 하나의 새로운 데이터 구조로 만들어서 사용했습니다. 그런데 From/Into같은 표준 트레이트가 있으면 모듈간 데이터를 전달할 때 표준 인터페이스가 있다는 의미가 되므로 데이터 전달 과정에서 오류를 방지할 수 있게됩니다.
+이 트레이트가 저처럼 C/C++만 사용하시던 분들께는 필요성이 잘 이해가 안될 수 있습니다. 저도 처음에는 이게 굳이 왜 필요한가 생각했었습니다. 그런데 한번 사용해보니 왜 필요한지 이해가되서 점점 더 자주 사용하게되었습니다. 제가 C/C++로 프로그래밍하는 경우, 한 모듈에서 다른 모듈로 데이터를 전달할때 구조체의 각 필드를 쪼개서 전달하는게 보통이었습니다. 그리고 다른 모듈은 여러개의 데이터를 하나의 새로운 데이터 구조로 만들어서 사용했습니다. 이 과정에서 데이터 순서가 바뀌거나, 허용되지 않는 값을 전달하는 등의 문제가 생기면 쉽게 해결하기 어려웠습니다.
+
+그런데 From/Into같은 타입을 변환하는 트레이트가 있으면 모듈간 데이터를 전달할 때 표준 인터페이스를 만들 수 있으므로 데이터 전달 과정에서 오류를 방지할 수 있게됩니다.
 
 다음은 Book타입의 객체를 u32타입의 ISBN 숫자로 바꾸는 예제입니다.
 
 ```rust
+// src/trait_from/main.rs
 #[derive(Debug)]
 struct Book {
     title: String,
@@ -1149,14 +1145,26 @@ fn main() {
     println!("The book is {isbn} and Rust in Action is {isbn2}");
 }
 ```
+```bash
+$ cargo run --bin trait_from
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running `target/debug/trait_from`
+The book is 718503105 and Rust in Action is 1617294551
+```
 
 Book타입을 u32로 변경하기 위한 것이므로 최종 생성되는 데이터는 u32타입이 됩니다. 그래서 u32타입을 위해 From<Book> 트레이트를 구현하는 것입니다. from이라는 메소드를 구현하게되는데 인자를 Book 타입을 받고, 반환값이 u32가 됩니다.
 
 보통 From을 더 많이 사용하는데, From을 구현하면 Into가 자동으로 구현되기 때문입니다. 예제를 봐도 into 메소드를 구현하지 않았는데 into 메소드를 사용할 수 있는 것을 볼 수 있습니다.
 
-#### TryFrom
+>
+> From<Book>에서 From은 트레이트의 이름이고, Book은 From 트레이트가 구현될 타입입니다. 이것은 제너릭 프로그래밍 기법입니다. 제너릭 프로그래밍은 다음에 다시 이야기하겠습니다. 이 예제에서는 From 트레이트를 Book 타입을 위해 구현했다고 이해해주시기 바랍니다.
+>
 
-간단한 From/Into를 알아봤으니, 이번에는 조금 더 유연하게 사용할 수 있는 TryFrom/TryInto의 예제를 보겠습니다. 이름에 Try가 들어가는 것을 보면 알 수 있듯이, 시도를 해보고 안되면 실패를 반환할 수 있는 것이 From/Into와 차이점입니다. 이전 예제에서 From/Into의 반환값을 보면 Result타입이 아니라 곧바로 u32를 반환하는 것을 볼 수 있습니다. 이번 예제에서는 Result를 반환하도록 만들어보겠습니다.
+#### TryFrom과 TryInto
+
+좀 더 간단한 From/Into를 알아봤으니, 이번에는 조금 더 유연하게 사용할 수 있는 TryFrom/TryInto의 예제를 보겠습니다. 이름에 Try가 들어가는 것을 보면 알 수 있듯이, 시도를 해보고 안되면 실패를 반환할 수 있는 것이 From/Into와 차이점입니다. 이전 예제에서 From/Into의 반환값을 보면 Result타입이 아니라 곧바로 u32를 반환하는 것을 볼 수 있습니다. 실패에 대한 고려가 없습니다.
+
+이번 예제에서는 TryFrom 트레이트를 구현하고, try_from 메소드에서 Result를 반환하도록 만들어보겠습니다.
 
 ```rust
 #[derive(Debug)]
@@ -1199,12 +1207,11 @@ fn main() {
 }
 ```
 
-TryFrom트레이트를 구현해봤습니다. 트레이트 구현을 보면 가장 처음 한 일이 Error 타입을 어느 타입을 지정할 지 결정하는 일입니다. 책의 ISBN은 0이 될 수 없으니 에러 타입을 u32 타입 정수로 지정해봤습니다. 보다 친절하게 에러 메세지를 지정하고 싶으면 Error타입을 &’static str 타입이나 String 타입으로 지정할 수도 있겠습니다. 그리고 try_from 메소드를 구현하는데 반환값이 Result<u32, Self::Error>입니다. from메소드에서 u32를 반환하는 것과 차이가 있습니다. 메소드의 구현은 간단합니다. 책 데이터에 있는 isbn값이 정상적인 값이라면 Ok(u32)가 반환될 것이고, 정상적인 값이 아니라서 파싱중에 에러가 발생하면 Err(0)이 반환될 것입니다.
+TryFrom 트레이트를 구현해봤습니다. 트레이트 구현을 보면 가장 처음 한 일이 Error 타입으로 어느 타입을 지정할지 결정하는 일입니다. 책의 ISBN은 0이 될 수 없으니 에러 타입을 u32 타입 정수로 지정하고 에러의 경우 Err(0)을 반환하도록 만들어봤습니다. 보다 친절하게 에러 메세지를 지정하고 싶으면 Error타입을 &’static str 타입이나 String 타입으로 지정할 수도 있겠습니다. 그리고 try_from 메소드를 구현하는데 반환값이 Result<u32, Self::Error>입니다. from메소드에서 u32를 반환하는 것과 차이가 있습니다. 메소드의 구현은 간단합니다. 책 데이터에 있는 isbn값이 정상적인 값이라면 Ok(u32)가 반환될 것이고, 정상적인 값이 아니라서 파싱중에 에러가 발생하면 Err(0)이 반환될 것입니다.
 
-상황에 따라 From을 쓸 것인지, TryFrom을 쓸 것인지 선택하면되겠지만, 보다 유연한 에러처리를 위해서는 TryFrom을 쓰는게 좋을 것입니다. 위 예제처럼 아주 단순한 경우라면 From도 충분하겠지만요.
+상황에 따라 From을 쓸 것인지, TryFrom을 쓸 것인지 선택하면되겠지만, 보다 유연한 에러처리를 위해서는 TryFrom을 쓰는게 좋을 것입니다.
 
-
-## Iterators 반복자
+### Iterators 반복자
 
 지금까지 이터레이터를 여러번 사용해봤는데 사실 이터레이트는 트레이트로 구현됩니다. 러스트의 기본 데이터 타입에는 이터레이터가 미리 구현되어있어서 우리가 직접 구현할 필요가 없었습니다. 하지만 우리가 직접 만든 타입에 이터레이터를 사용하기 위해서는 우리가 직접 구현해야겠지요.
 
@@ -1313,6 +1320,18 @@ fn main() {
     }
 }
 ```
+```bash
+$ cargo run --bin trait_iterator
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.36s
+     Running `target/debug/trait_iterator`
+Some(Book { title: "The Fellowship of the Ring", author: "J. R. R. Tolkien", published: 19540729 })
+Some(Book { title: "The Two Towers", author: "J. R. R. Tolkien", published: 19541111 })
+Some(Book { title: "The Return of the King", author: "J. R. R. Tolkien", published: 19551020 })
+None
+Book { title: "The Fellowship of the Ring", author: "J. R. R. Tolkien", published: 19540729 }
+Book { title: "The Two Towers", author: "J. R. R. Tolkien", published: 19541111 }
+Book { title: "The Return of the King", author: "J. R. R. Tolkien", published: 19551020 }
+```
 
 일단 구현이 어떻게할지는 놔두고 main함수에서 어떻게 사용하는지부터 보겠습니다.
 
@@ -1324,11 +1343,15 @@ book_array라는 이름의 배열을 만들어서 여러개의 Book 객체를 �
 
 Iterator 구현을 보면 가장 먼저 볼 수 있는게 Item 타입은 Book객체의 참조 포인터라는 것입니다. 이것은 이터레이터가 next() 메소드를 호출하거나 for 루프에서 사용될때 반환하는 값의 타입이 Book 객체의 참조 포인터라는 것입니다. 그 다음을 보면 next() 메소드의 구현이 나옵니다. 메소드 인자는 &mut self로 우리가 만든 BookSelf 구조체 mutable 참조가 됩니다. 그리고 반환값인 Option<&Book>이 되겠지요. 구현은 생각보다 간단합니다. 우선 현재 self.books라는 배열을 첫번째 객체와 나머지로 쪼갭니다. 만약 잘 쪼개진다면 어쨌든 배열안에 데이터(Book객체에 대한 포인터)가 1개 이상 들어있다는 뜻이므로 첫번째 객체는 반환하고 나머지는 self.books에 저장합니다. 그런데 배열을 쪼개려고했는데 None이 반환되었다는 것은 self.books 배열에 아무런 데이터가 없다는 뜻이므로 None을 반환해주면 됩니다.
 
-아마 다른 언어로 이터레이터를 만들어본 경험이 있으시다면 쉽게 익숙해질 수 있을거라 생각합니다. 단지 주의해야할 것은 반환값은 Option이므로 더이상 데이터가 없을때 None을 호출해야한다는 것입니다. 그리고 라이프타임을 지정해야되는데 이것은 일단 라이프타임을 지정하지않고 코딩한 후에 컴파일러의 에러 메세지를 참고해서 라이프타임 지정을 추가해주면 됩니다.
+아마 다른 언어로 이터레이터를 만들어본 경험이 있으시다면 쉽게 익숙해질 수 있을거라 생각합니다. 단지 주의해야할 것은 반환값은 Option이므로 더이상 데이터가 없을때 None을 호출해야한다는 것입니다. 
+
+>
+> 예제에 impl<'a>와 Bookshelf<'a>같이 새로운 형태의 문법이 사용되었습니다. 이것들을 라이프타임(Lifetime)이라고 합니다. 다음에 제대로 소개하겠습니다. 일단 이 예제와같이 아주 간단하게 라이프타임을 사용할 경우에는, 일단 라이프타임을 지정하지않고 코딩한 후에 컴파일러의 에러 메세지를 참고해서 라이프타임 지정을 추가해주면 됩니다.
+>
 
 ### 벡터의 각 요소를 수정할 수 있는 반복자
 
-지금까지는 배열이나 벡터의 각 데이터를 읽기만 하는 예제를 사용했었습니다. 하지만 보통은 아래와 같이 데이터를 수정해야되는 상황이 더 많을 것입니다.
+지금까지는 배열이나 벡터의 각 데이터를 읽기만 하는 반복자를 사용했었습니다. 하지만 보통은 아래와 같이 데이터를 수정해야되는 상황이 더 많을 것입니다.
 
 ```rust
 #[derive(Debug)]
@@ -1363,13 +1386,12 @@ fn main() {
 
     println!("{:?}", book_array);
 }
-
 ```
 
-위 예제를 빌드해보면 아래와 같은 에러가 발생합니다.
+이 예제는 모든 책의 author 필드를 "John Ronald Reuel Tolkien"으로 바꾸려는 예제입니다. 이 예제를 빌드해보면 아래와 같은 에러가 발생합니다.
 
-```rust
-$ cargo build
+```bash
+$ cargo build --bin trait_iterator_iter_mut
    Compiling pyalgo v0.1.0 (/home/gurugio/pyalgo)
 error[E0594]: cannot assign to `b.author`, which is behind a `&` reference
   --> src/main.rs:28:9
@@ -1386,7 +1408,63 @@ For more information about this error, try `rustc --explain E0594`.
 error: could not compile `pyalgo` (bin "pyalgo") due to 1 previous error
 ```
 
-book_array.iter()는 immutable reference를 반환합니다. 따라서 book_array.iter()에서 반환된 불변 참조가 b에 저장되고, b를 통해 데이터에 접근하면 데이터를 수정할 수 없습니다.
+book_array.iter()는 immutable reference를 반환합니다. 따라서 book_array.iter()에서 반환된 불변 참조가 b에 저장되고, b를 통해 데이터에 접근하면 데이터를 수정할 수 없습니다. 컴파일러가 친절하게 iter() 대신에 iter_mut() 메소드를 사용하라고 알려주고 있습니다. 그리고 한가지 더 잊지 말아야하는게있는데 book_array 선언에 mut를 추가하는 것입니다.
 
-컴파일러가 친절하게 iter() 대신에 iter_mut() 메소드를 사용하라고 알려주고 있습니다. 그리고 한가지 더 잊지 말아야하는게있는데 book_array 선언에 mut를 추가하는 것입니다.
+```rust
+#[derive(Debug)]
+struct Book {
+    title: String,
+    author: String,
+    published: u32,
+}
 
+fn main() {
+    let mut book_array = [
+        Book {
+            title: String::from("The Fellowship of the Ring"),
+            author: String::from("J. R. R. Tolkien"),
+            published: 19540729,
+        },
+        Book {
+            title: String::from("The Two Towers"),
+            author: String::from("J. R. R. Tolkien"),
+            published: 19541111,
+        },
+        Book {
+            title: String::from("The Return of the King"),
+            author: String::from("J. R. R. Tolkien"),
+            published: 19551020,
+        },
+    ];
+
+    for b in book_array.iter_mut() {
+        b.author = String::from("John Ronald Reuel Tolkien");
+    }
+
+    println!("{:?}", book_array);
+}
+```
+```bash
+$ cargo run --bin trait_iterator_iter_mut
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
+warning: fields `title` and `published` are never read
+ --> src/trait_iterator_iter_mut/main.rs:3:5
+  |
+2 | struct Book {
+  |        ---- fields in this struct
+3 |     title: String,
+  |     ^^^^^
+4 |     author: String,
+5 |     published: u32,
+  |     ^^^^^^^^^
+  |
+  = note: `Book` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` on by default
+
+warning: `my-rust-book` (bin "trait_iterator_iter_mut") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.40s
+     Running `target/debug/trait_iterator_iter_mut`
+[Book { title: "The Fellowship of the Ring", author: "John Ronald Reuel Tolkien", published: 19540729 }, Book { title: "The Two Towers", author: "John Ronald Reuel Tolkien", published: 19541111 }, Book { title: "The Return of the King", author: "John Ronald Reuel Tolkien", published: 19551020 }]
+```
+
+배열이나 벡터를 사용할 때 반복자를 직접 구현하는 경우는 많지 않을 것입니다. 보통은 네트워크에서 데이터를 받거나 보낼때, 스트림에서 데이터를 읽어올 때 같이 모든 데이터를 한꺼번에 처리하지않고 조금씩 처리하는 경우에 반복자를 사용합니다.

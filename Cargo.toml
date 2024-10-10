@@ -112,8 +112,8 @@ name = "trait"
 path = "src/trait/main.rs"
 
 [[bin]]
-name = "std_trait_display_debug"
-path = "src/std_trait_display_debug/main.rs"
+name = "trait_display_debug"
+path = "src/trait_display_debug/main.rs"
 
 [[bin]]
 name = "trait_clone"
@@ -140,6 +140,34 @@ name = "trait_partialeq_eq_hashmap"
 path = "src/trait_partialeq_eq_hashmap/main.rs"
 
 [[bin]]
+name = "trait_partialord"
+path = "src/trait_partialord/main.rs"
+
+[[bin]]
+name = "trait_partialord_sort_first"
+path = "src/trait_partialord_sort_first/main.rs"
+
+[[bin]]
+name = "trait_partialord_sort_second"
+path = "src/trait_partialord_sort_second/main.rs"
+
+[[bin]]
+name = "trait_from"
+path = "src/trait_from/main.rs"
+
+[[bin]]
+name = "trait_tryfrom"
+path = "src/trait_tryfrom/main.rs"
+
+[[bin]]
+name = "trait_iterator"
+path = "src/trait_iterator/main.rs"
+
+[[bin]]
+name = "trait_iterator_iter_mut"
+path = "src/trait_iterator_iter_mut/main.rs"
+
+[[bin]]
 name = "generic_struct"
 path = "src/generic_struct/main.rs"
 
@@ -164,18 +192,6 @@ name = "std_library_vec"
 path = "src/std_library_vec/main.rs"
 
 [[bin]]
-name = "std_trait_partialeq_eq"
-path = "src/std_trait_partialeq_eq/main.rs"
-
-[[bin]]
-name = "std_trait_ordering"
-path = "src/std_trait_ordering/main.rs"
-
-[[bin]]
-name = "std_trait_iterator"
-path = "src/std_trait_iterator/main.rs"
-
-[[bin]]
 name = "std_library_hashmap"
 path = "src/std_library_hashmap/main.rs"
 
@@ -183,6 +199,3 @@ path = "src/std_library_hashmap/main.rs"
 name = "std_library_file"
 path = "src/std_library_file/main.rs"
 
-[[bin]]
-name = "std_trait_tryfrom"
-path = "src/std_trait_tryfrom/main.rs"
