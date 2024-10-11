@@ -1,8 +1,10 @@
-# Generic 프로그래밍 소개
+# 제네릭(Generic) 프로그래밍 소개
 
-제너릭 프로그래밍은 다른 프로그래밍 언어와 마찬가지로 같은 코드를 다른 타입에 사용할 수 있도록 하는 것입니다. 제너릭 타입과 제너릭 함수가 있는데 다음 예제로 알아보겠습니다.
+제네릭 프로그래밍은 다른 프로그래밍 언어와 마찬가지로 같은 코드를 다른 타입에 사용할 수 있도록 하는 것입니다. 제네릭을 이용한 타입(구조체와 열거형)과 제네릭을 이용한 함수(일반 함수, 메소드, 트레이트 등)을 만들 수 있는데 있는데 다음 예제로 제네릭 타입, 함수, 트레이트에 대해서 알아보겠습니다.
 
 ```rust
+// src/generic_struct/main.rs
+#[derive(Debug)]
 struct Pair<T> {
     first: T,
     second: T,
@@ -13,100 +15,6 @@ where
     T: std::ops::Add<Output = T>,
 {
     a + b
-}
-
-fn main() {
-    let integer_pair: Pair<i32> = Pair {
-        first: 5,
-        second: 10,
-    };
-
-    let float_pair: Pair<f64> = Pair {
-        first: 3.14,
-        second: 1.618,
-    };
-
-    let result = add(4, 6);
-    println!("Sum: {}", result); // Prints "Sum: 10"
-
-    let result = add(3.14, 1.618);
-    println!("Sum: {}", result); // Prints "Sum: 4.758"
-}
-```
-
-Pair라는 제너릭 구조체를 만들었습니다. 타입 파라미터는 T입니다. 다른 언어들과 다를게 없어서 쉽게 이해할 수 있습니다.
-
-그 다음은 제너릭 함수 add입니다. 타입 파라미터는 T입니다. 같은 타입의 두 인자를 받아서 두 인자를 합한 값을 반환합니다. 러스트의 제너릭 함수에는 타입 파라미터가 어떤 트레이트를 구현해야하는지를 선언할 수 있습니다.
-
-```rust
-where
-    T: std::ops::Add<Output = T>,
-```
-
-이렇게 where절을 추가하면 T타입은 std::ops::Add트레이트를 구현하고 있어야하며 Output타입은 T가 되어야한다는 제약조건을 걸게됩니다. 아래와같이 정수나 실수를 add함수에 전달할 수 있다는 것은 정수나 실수 타입이 std::ops::Add 트레이트를 구현하고 있다는 의미겠지요.
-
-```rust
-    let result = add(3.14, 1.618);
-    println!("Sum: {}", result); // Prints "Sum: 4.758"
-```
-
-그럼 우리가 만든 타입도 마찬가지로 std::ops::Add 트레이트를 구현한다면 add함수를 이용할 수 있다는 의미가 됩니다. Pair타입을 위한 std::ops::Add 트레이트 구현을 해볼까요.
-
-```rust
-#[derive(Debug)]
-struct Pair<T> {
-    first: T,
-    second: T,
-}
-
-impl std::ops::Add for Pair<i32> {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self {
-        Self {
-            first: self.first + rhs.first,
-            second: self.first + rhs.second,
-        }
-    }
-}
-
-fn add<T>(a: T, b: T) -> T
-where
-    T: std::ops::Add<Output = T>,
-{
-    a + b
-}
-
-fn main() {
-    let left_pair: Pair<i32> = Pair {
-        first: 5,
-        second: 10,
-    };
-
-    let right_pair: Pair<i32> = Pair {
-        first: 10,
-        second: 5,
-    };
-
-    let result = add(left_pair, right_pair);
-    println!("Sum: {:?}", result);
-    // Sum: Pair { first: 15, second: 10 }
-}
-```
-
-이전에 트레이트를 이야기할 때 구현해본 바와 크게 다르지 않습니다. 단지 Pair가 제너릭 타입이기 때문에 i32타입을 바인딩한 Pair타입에 대한 add함수를 구현한다는 표시를 추가했습니다.
-
-```rust
-impl 트레이트이름 for Pair<타입> {
-...
-```
-
-그럼 Pair에 특정한 타입이 바인딩되었을때의 트레이트 구현뿐 아니라 제너릭 타입을 사용한 Pair도 사용할 수 있지 않을까요? 아래와 같이 구현할 수 있습니다.
-
-```rust
-#[derive(Debug)]
-struct Pair<T> {
-    first: T,
-    second: T,
 }
 
 impl<T> std::ops::Add for Pair<T>
@@ -120,13 +28,6 @@ where
             second: self.first + rhs.second,
         }
     }
-}
-
-fn add<T>(a: T, b: T) -> T
-where
-    T: std::ops::Add<Output = T>,
-{
-    a + b
 }
 
 fn main() {
@@ -157,23 +58,88 @@ fn main() {
     println!("Sum: {:?}", result);
 }
 ```
+```bash
+$ cargo run --bin generic_struct
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.23s
+     Running `target/debug/generic_struct`
+Sum: Pair { first: 15, second: 10 }
+Sum: Pair { first: 15, second: 10 }
+```
 
-사실 이 부분이 러스트에서 이해하기 어렵다고 알려진 부분중에 하나입니다. 바뀐 코드는 단 2줄이지만 조금 복잡합니다. 한줄씩 따로 이야기해보겠습니다.
+코드를 하나씩 뜯어보겠습니다. 가장 먼저 Pair라는 구조체를 만들었습니다. 
 
-우선 Pair<i32>와같이 특정 타입만 사용하던 코드를 제너릭 타입 파라미터로 바꿔야합니다. 이럴때는 impl<T>와 Pair<T> 이렇게 2군데에 타입 파라미터를 추가하도록 되어있습니다.
+```rust
+#[derive(Debug)]
+struct Pair<T> {
+    first: T,
+    second: T,
+}
+```
+
+타입 파라미터는 T입니다. T에는 다양한 타입들이 올 수 있습니다. u32같은 기본 타입도 사용될 수 있고, 다른 구조체 타입도 올 수 있습니다.
+
+>
+> C++ 언어의 제네릭과 완전히 동일한 문법을 가지고있고, 파이선등의 다른 언어들에서 제네릭을 사용하는 것과도 거의 동일하므로, 다른 언어에서 제네릭을 접해보신 분들은 쉽게 사용하실 수 있습니다.
+>
+
+그 다음은 일반 함수 add입니다. 
+
+```rust
+fn add<T>(a: T, b: T) -> T
+where
+    T: std::ops::Add<Output = T>,
+{
+    a + b
+}
+```
+
+타입 파라미터는 T입니다. 마찬가지로 T에는 다양한 타입들이 올 수 있습니다. 인자가 두개 있는데 두 인자가 반드시 같은 타입이어야만 합니다. 같은 타입의 인자를 두개 받아서 두 인자를 합한 값을 반환합니다. 러스트에서 제공하는 추가적인 기능이 있는데, 러스트의 제네릭 함수에는 타입 파라미터가 어떤 트레이트를 구현해야하는지를 선언할 수 있습니다.
+
+```rust
+where
+    T: std::ops::Add<Output = T>,
+```
+
+이렇게 where절을 추가하면 T타입은 std::ops::Add트레이트를 반드시 구현하고 있어야하며 Add 트레이트에서 사용하는 Output타입은 T가 되어야한다는 제약조건을 걸게됩니다. 아래와같이 정수나 실수를 add함수에 전달할 수 있다는 것은 정수나 실수 타입이 내부적으로 이미 std::ops::Add 트레이트를 구현하고 있기 때문입니다.
+
+```rust
+    let result = add(3.14, 1.618);
+    println!("Sum: {}", result); // Prints "Sum: 4.758"
+```
+
+정수나 실수가 std::ops::Add 트레이트를 이미 구현하고 있기 때문에 add 함수에 사용될 수 있다면, 그럼 우리가 만든 Pair라는 타입도 마찬가지로 std::ops::Add 트레이트를 구현한다면 add함수를 이용할 수 있다는 의미가 됩니다. Pair타입을 위한 std::ops::Add 트레이트 구현을 해볼까요.
+
+```rust
+impl<T> std::ops::Add for Pair<T>
+where
+    T: std::ops::Add<Output = T> + Copy,
+{
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        Self {
+            first: self.first + rhs.first,
+            second: self.first + rhs.second,
+        }
+    }
+}
+```
+
+이전에 트레이트를 소개할 때 구현해본 것과 조금 더 복잡해졌습니다. 각 차이점들을 하나씩 확인해보겠습니다.
+
+가장 먼저 Pair 타입이 제네릭 타입이기 때문에 Pair타입을 사용하기 위해서 트레이트 구현에도 똑같이 <T>라는 타입 지정이 추가(이렇게 제네릭에서 타입이 지정되는 것을 바인딩이라고 부릅니다)되었습니다. impl<T>와 Pair<T> 이렇게 2군데에 타입 파라미터를 추가합니다.
 
 ```rust
 impl<T> std::ops::Add for Pair<T>
 ```
 
-그럼 Pair<T> 구조체에 정의된 first와 second간에 + 연산이 실행됩니다. 그럴때 위에서 이야기했듯이 T타입이 + 연산이 가능하다는 제한이 필요합니다. 그래서 아래와같이 T타입이 std::ops::Add 트레이트를 구현해야한다는 제약을 추가합니다.
+add함수에서 T타입이 std::ops::Add 트레이트 구현이 되어있어야한다는 제한을 했습니다. 그래서 Pair를 위한 트레이트 구현에서도 아래와같이 T타입이 std::ops::Add 트레이트를 구현해야한다는 제약을 추가합니다.
 
 ```rust
 where
     T: std::ops::Add<Output = T> + Copy,
 ```
 
-여기서 Copy트레이트가 추가되었는데요 add함수에서 self인자가 참조가 아니라 값이 넘어가는 것이기때문에 소유권의 이동이 일어나기 때문입니다. Copy 트레이트를 추가하지않고 빌드하면 다음과 같은 에러가 발생합니다.
+여기서 Copy트레이트가 추가되었는데요 add함수에서 self인자가 참조가 아니라 값이 넘어가는 것이기때문에 소유권의 이동이 일어나기 때문입니다. add함수의 self인자가 &self와같은 참조가 아님을 잘 봐주세요. Copy 트레이트를 추가하지않고 빌드하면 다음과 같은 에러가 발생합니다.
 
 ```rust
 error[E0382]: use of moved value: `self.first`
@@ -194,17 +160,56 @@ note: calling this operator moves the left-hand side
 For more information about this error, try `rustc --explain E0382`.
 ```
 
-고맙게도 Copy 트레이트를 추가하라고 알려주고있습니다.
+고맙게도 Copy 트레이트를 추가하라고 알려주고있습니다. 지금 단계에서 잘 이해가 안된다고해도 컴파일러가 알려주는대로 Copy를 추가해서 일단 빌드가되도록 만들고 천천히 이해해도 좋습니다.
 
-Copy 트레이트는 Marker 트레이트로 소유권이 이동할 때 이 타입이 비트단위로 복사하면 값이 이동될 수 있다는 표시를 한 것입니다. 실제로 구현해야하는 함수가 있는 것은 아닙니다. 보통 Clone 트레이트와 같이 사용되는데 clone을 실행할 때 비트단위로 복사하라고 알려주는 것입니다. 만약 포인터 등이 포함된 타입이라면 Deep copy를 수행하는데 비트단위 복사만으로는 부족하겠지요. 포인터 값만 복사되고 객체는 복사되지 않을 것이니까요. 그런 타입에는 Copy 트레이트를 연결할 수 없습니다. 우리 코드에서 실제로 러스트가 비트단위 복사를 실행하는 것은 아닙니다. 물론 지금 예제와 달리 복사가 필요한 코드를 구현할 수도 있겠지요. 그럴때 필요한 것입니다.
+>
+> Copy 트레이트는 Marker 트레이트로 소유권이 이동할 때 이 타입이 비트단위로 복사하면 값이 이동될 수 있다는 표시를 한 것입니다. 실제로 구현해야하는 함수가 있는 것은 아닙니다. 보통 Clone 트레이트는 객체도 같이 복사하는 Deep copy를 수행하는데 Copy는 비트단위 복사만 실행합니다. 즉 포인터 값만 복사되고 객체는 복사되지 않습니다. 포인터외에도 i32같은 기본 타입에는 Copy 트레이트가 구현되어있습니다. 우리 코드에서 self가 인자로 넘어갈 때 비트단위로 복사되어서 전달됩니다.
+>
 
-이와같이 러스트 표준 라이브러리나 기타 라이브러리 등에 있는 제너릭 함수를 사용하기 위해서는 보통 해당 제너릭 함수의 타입 파라미터가 어떤 트레이트를 구현해야하는지를 확인해서, 트레이트를 구현하고 제너릭 함수를 이용하면 됩니다. 이렇게 제너릭과 트레이트를 같이 사용되는 경우가 많습니다.
-
-## 트레이트에 제너릭 사용하기
-
-구조체 타입에 제너릭을 사용해봤으니까 이번에는 트레이트에 제너릭을 사용해보겠습니다. 아래 예제는 이전에 트레이트를 설명하면서 사용했던 예제를 제너릭을 사용하도록 바꾼 예제입니다.
+std::ops::Add 트레이트의 구현을 보겠습니다.
 
 ```rust
+{
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self {
+        Self {
+            first: self.first + rhs.first,
+            second: self.first + rhs.second,
+        }
+    }
+}
+```
+
+두 타입을 더한 결과물은 같은 타입이 되는게 보통이겠지요. 그래서 Output을 Self 타입으로 지정합니다. 그리고 add메소드를 구현합니다. add 메소드의 반환값은 함수 내부에서 새롭게 만들어진 Self타입의 객체입니다. first와 second 필드를 각각 계산해서 새로운 Self 타입의 객체를 만들어서 반환합니다.
+
+그래서 최종적으로 main함수에서 Pair타입의 두 변수, left_pair와 right_pair를 add함수에 전달할 수 있게됩니다.
+```rust
+fn main() {
+    let left_pair: Pair<i32> = Pair {
+        first: 5,
+        second: 10,
+    };
+
+    let right_pair: Pair<i32> = Pair {
+        first: 10,
+        second: 5,
+    };
+
+    let result = add(left_pair, right_pair);
+    println!("Sum: {:?}", result);
+...
+```
+
+여기에서 result의 타입이 생략되었지만 Pair<i32>타입이라는 것을 알아낼 수 있어야합니다.
+
+이와같이 러스트 표준 라이브러리나 기타 라이브러리 등에 있는 함수나 트레이트등은 대부분 제네릭을 사용하고 있습니다. 이것들을 사용하기 위해서는 먼저 해당 제네릭 타입 파라미터가 어떤 트레이트를 구현해야하는지를 확인해서, 트레이트를 구현하고 그 다음 제네릭 함수나 트레이트를 이용하면 됩니다. 이렇게 제네릭과 트레이트를 같이 사용되는 경우가 거의 대부분입니다. 처음에는 많이 낯설고 이해하기 쉽지 않지만, 몇번 만들다보면 익숙해집니다.
+
+## 트레이트에 제네릭 사용하기
+
+구조체 타입에 적용된 제네릭을 사용해봤으니까 이번에는 트레이트에 적용된 제네릭을 사용해보겠습니다. 아래 예제는 이전에 트레이트를 설명하면서 사용했던 Printable 트레이트 구현 예제를 제네릭을 사용하도록 바꾼 예제입니다.
+
+```rust
+// src/generic_trait/main.rs
 trait Printable<AGE> {
     fn print(&self);
     fn get_age(&self) -> AGE;
@@ -242,8 +247,14 @@ fn main() {
     print_info(&person);
 }
 ```
+```bash
+$ cargo run --bin generic_trait
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running `target/debug/generic_trait`
+Name: Alice, 22 years old
+```
 
-트레이트를 설명하면서 Printable 트레이트에 아래와 같이 타입 정의도 사용할 수 있다고 설명했었습니다.
+트레이트를 설명하면서 Printable 트레이트에 아래와 같이 연관 타입을 사용할 수 있다고 설명했었습니다.
 
 ```rust
 trait Printable {
@@ -253,7 +264,7 @@ trait Printable {
 }
 ```
 
-제너릭을 안다면 이것을 아래와같이 제너릭으로 표현할 수 있습니다.
+제네릭을 안다면 이것을 아래와같이 제네릭으로 바꿀 수 있습니다.
 
 ```rust
 trait Printable<AGE> {
@@ -262,7 +273,7 @@ trait Printable<AGE> {
 }
 ```
 
-그리고 Printable을 구현하거나 사용할 때도 “Age=u32”라는 타입 지정을 쓸필요없이 제너릭으로 다음과 같이 구현할 수 있습니다.
+그리고 Printable을 구현하거나 사용할 때도 “Age=u32”라는 연관 타입 지정을 쓸필요없이 제네릭으로 다음과 같이 구현할 수 있습니다.
 
 ```rust
 impl Printable<u32> for Person {
@@ -278,14 +289,20 @@ fn print_info(item: &dyn Printable<u32>) {
     item.print();
 }
 ```
+print_info에 전달할 트레이트 객체도 <u32>이라는 타입 바인딩을 가지고있어야합니다. 트레이트 객체와 제네릭이 결합된게 한번에 눈에 들어오지 않을 수 있습니다. 이렇게 3단계로 생각하면 좋습니다.
 
-물론 어느게 더 간단하다고 할 수는 없습니다만, 제너릭으로 지정하는 타입이 u32, i8같은 기본 타입이 아니라 또다른 구조체 타입이라면 제너릭을 사용하는게 더 간단할 때가 있습니다.
+1. print_info에 전달되는 인자는 하나의 타입이 아니라, 다양한 타입의 레퍼런스를 받을 수 있다.
+2. print_info에 전달되는 타입은 Printable이라는 트레이트를 구현한 타입의 레퍼런스이다.
+3. Printable이라는 트레이트가 반드시 u32 타입을 위해 구현되어야한다.
 
-## 트레이트와 구조체 모두 제너릭 사용하기
+제너릭과 연관 타입 중에서 어느게 더 간단하다고 단정할 수는 없습니다만, 제네릭으로 지정하는 타입이 u32, i8같은 기본 타입이 아니라 또다른 구조체 타입이라면 제네릭을 사용하는게 더 간단할 때가 많습니다.
 
-다음과 같이 트레이트에도 제너릭이 사용되고, 구조체에도 제너릭이 사용되는 경우가 실무에서 더 일반적일 것입니다.
+## 트레이트와 구조체 모두 제네릭 사용하기
+
+다음과 같이 트레이트에도 제네릭이 사용되고, 구조체에도 제네릭이 사용되는 경우가 실무에서 더 일반적일 것입니다.
 
 ```rust
+// src/generic_trait_struct/main.rs
 trait Printable<AGE> {
     fn print(&self);
     fn get_age(&self) -> AGE;
@@ -344,13 +361,22 @@ fn main() {
     println!("Bruce is at : {:?}", bruce.location);
 }
 ```
+```bash
+$ cargo run --bin generic_trait_struct
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.14s
+     Running `target/debug/generic_trait_struct`
+Name: Alice, 22 years old
+Alice is at : Address { post: 0, city: "Unknown" }
+Bruce is at : "NewYork"
+```
 
-약간 복잡해보이지만 예제에서 2가지의 타입 파라미터를 쓰고있고, 각각이 무엇을 위한 타입인지를 기억한다면 어려울게 없습니다.
+예제가 복잡해보이지만 총 2가지의 타입 파라미터를 쓰고있고, 각각이 무엇을 위한 타입인지를 기억하면서 시작해보겠습니다.
 
-1. 트레이트 Printable의 AGE 타입 파라이터
-2. 구조체 Person의 ADDR 타입 파라미터
+1. 트레이트 Printable의 AGE 타입 파라이터: 나이를 표현하는 타입입니다.
+2. 구조체 Person의 ADDR 타입 파라미터: 주소를 표현하는 타입입니다.
 
-약간의 요령이 있는데 Person 구조체의 타입을 구현할 때는 항상 Person<ADDR>로 사용한다고 기억하면 편합니다.
+약간의 요령이 있는데 Person 구조체의 타입을 구현할 때는 항상 Person<ADDR>로 사용한다고 기억하면 편합니다. Printable 트레이트의 구현 코드에서도 Person<ADDR>과 같이 제네릭 타입을 항상 써줘야한다는걸 주의해야합니다.
+
 
 ```rust
 impl<ADDR> Person<ADDR> {
@@ -359,7 +385,122 @@ impl<ADDR> Printable<u32> for Person<ADDR> {
 ...
 ```
 
-그리고 트레이트의 구현 코드에서도 ADDR이라는 타입을 사용하지 않아도 써줘야한다는걸 주의해야합니다. 그리고 구조체의 메소드를 구현할때나, 트레이트를 구현할 때나 늘 impl<ADDR>과 같이 impl키워드에도 타입 파라미터를 써줘야합니다
+그럼 예제 코드를 쪼개서 하나씩 읽어보겠습니다. 가장 먼저는 Printable이라는 트레이트를 선언합니다.
+
+```rust
+trait Printable<AGE> {
+    fn print(&self);
+    fn get_age(&self) -> AGE;
+}
+```
+
+Printable이라는 트레이트가 있는데 아직 구현은 안되어있습니다. 단지 그런 트레이트가 있고, print와 get_age라는 메소드들이 있다는 것을 선언한 것입니다. get_age는 AGE라는 제네릭 타입을 반환하게됩니다. 나이는 보통 정수값이 되겠지만, 그렇지 않은 경우도 있나봅니다. 어쨌든 제네릭 타입이니 나중에 Printable 트레이트를 구현하는 코드에서 AGE 타입을 무엇으로할지 정하게될거라는 예상을 할 수 있습니다.
+
+그 다음은 Address라는 구조체 타입을 만들고있습니다.
+
+```rust
+#[derive(Debug)]
+struct Address {
+    post: u32,
+    city: String,
+}
+
+impl Default for Address {
+    fn default() -> Self {
+        Address {
+            post: 0,
+            city: "Unknown".to_string(),
+        }
+    }
+}
+```
+
+별다를게 없는 구조체타입입니다. Default 트레이트를 구현해줬습니다. city라는 필드가 디폴트값이라면 보통 빈 문자열이 되겠지만, 굳이 "Unknown"으로 초기화될 수 있도록, Default 트레이트를 직접 구현한 것입니다.
+
+그 다음은 Person이라는 구조체 타입입니다.
+
+```rust
+struct Person<ADDR> {
+    name: String,
+    age: u32,
+    location: ADDR,
+}
+
+impl<ADDR> Person<ADDR> {
+    fn new(name: &str, age: u32, addr: ADDR) -> Self {
+        Person {
+            name: name.to_string(),
+            age: age,
+            location: addr,
+        }
+    }
+}
+```
+
+사람의 이름, 나이, 위치를 저장하는 구조체입니다. 위치가 꼭 집 주소같은 문자열이 될 필요는 없으므로 ADDR이라는 제네릭 타입을 사용해줬습니다. 우편번호도 될 수 있고, 좌표도 될 수 있으니 Post나 Coordinates같이 새로운 타입을 사용할 수도 있겠네요. 그래서 제네릭 타입으로 만들었나봅니다. impl<ADDR> Person<ADDR>과 같이 ADDR이라는 제네릭 타입을 어디에 써줘야되는지를 잘 봐주세요.
+
+이제 우리가 보고자했던 코드가 나옵니다. 제네릭 타입을 사용한 구조체에 제네릭 타입을 사용한 트레이트를 구현하는 코드입니다.
+
+```rust
+impl<ADDR> Printable<u32> for Person<ADDR> {
+    fn print(&self) {
+        println!("Name: {}, {} years old", self.name, self.age);
+    }
+    fn get_age(&self) -> u32 {
+        self.age
+    }
+}
+```
+
+첫줄은 트레이트 구현을 선언하는 코드인데 2개의 제네릭 타입이 동시에 나오므로 눈에 잘 안들어옵니다. 한글로 다시 써보겠습니다.
+```rust
+impl<구조체의 제네릭 타입> 트레이트<트레이트의 제네릭 타입> for 구조체이름<구조체의 제네릭 타입> {
+```
+
+Printable 트레이트가 u32타입으로 구현됩니다. 따라서 제네릭 타입을 사용하는 get_age라는 함수가 u32 타입을 반환하게됩니다.
+
+마지막으로 print_info에 전달되는 트레이트 객체가 Printable<u32> 타입이 됩니다.
+
+```rust
+fn print_info(item: &dyn Printable<u32>) {
+```
+
+Printable<i32>나 Printable<String>등등 제네릭 타입이 다른 Printable 트레이트를 구현한 타입들은 print_info에 전달 될 수 없습니다. 오직 Printable<u32>만이 사용될 수 있습니다.
+
+트레이트와 구조체, 열거형에 모두 제네릭 타입이 사용되면 여러개의 제네릭 타입이 사용되고, 어느게 어디에 바인딩된 타입인지 헷갈릴 수 있습니다. 조금 시간이 필요한 부분이므로 조급하게 생각하지말고 천천히 적응해나가도록 합시다. 조금씩 읽고 쓰다보면 그 편리함과 유연함을 즐길 수 있는 순간이 올 것입니다.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+======================== 2024 10 11 ==============================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Life-time 라이프타임
 
@@ -436,7 +577,7 @@ Storage는 창고에 저장된 과일의 갯수와 가격을 관리하고, Stati
 
 이렇게 서로 다른 객체에 대한 참조가 발생할 때 참조된 객체가 먼저 해지되지 않도록 하기 위해서 라이프타임 지정이 필요합니다. 러스트 컴파일러는 컴파일 시점에 모든 객체의 소유권 이동 시점을 체크하므로, 객체가 해지되는 것도 체크할 수 있습니다. 따라서 라이프타임을 지정하게되면 참조된 객체가 먼저 해지되지 않는 것을 보장할 수 있습니다.
 
-# 트레이트와 제너릭을 이용한 에러 처리 실습
+# 트레이트와 제네릭을 이용한 에러 처리 실습
 
 러스트에서 처음 Result, Option을 배우면 보통 다음과 같이 에러처리를 하게됩니다.
 
