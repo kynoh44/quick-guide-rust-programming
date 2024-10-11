@@ -4,6 +4,13 @@ struct Pair<T> {
     second: T,
 }
 
+fn add<T>(a: T, b: T) -> T
+where
+    T: std::ops::Add<Output = T>,
+{
+    a + b
+}
+
 impl<T> std::ops::Add for Pair<T>
 where
     T: std::ops::Add<Output = T> + Copy,
@@ -15,13 +22,6 @@ where
             second: self.first + rhs.second,
         }
     }
-}
-
-fn add<T>(a: T, b: T) -> T
-where
-    T: std::ops::Add<Output = T>,
-{
-    a + b
 }
 
 fn main() {
