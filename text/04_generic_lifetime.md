@@ -469,6 +469,15 @@ Printable<i32>나 Printable<String>등등 제네릭 타입이 다른 Printable �
 
 트레이트와 구조체, 열거형에 모두 제네릭 타입이 사용되면 여러개의 제네릭 타입이 사용되고, 어느게 어디에 바인딩된 타입인지 헷갈릴 수 있습니다. 조금 시간이 필요한 부분이므로 조급하게 생각하지말고 천천히 적응해나가도록 합시다. 조금씩 읽고 쓰다보면 그 편리함과 유연함을 즐길 수 있는 순간이 올 것입니다.
 
+## 트레이트와 제네릭을 처음 접하시는 분들을 위한 안내
+
+객체지향 프로그래밍과 제네릭 프로그래밍 등을 직접 적용해서 소프트웨어를 설계하고 구현해보는 경험을 해보기는 쉽지 않습니다. 보통은 이미 객체지향이나 제네릭 프로그래밍을 고려해서 설계된 소프트웨어를 수정하거나 기능을 추가하는 업무를 하게됩니다. 따라서 러스트를 처음 접하는 단계에서 트레이트나 제네릭에 대해서 이해가 안되거나, 개념은 이해가 되더라도 막상 적용을 어떻게 해야할지 난감하게 느껴지는게 당연한 일일 것입니다. 회사에서 짧고 작은 규모지만 러스트로 개발을 해보고, 순수 러스트로 구현된 오픈 소스 프로젝트에 참여해본 경험을 바탕으로 어떻게 시작하면 좋을지를 짧게 말씀드리려고합니다.
+
+1. 일단은 트레이트와 제네릭을 생각하지않고 당장 동작하도록 구현합니다. 아직 익숙하지않은 개념을 개발 초기 개발단계에서 적용하는 것은 무리입니다. 일단은 동작에만 집중해서 구현합니다. 그리고 사실 프로토타입을 만드는 단계에서 아주 핵심 기능만을 구현하는데 트레이트와 제네릭을 사용할 필요도 없을 수 있습니다. 최소한의 필수 기능만을 잘 동작하도록 만드는데 집중합니다.
+2. 필수 기능이나 소프트웨어의 뼈대가 되는 모듈들만 구현한 후에는 점차 소프트웨어의 규모를 늘려나갈 것입니다. 기능을 추가하고, 좀더 각 모듈을 유연하게 만들고, 잘 정리된 인터페이스로 데이터를 전달하게 다듬어나갈 것입니다. 이정도 단계가되면 조금씩 반복되는 패턴들이 생겨나게되고 트레이트나 제네릭으로 해결할 수 있게됩니다.
+3. 객체들간에 반복되는 특성이 있거나 공통적인 동작은 트레이트로 정리합니다. 그리고 트레이트 객체를 사용하는 함수를 만들어서 표준화된 인터페이스를 만듭니다. 오직 해당 트레이트를 구현한 객체들만 사용할 수 있는 인터페이스가 생긴다면, 추후에 본인이 아닌 누가 개발에 참여한다고해도 자연스럽게 표준 인터페이스만을 사용할 수밖에 없습니다.
+4. 구조체나 열거형 타입에 제네릭을 사용할 때는 트레이트 구현을 항상 같이 생각해야합니다. 구조체에 제네릭 타입을 추가했을 때 이 제네릭 타입이 u32, char같은 일반 타입이 아니라 또 다른 구조체가 될 수 있다는 것을 생각하면서, 그렇다면 제네릭 타입이 어떤 트레이트를 구현해야만 사용될 수 있는지를 고려해서 트레이트 구현에 where를 추가해주어야합니다. 점차 where에 Copy등의 마커 트레이트가 없어서 빌드가 안되는 것을 경험하실 겁니다. 그렇게 마커 트레이트에 어떤 것들이 있는지, 어떻게 사용하는지 등을 조금씩 경험하면서 트레이트와 제네릭에 대해서 더 잘 이해하게 될 것입니다.
+5. 당연히 객체지향에 대한 이해가 있다면 더 빨리 익숙해지실 수 있습니다. 하스켈등 순수 객체지향 언어뿐 아니라 객체지향 설계에 대한 책들도 읽어보세요. 그리고 함수형 언어와 설계에 대해서도 경험해보면 러스트 언어를 사용하는데 도움이 됩니다.
 
 
 
@@ -484,10 +493,7 @@ Printable<i32>나 Printable<String>등등 제네릭 타입이 다른 Printable �
 
 
 
-
-
-======================== 2024 10 11 ==============================
-
+========================================= 2024 10 12 =========================================
 
 
 
@@ -497,87 +503,7 @@ Printable<i32>나 Printable<String>등등 제네릭 타입이 다른 Printable �
 
 
 
-
-
-
-
-
-# Life-time 라이프타임
-
-라이프타임은 Dangling reference(유효하지 않은 참조, 이미 해지된 객체에 대한 포인터에 접근하는 경우)를 방지하기 위한 기법입니다. 자세한 설명은 러스트 언어의 표준 문서를 참조하시고 이 장에서는 핵심만 이야기하겠습니다. 사실 라이프타임의 개념을 잘 이해한다고해도 실제로 개발을 하다보면 막막할 때가 자주 생길 것입니다. 그럴때는 기본 개념들을 다시 한번 읽어보고, 컴파일러 에러 메세지를 최대한 활용하는게 필요합니다.
-
-라이프타임은 대부분 아래와같이 어떤 구조체를 만들고, 그 구조체의 일부나 전체를 다른 구조체에서 참조하는 경우에 사용합니다.
-
-```rust
-use std::collections::HashMap;
-
-struct Item {
-    name: String,
-    price: f32,
-    quantity: u32,
-}
-
-struct Storage {
-    items: HashMap<String, Item>,
-}
-
-impl Storage {
-    fn new() -> Self {
-        Storage {
-            items: HashMap::new(),
-        }
-    }
-
-    fn storage_store(&mut self, item: Item) {
-        self.items.insert(item.name.clone(), item);
-    }
-}
-
-struct Statistics<'a> {
-    items: &'a HashMap<String, Item>,
-}
-
-impl<'a> Statistics<'a> {
-    fn new(items: &'a HashMap<String, Item>) -> Self {
-        Statistics { items }
-    }
-
-    fn get_average(&self) -> f32 {
-        let total = self.items.values().fold(0.0, |acc, i| acc + i.price);
-        let count = self.items.values().fold(0, |acc, i| acc + i.quantity);
-        total / count as f32
-    }
-}
-
-fn main() {
-    let mut mystorage = Storage::new();
-
-    let apple = Item {
-        name: "apple".to_string(),
-        price: 1.0,
-        quantity: 10,
-    };
-    mystorage.storage_store(apple);
-
-    let banana = Item {
-        name: "banana".to_string(),
-        price: 2.0,
-        quantity: 20,
-    };
-    mystorage.storage_store(banana);
-
-    let stats = Statistics::new(&mystorage.items);
-    println!("{}", stats.get_average());
-}
-```
-
-아주 간단한 예제를 만들어봤습니다.
-
-Storage는 창고에 저장된 과일의 갯수와 가격을 관리하고, Statistics는 여러 창고중 하나의 창고에 있는 과일 가격에 대한 통계를 계산하는 일을 합니다. Statistics는 창고 정보가 필요하므로 창고에 대한 레퍼런스를 가지게됩니다. Statistics가 레퍼런스를 가지고있는 Storage 객체가 Statistic보다 먼저 해지되면 안됩니다.
-
-이렇게 서로 다른 객체에 대한 참조가 발생할 때 참조된 객체가 먼저 해지되지 않도록 하기 위해서 라이프타임 지정이 필요합니다. 러스트 컴파일러는 컴파일 시점에 모든 객체의 소유권 이동 시점을 체크하므로, 객체가 해지되는 것도 체크할 수 있습니다. 따라서 라이프타임을 지정하게되면 참조된 객체가 먼저 해지되지 않는 것을 보장할 수 있습니다.
-
-# 트레이트와 제네릭을 이용한 에러 처리 실습
+## 트레이트와 제네릭을 이용한 에러 처리 실습
 
 러스트에서 처음 Result, Option을 배우면 보통 다음과 같이 에러처리를 하게됩니다.
 
@@ -761,3 +687,83 @@ main 모듈은 mycommand.rs 모듈의 에러 타입을 포함하는 새로운 �
 그 외에 에러값을 처리하는 것은 하위 모듈에서와 동일합니다. 하위 모듈의 함수를 호출할 때마다 일일이 에러를 체크할 필요가 없어지니 편리합니다.
 
 에러 값을 출력해보면 아래와 같이 상위 에러 타입안에 하위 에러 타입이 저장되어있는 것을 확인할 수 있습니다.
+
+
+
+
+
+
+# Life-time 라이프타임
+
+라이프타임은 Dangling reference(유효하지 않은 참조, 이미 해지된 객체에 대한 포인터에 접근하는 경우)를 방지하기 위한 기법입니다. 자세한 설명은 러스트 언어의 표준 문서를 참조하시고 이 장에서는 핵심만 이야기하겠습니다. 사실 라이프타임의 개념을 잘 이해한다고해도 실제로 개발을 하다보면 막막할 때가 자주 생길 것입니다. 그럴때는 기본 개념들을 다시 한번 읽어보고, 컴파일러 에러 메세지를 최대한 활용하는게 필요합니다.
+
+라이프타임은 대부분 아래와같이 어떤 구조체를 만들고, 그 구조체의 일부나 전체를 다른 구조체에서 참조하는 경우에 사용합니다.
+
+```rust
+use std::collections::HashMap;
+
+struct Item {
+    name: String,
+    price: f32,
+    quantity: u32,
+}
+
+struct Storage {
+    items: HashMap<String, Item>,
+}
+
+impl Storage {
+    fn new() -> Self {
+        Storage {
+            items: HashMap::new(),
+        }
+    }
+
+    fn storage_store(&mut self, item: Item) {
+        self.items.insert(item.name.clone(), item);
+    }
+}
+
+struct Statistics<'a> {
+    items: &'a HashMap<String, Item>,
+}
+
+impl<'a> Statistics<'a> {
+    fn new(items: &'a HashMap<String, Item>) -> Self {
+        Statistics { items }
+    }
+
+    fn get_average(&self) -> f32 {
+        let total = self.items.values().fold(0.0, |acc, i| acc + i.price);
+        let count = self.items.values().fold(0, |acc, i| acc + i.quantity);
+        total / count as f32
+    }
+}
+
+fn main() {
+    let mut mystorage = Storage::new();
+
+    let apple = Item {
+        name: "apple".to_string(),
+        price: 1.0,
+        quantity: 10,
+    };
+    mystorage.storage_store(apple);
+
+    let banana = Item {
+        name: "banana".to_string(),
+        price: 2.0,
+        quantity: 20,
+    };
+    mystorage.storage_store(banana);
+
+    let stats = Statistics::new(&mystorage.items);
+    println!("{}", stats.get_average());
+}
+```
+
+아주 간단한 예제를 만들어봤습니다.
+
+Storage는 창고에 저장된 과일의 갯수와 가격을 관리하고, Statistics는 여러 창고중 하나의 창고에 있는 과일 가격에 대한 통계를 계산하는 일을 합니다. Statistics는 창고 정보가 필요하므로 창고에 대한 레퍼런스를 가지게됩니다. Statistics가 레퍼런스를 가지고있는 Storage 객체가 Statistic보다 먼저 해지되면 안됩니다.
+
+이렇게 서로 다른 객체에 대한 참조가 발생할 때 참조된 객체가 먼저 해지되지 않도록 하기 위해서 라이프타임 지정이 필요합니다. 러스트 컴파일러는 컴파일 시점에 모든 객체의 소유권 이동 시점을 체크하므로, 객체가 해지되는 것도 체크할 수 있습니다. 따라서 라이프타임을 지정하게되면 참조된 객체가 먼저 해지되지 않는 것을 보장할 수 있습니다.
