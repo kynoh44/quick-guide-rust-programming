@@ -180,12 +180,12 @@ name = "generic_trait_struct"
 path = "src/generic_trait_struct/main.rs"
 
 [[bin]]
-name = "lifetime"
-path = "src/lifetime/main.rs"
-
-[[bin]]
 name = "error"
 path = "src/error/main.rs"
+
+[[bin]]
+name = "lifetime"
+path = "src/lifetime/main.rs"
 
 [[bin]]
 name = "std_library_vec"

@@ -34,12 +34,10 @@ pub fn handle_command(cmd: &str) -> Result<usize> {
     let passed = check_command(cmd)?;
     println!("Good command passed: status={}", passed);
 
-    // use map_err to handle the error
     let _ = check_command(cmd)
         .map_err(|e| println!("Command failed: error={:?}", e))
         .map(|s| println!("Command passed: status={}", s));
 
-    // use pattern
     if let Ok(status) = check_command(cmd) {
         println!("wierd but ok: status={:?}", status);
     } else {

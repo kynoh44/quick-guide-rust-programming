@@ -19,7 +19,7 @@ fn super_handle_command(cmd: &str) -> Result<usize> {
 }
 
 fn main() {
-    let status = super_handle_command("bad");
+    let status: Result<usize, SuperError> = super_handle_command("bad");
     if status.is_ok() {
         println!("Everything is fine");
     } else {
