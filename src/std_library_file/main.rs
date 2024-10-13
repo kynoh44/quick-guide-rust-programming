@@ -22,7 +22,7 @@ fn grep(filename: &Path, word: &str) -> std::io::Result<()> {
 fn main() -> std::io::Result<()> {
     let mut filename: PathBuf = current_dir()?;
 
-    filename.push("src/wrongfilename.rs");
+    filename.push("src/std_library_file/main.rs");
     grep(&filename, "main")?; // show lines that include specific word
     Ok(())
 }

@@ -192,6 +192,10 @@ name = "std_library_vec"
 path = "src/std_library_vec/main.rs"
 
 [[bin]]
+name = "std_library_hashmap_simple"
+path = "src/std_library_hashmap_simple/main.rs"
+
+[[bin]]
 name = "std_library_hashmap"
 path = "src/std_library_hashmap/main.rs"
 
