@@ -23,15 +23,107 @@ Box<T>의 가장 핵심적인 역할은 메모리를 힙 영역에 저장한다�
 
 ## 기본 사용법
 
+사용법은 간단합니다. Box라는 구조체의 new 메소드에 자신이 원하는 데이터를 전달하는것 뿐입니다.
+
 ```rust
 fn main() {
     let my_data = Box::new(10);
-    println("What is in the heap?: {}", my_data);
+    println!("What is in the heap?: {}", my_data);
 }
 ```
+```bash
+$ cargo run
+   Compiling pyalgo v0.1.0 (/Users/user/study/pyalgo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.88s
+     Running `target/debug/pyalgo`
+What is in the heap?: 10
+```
 
-&my_data는 스택 주소 반환, 그럼 힙에 있는 데이터의 주소는? my_data.as_ref()
-예제 추가
+그럼 my_data라는 스마트 포인터가 만들어졌습니다. my_data라는 Box<i32>타입 구조체는 스택에 생성되었고, 10이 저장된 i32타입 데이터는 힙에 저장되었습니다. 크게 중요한건 아니지만 한가지 더 실험을 해보겠습니다. my_data가 스택에 저장되어있고, i32타입 데이터가 힙에 저장되어있는 것을 증명해보겠습니다. 다음 예제를 실행해보겠습니다.
+
+```rust
+fn main() {
+    let my_data = Box::new(10);
+    println!("What is in the heap?: {}", my_data);
+    println!("At stack: {:p}", &my_data);
+    println!("At heap: {:p}", my_data.as_ref());
+}
+```
+```
+$ cargo run
+   Compiling pyalgo v0.1.0 (/Users/user/study/pyalgo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.88s
+     Running `target/debug/pyalgo`
+What is in the heap?: 10
+At stack: 0x7ffef0c2e9b8
+At heap: 0x5d21262e2b80
+```
+
+결과값을 보면 my_data라는 변수가 위치한 곳의 주소값이 0x7ffef0c2e9b8이고 Box의 as_ref메소드가 반환한 값이 0x5d21262e2b80입니다. as_ref는 메뉴얼을 찾아보면 Box<T>에서 &T를 반환한다고 써있습니다. 힙에 저장된 데이터의 포인터를 반환하는 것입니다. 리눅스에서는 이 메모리 값으로 힙인지 스택인지 확인할 수 있는 방법이 있습니다. 아래와같이 어플리케이션의 메모리 영역을 출력해볼 수 있습니다.
+
+```bash
+$ cat /proc/$$/maps
+563bb63d6000-563bb6404000 r--p 00000000 fc:02 16909610                   /usr/bin/bash
+563bb6404000-563bb64df000 r-xp 0002e000 fc:02 16909610                   /usr/bin/bash
+563bb64df000-563bb6518000 r--p 00109000 fc:02 16909610                   /usr/bin/bash
+563bb6518000-563bb651c000 r--p 00141000 fc:02 16909610                   /usr/bin/bash
+563bb651c000-563bb6525000 rw-p 00145000 fc:02 16909610                   /usr/bin/bash
+563bb6525000-563bb6530000 rw-p 00000000 00:00 0
+563bb7090000-563bb71d1000 rw-p 00000000 00:00 0                          [heap]
+7f51b6400000-7f51b6678000 r--p 00000000 fc:02 25184959                   /usr/lib/locale/en_US.utf8/LC_COLLATE
+7f51b6749000-7f51b6800000 r--p 00000000 fc:02 8597051                    /usr/lib/locale/ko_KR.utf8/LC_CTYPE
+7f51b6800000-7f51b6828000 r--p 00000000 fc:02 50768                      /usr/lib64/libc.so.6
+7f51b6828000-7f51b699d000 r-xp 00028000 fc:02 50768                      /usr/lib64/libc.so.6
+7f51b699d000-7f51b69f5000 r--p 0019d000 fc:02 50768                      /usr/lib64/libc.so.6
+7f51b69f5000-7f51b69f6000 ---p 001f5000 fc:02 50768                      /usr/lib64/libc.so.6
+7f51b69f6000-7f51b69fa000 r--p 001f5000 fc:02 50768                      /usr/lib64/libc.so.6
+7f51b69fa000-7f51b69fc000 rw-p 001f9000 fc:02 50768                      /usr/lib64/libc.so.6
+7f51b69fc000-7f51b6a09000 rw-p 00000000 00:00 0
+7f51b6a16000-7f51b6a6b000 r--p 00000000 fc:02 8597039                    /usr/lib/locale/C.utf8/LC_CTYPE
+7f51b6a6b000-7f51b6a6c000 r--p 00000000 fc:02 25184965                   /usr/lib/locale/en_US.utf8/LC_NUMERIC
+7f51b6a6c000-7f51b6a6d000 r--p 00000000 fc:02 8597183                    /usr/lib/locale/en_US.utf8/LC_TIME
+7f51b6a6d000-7f51b6a6e000 r--p 00000000 fc:02 8597181                    /usr/lib/locale/en_US.utf8/LC_MONETARY
+7f51b6a6e000-7f51b6a6f000 r--p 00000000 fc:02 21955                      /usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES
+7f51b6a6f000-7f51b6a70000 r--p 00000000 fc:02 25184990                   /usr/lib/locale/en_US.utf8/LC_PAPER
+7f51b6a70000-7f51b6a71000 r--p 00000000 fc:02 25184964                   /usr/lib/locale/en_US.utf8/LC_NAME
+7f51b6a71000-7f51b6a72000 r--p 00000000 fc:02 8597177                    /usr/lib/locale/en_US.utf8/LC_ADDRESS
+7f51b6a72000-7f51b6a73000 r--p 00000000 fc:02 8597182                    /usr/lib/locale/en_US.utf8/LC_TELEPHONE
+7f51b6a73000-7f51b6a74000 r--p 00000000 fc:02 8597180                    /usr/lib/locale/en_US.utf8/LC_MEASUREMENT
+7f51b6a74000-7f51b6a75000 r--p 00000000 fc:02 8597179                    /usr/lib/locale/en_US.utf8/LC_IDENTIFICATION
+7f51b6a75000-7f51b6aaa000 r--s 00000000 fc:02 26380898                   /var/db/nscd/passwd
+7f51b6aaa000-7f51b6aab000 r--p 00000000 fc:02 8597056                    /usr/lib/locale/ko_KR.utf8/LC_NUMERIC
+7f51b6aab000-7f51b6aac000 r--p 00000000 fc:02 8597059                    /usr/lib/locale/ko_KR.utf8/LC_TIME
+7f51b6aac000-7f51b6b3b000 r--p 00000000 fc:02 8597050                    /usr/lib/locale/ko_KR.utf8/LC_COLLATE
+7f51b6b3b000-7f51b6b3c000 r--p 00000000 fc:02 8597054                    /usr/lib/locale/ko_KR.utf8/LC_MONETARY
+7f51b6b3c000-7f51b6b3d000 r--p 00000000 fc:02 17140196                   /usr/lib/locale/ko_KR.utf8/LC_MESSAGES/SYS_LC_MESSAGES
+7f51b6b3d000-7f51b6b40000 rw-p 00000000 00:00 0
+7f51b6b40000-7f51b6b4e000 r--p 00000000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
+7f51b6b4e000-7f51b6b5d000 r-xp 0000e000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
+7f51b6b5d000-7f51b6b6b000 r--p 0001d000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
+7f51b6b6b000-7f51b6b6f000 r--p 0002a000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
+7f51b6b6f000-7f51b6b70000 rw-p 0002e000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
+7f51b6b70000-7f51b6b71000 r--p 00000000 fc:02 8597057                    /usr/lib/locale/ko_KR.utf8/LC_PAPER
+7f51b6b71000-7f51b6b72000 r--p 00000000 fc:02 8597055                    /usr/lib/locale/ko_KR.utf8/LC_NAME
+7f51b6b72000-7f51b6b73000 r--p 00000000 fc:02 8597049                    /usr/lib/locale/ko_KR.utf8/LC_ADDRESS
+7f51b6b73000-7f51b6b74000 r--p 00000000 fc:02 8597058                    /usr/lib/locale/ko_KR.utf8/LC_TELEPHONE
+7f51b6b74000-7f51b6b75000 r--p 00000000 fc:02 8597053                    /usr/lib/locale/ko_KR.utf8/LC_MEASUREMENT
+7f51b6b75000-7f51b6b76000 r--s 00000000 fc:02 25328768                   /usr/lib64/gconv/gconv-modules.cache
+7f51b6b76000-7f51b6b78000 rw-p 00000000 00:00 0
+7f51b6b78000-7f51b6b7a000 r--p 00000000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
+7f51b6b7a000-7f51b6ba0000 r-xp 00002000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
+7f51b6ba0000-7f51b6bab000 r--p 00028000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
+7f51b6bab000-7f51b6bac000 r--p 00000000 fc:02 8597052                    /usr/lib/locale/ko_KR.utf8/LC_IDENTIFICATION
+7f51b6bac000-7f51b6bae000 r--p 00033000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
+7f51b6bae000-7f51b6bb0000 rw-p 00035000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
+7fffdb5c4000-7fffdb5e5000 rw-p 00000000 00:00 0                          [stack]
+7fffdb5f2000-7fffdb5f6000 r--p 00000000 00:00 0                          [vvar]
+7fffdb5f6000-7fffdb5f8000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+```
+
+어플리케이션마다 세부 값들은 다르지만 제가 실행한 쉘의 스택 영역의 주소값은 7fffdb5c4000-7fffdb5e5000이고, 힙 영역의 주소값은 55fb3f245000-55fb3f4a9000인 것을 확인할 수 있습니다. 물론 예제의 메모리 영역과 정확한 값은 다르겠지만, 모든 어플리케이션의 스택 영역의 주소값이 0x7fff로 시작하고 힙 영역의 주소값이 0x55fb로 시작하는 것은 다르지 않을 것입니다. 왜냐하면 리눅스 커널이 프로그램을 실행할 때 그렇게 지정하기 때문입니다.
+
+어쨌든 결론적으로 예제를 실행해보면 Box라는 데이터 타입은 스택 영역에 존재하고, 포인터가 가리키는 데이터는 힙 영역에 존재하고 있음을 확인할 수 있습니다.
 
 ## Box<T>를 직접 구현해보기
 
@@ -71,9 +163,15 @@ fn main() {
     let my_pointer = MySmartPointer::new(5);
     println!("Value: {}", *my_pointer);
 }
-
 ```
-
+```bash
+$ cargo run
+   Compiling pyalgo v0.1.0 (/Users/user/study/pyalgo)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.39s
+     Running `target/debug/pyalgo`
+Value: 5
+Dropping MySmartPointer
+```
 
 ## 스마트 포인터를 사용하는 경우와 사용하지 않는 경우
 
