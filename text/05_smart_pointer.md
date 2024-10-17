@@ -35,14 +35,154 @@ fn main() {
 
 ## Box<T>를 직접 구현해보기
 
-```rust
+Box<T>를 잘 이해하기 위해서 아주 단순한 Box<T>를 직접 만들어보겠습니다. 사실 Box<T>에는 다양한 메소드들이 있지만, 우리는 스마트 포인터의 가장 핵심 기능인 역참조와 자동 메모리 해지만을 구현해보겠습니다.
 
+```rust
+use std::ops::{Deref, DerefMut};
+
+struct MySmartPointer<T>(T);
+
+impl<T> MySmartPointer<T> {
+    fn new(x: T) -> MySmartPointer<T> {
+        MySmartPointer(x)
+    }
+}
+
+impl<T> Deref for MySmartPointer<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T> DerefMut for MySmartPointer<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+}
+
+impl<T> Drop for MySmartPointer<T> {
+    fn drop(&mut self) {
+        println!("Dropping MySmartPointer");
+    }
+}
+
+fn main() {
+    let my_pointer = MySmartPointer::new(5);
+    println!("Value: {}", *my_pointer);
+}
 
 ```
 
 
 ## 스마트 포인터를 사용하는 경우와 사용하지 않는 경우
 
+When to Use Smart Pointers
+Heap Allocation: Use Box<T> when you need to store data on the heap rather than the stack. This is particularly useful for large data structures or when you need a fixed size for a recursive type.
+Dynamic Polymorphism: Utilize Box<T> for dynamic dispatch. If you have a trait and you want to store different types that implement this trait, Box<dyn Trait> is your go-to choice.
+Shared Ownership: Opt for Rc<T> or Arc<T> (the thread-safe variant of Rc<T>) when data needs to be accessed by multiple owners. These are useful in graph-like data structures or when you need to share data between different parts of a program without a clear single owner.
+Interior Mutability: Choose RefCell<T> or Mutex<T>/RwLock<T> (for multithreading scenarios) when you need to modify data even when it's borrowed immutably. This is particularly useful for implementing patterns like the Observer pattern or for working around borrowing rules when you know the borrowing constraints can be safely relaxed.
+Custom Smart Pointers: Create your own smart pointers when the standard library’s smart pointers don’t meet your specific requirements, such as specialized memory management strategies, non-standard resource management (like file handles or network connections), or custom reference-counting logic.
+When Not to Use Smart Pointers
+Stack Allocation Suffices: Avoid using smart pointers for small or short-lived data that can efficiently live on the stack. The overhead of heap allocation and pointer indirection is unnecessary in these cases.
+Performance Critical Sections: In performance-sensitive code, the overhead of reference counting in Rc<T>/Arc<T> and the runtime borrow checking of RefCell<T> might be detrimental. In such scenarios, using standard references or other Rust features like lifetimes might be more appropriate.
+Exclusive Ownership: If your data has a clear, single owner, and there’s no need for heap allocation, stick to regular references or ownership. Using Box<T> in such cases adds unnecessary overhead.
+Concurrency: Avoid Rc<T> and RefCell<T> in concurrent contexts, as they are not thread-safe. Prefer Arc<T>, Mutex<T>, or RwLock<T> in multithreaded environments.
+Simple Borrowing Cases: For simple borrowing scenarios where the borrowing rules are easily adhered to, regular references are more suitable. Overusing RefCell<T> or other smart pointers can complicate the code and introduce unnecessary runtime checks.
+Performance Implications
+Heap Allocation: Smart pointers often involve heap allocation (Box<T>, Rc<T>, Arc<T>). Allocating memory on the heap is generally slower than stack allocation due to the overhead of managing heap memory. This can impact performance, particularly in scenarios with frequent allocations and deallocations.
+Indirection and Dereferencing: Smart pointers add a level of indirection. Accessing the data requires dereferencing the pointer, which can be less efficient than direct stack access, especially if done frequently in performance-critical sections of code.
+Reference Counting: Rc<T> and Arc<T> manage shared ownership through reference counting. Incrementing and decrementing the reference count involves atomic operations, particularly in Arc<T>, which are thread-safe. These operations can add overhead, especially in multi-threaded contexts where atomic operations are more costly.
+Runtime Borrow Checking: RefCell<T> and similar types perform borrow checking at runtime. This adds overhead as it requires runtime checks to enforce borrowing rules, unlike compile-time checks with regular references.
+Readability Implications
+Clarity of Ownership and Lifetimes: Smart pointers can make ownership and lifetimes explicit, which can be beneficial for readability. For instance, seeing a Box<T> or Rc<T> clearly indicates heap allocation and ownership details.
+Complexity in Code: On the flip side, overusing smart pointers or using them inappropriately can lead to code that is harder to follow. For instance, nested smart pointers (Rc<RefCell<T>>) or deep chains of method calls on dereferenced smart pointers can reduce readability.
+Explicit Lifetime Management: The explicit management of resources (like the explicit dropping of smart pointers or reference counting) can make code more verbose and harder to read, compared to automatic stack allocation and deallocation.
+Conciseness vs. Explicitness: While smart pointers can make some patterns more concise (like shared ownership), they can also lead to more verbose code compared to using simple references. Striking the right balance between conciseness and explicitness is key to maintaining readability.
 
 ## 스마트 포인터를 활용하는 예제
 
+```rust
+use std::io::{stdin, stdout, Write};
+
+fn get_user_input() -> String {
+    let mut s = String::new();
+    let _ = stdout().flush();
+    stdin()
+        .read_line(&mut s)
+        .expect("Did not enter a correct string");
+    if let Some('\n') = s.chars().next_back() {
+        s.pop();
+    }
+    if let Some('\r') = s.chars().next_back() {
+        s.pop();
+    }
+    s
+}
+
+trait GenSerialData {
+    fn get_input(&mut self);
+    fn generate(&self) -> Option<&str>;
+}
+
+struct UserID {
+    digit: u32,
+    id: Option<String>,
+}
+
+impl GenSerialData for UserID {
+    fn get_input(&mut self) {
+        println!("Please input {}-digits User ID: ", self.digit);
+        self.id = Some(get_user_input());
+    }
+
+    fn generate(&self) -> Option<&str> {
+        self.id.as_ref().map(|x| x.as_str())
+    }
+}
+
+struct ProductID {
+    digit: u32,
+    id: Option<String>,
+}
+
+impl GenSerialData for ProductID {
+    fn get_input(&mut self) {
+        println!("Please input {}-digits Product ID: ", self.digit);
+        self.id = Some(get_user_input());
+    }
+
+    fn generate(&self) -> Option<&str> {
+        self.id.as_ref().map(|x| x.as_str())
+    }
+}
+
+fn collect_data(items: &mut [Box<dyn GenSerialData>]) {
+    for item in items.iter_mut() {
+        item.get_input();
+    }
+}
+
+// &[&dyn GenSerialData] is wrong!
+fn generate_serial(items: &[Box<dyn GenSerialData>]) -> String {
+    let mut data = String::new();
+    for item in items.iter() {
+        data.push_str(item.generate().unwrap());
+    }
+    data
+}
+
+fn main() {
+    println!("hello");
+
+    let userid = UserID { digit: 4, id: None };
+    let product = ProductID { digit: 8, id: None };
+
+    // Vec<&dyn GenSerialData> is wrong!
+    let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(product)];
+
+    collect_data(&mut items);
+    let serial = generate_serial(&items);
+    println!("Serial generated: {}", serial);
+}
+```
