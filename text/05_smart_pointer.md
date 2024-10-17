@@ -70,51 +70,7 @@ $ cat /proc/$$/maps
 563bb651c000-563bb6525000 rw-p 00145000 fc:02 16909610                   /usr/bin/bash
 563bb6525000-563bb6530000 rw-p 00000000 00:00 0
 563bb7090000-563bb71d1000 rw-p 00000000 00:00 0                          [heap]
-7f51b6400000-7f51b6678000 r--p 00000000 fc:02 25184959                   /usr/lib/locale/en_US.utf8/LC_COLLATE
-7f51b6749000-7f51b6800000 r--p 00000000 fc:02 8597051                    /usr/lib/locale/ko_KR.utf8/LC_CTYPE
-7f51b6800000-7f51b6828000 r--p 00000000 fc:02 50768                      /usr/lib64/libc.so.6
-7f51b6828000-7f51b699d000 r-xp 00028000 fc:02 50768                      /usr/lib64/libc.so.6
-7f51b699d000-7f51b69f5000 r--p 0019d000 fc:02 50768                      /usr/lib64/libc.so.6
-7f51b69f5000-7f51b69f6000 ---p 001f5000 fc:02 50768                      /usr/lib64/libc.so.6
-7f51b69f6000-7f51b69fa000 r--p 001f5000 fc:02 50768                      /usr/lib64/libc.so.6
-7f51b69fa000-7f51b69fc000 rw-p 001f9000 fc:02 50768                      /usr/lib64/libc.so.6
-7f51b69fc000-7f51b6a09000 rw-p 00000000 00:00 0
-7f51b6a16000-7f51b6a6b000 r--p 00000000 fc:02 8597039                    /usr/lib/locale/C.utf8/LC_CTYPE
-7f51b6a6b000-7f51b6a6c000 r--p 00000000 fc:02 25184965                   /usr/lib/locale/en_US.utf8/LC_NUMERIC
-7f51b6a6c000-7f51b6a6d000 r--p 00000000 fc:02 8597183                    /usr/lib/locale/en_US.utf8/LC_TIME
-7f51b6a6d000-7f51b6a6e000 r--p 00000000 fc:02 8597181                    /usr/lib/locale/en_US.utf8/LC_MONETARY
-7f51b6a6e000-7f51b6a6f000 r--p 00000000 fc:02 21955                      /usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES
-7f51b6a6f000-7f51b6a70000 r--p 00000000 fc:02 25184990                   /usr/lib/locale/en_US.utf8/LC_PAPER
-7f51b6a70000-7f51b6a71000 r--p 00000000 fc:02 25184964                   /usr/lib/locale/en_US.utf8/LC_NAME
-7f51b6a71000-7f51b6a72000 r--p 00000000 fc:02 8597177                    /usr/lib/locale/en_US.utf8/LC_ADDRESS
-7f51b6a72000-7f51b6a73000 r--p 00000000 fc:02 8597182                    /usr/lib/locale/en_US.utf8/LC_TELEPHONE
-7f51b6a73000-7f51b6a74000 r--p 00000000 fc:02 8597180                    /usr/lib/locale/en_US.utf8/LC_MEASUREMENT
-7f51b6a74000-7f51b6a75000 r--p 00000000 fc:02 8597179                    /usr/lib/locale/en_US.utf8/LC_IDENTIFICATION
-7f51b6a75000-7f51b6aaa000 r--s 00000000 fc:02 26380898                   /var/db/nscd/passwd
-7f51b6aaa000-7f51b6aab000 r--p 00000000 fc:02 8597056                    /usr/lib/locale/ko_KR.utf8/LC_NUMERIC
-7f51b6aab000-7f51b6aac000 r--p 00000000 fc:02 8597059                    /usr/lib/locale/ko_KR.utf8/LC_TIME
-7f51b6aac000-7f51b6b3b000 r--p 00000000 fc:02 8597050                    /usr/lib/locale/ko_KR.utf8/LC_COLLATE
-7f51b6b3b000-7f51b6b3c000 r--p 00000000 fc:02 8597054                    /usr/lib/locale/ko_KR.utf8/LC_MONETARY
-7f51b6b3c000-7f51b6b3d000 r--p 00000000 fc:02 17140196                   /usr/lib/locale/ko_KR.utf8/LC_MESSAGES/SYS_LC_MESSAGES
-7f51b6b3d000-7f51b6b40000 rw-p 00000000 00:00 0
-7f51b6b40000-7f51b6b4e000 r--p 00000000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
-7f51b6b4e000-7f51b6b5d000 r-xp 0000e000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
-7f51b6b5d000-7f51b6b6b000 r--p 0001d000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
-7f51b6b6b000-7f51b6b6f000 r--p 0002a000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
-7f51b6b6f000-7f51b6b70000 rw-p 0002e000 fc:02 50739                      /usr/lib64/libtinfo.so.6.2
-7f51b6b70000-7f51b6b71000 r--p 00000000 fc:02 8597057                    /usr/lib/locale/ko_KR.utf8/LC_PAPER
-7f51b6b71000-7f51b6b72000 r--p 00000000 fc:02 8597055                    /usr/lib/locale/ko_KR.utf8/LC_NAME
-7f51b6b72000-7f51b6b73000 r--p 00000000 fc:02 8597049                    /usr/lib/locale/ko_KR.utf8/LC_ADDRESS
-7f51b6b73000-7f51b6b74000 r--p 00000000 fc:02 8597058                    /usr/lib/locale/ko_KR.utf8/LC_TELEPHONE
-7f51b6b74000-7f51b6b75000 r--p 00000000 fc:02 8597053                    /usr/lib/locale/ko_KR.utf8/LC_MEASUREMENT
-7f51b6b75000-7f51b6b76000 r--s 00000000 fc:02 25328768                   /usr/lib64/gconv/gconv-modules.cache
-7f51b6b76000-7f51b6b78000 rw-p 00000000 00:00 0
-7f51b6b78000-7f51b6b7a000 r--p 00000000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
-7f51b6b7a000-7f51b6ba0000 r-xp 00002000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
-7f51b6ba0000-7f51b6bab000 r--p 00028000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
-7f51b6bab000-7f51b6bac000 r--p 00000000 fc:02 8597052                    /usr/lib/locale/ko_KR.utf8/LC_IDENTIFICATION
-7f51b6bac000-7f51b6bae000 r--p 00033000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
-7f51b6bae000-7f51b6bb0000 rw-p 00035000 fc:02 50764                      /usr/lib64/ld-linux-x86-64.so.2
+...생략
 7fffdb5c4000-7fffdb5e5000 rw-p 00000000 00:00 0                          [stack]
 7fffdb5f2000-7fffdb5f6000 r--p 00000000 00:00 0                          [vvar]
 7fffdb5f6000-7fffdb5f8000 r-xp 00000000 00:00 0                          [vdso]
@@ -162,6 +118,9 @@ impl<T> Drop for MySmartPointer<T> {
 fn main() {
     let my_pointer = MySmartPointer::new(5);
     println!("Value: {}", *my_pointer);
+    let mut mut_pointer = MySmartPointer::new(1);
+    *mut_pointer = 2;
+    println!("Value: {}", *mut_pointer);
 }
 ```
 ```bash
@@ -170,8 +129,80 @@ $ cargo run
     Finished dev [unoptimized + debuginfo] target(s) in 0.39s
      Running `target/debug/pyalgo`
 Value: 5
+Value: 2
+Dropping MySmartPointer
 Dropping MySmartPointer
 ```
+
+가장 먼저 Deref, DerefMut 두가지 트레이트를 구현하도록 선언합니다.
+```
+use std::ops::{Deref, DerefMut};
+```
+
+그리고 MySmartPointer라는 구조체를 만듭니다. 제네릭을 사용해서 제네릭 타입은 T입니다. 구조체 자체는 가장 단순하게 데이터만 포함하도록 만듭니다. 
+```
+struct MySmartPointer<T>(T);
+```
+사실은 이 구조체는 스마트포인터가 아닙니다. 데이터를 힙에 저장하는게 아니라 스택에 저장히기 때문입니다. 하지만 힙에 메모리 할당하기 위한 라이브러리를 소개하지않았으니 흉내만 내기 위해서 스택에 데이터를 저장합니다.
+
+MySmartPointer를 생성하는 new 메소드를 구현합니다. 우리가 원하는 데이터 x를 받아서 그대로 저장할 뿐입니다.
+```
+impl<T> MySmartPointer<T> {
+    fn new(x: T) -> MySmartPointer<T> {
+        MySmartPointer(x)
+    }
+}
+```
+
+이제 Deref 트레이트를 구현합니다.
+```
+impl<T> Deref for MySmartPointer<T> {
+    type Target = T;
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+```
+deref라는 메소드가 있는데 스마트포인터가 가리키는 데이터의 레퍼런스를 반환하도록 구현하면 됩니다. 그러면 *연산자와 결함해서 *&T가 되므로 결국 힙에 있는 데이터를 읽게되는 것입니다.
+
+다음은 DerefMut 트레이트입니다. mut이라는 이름이 붙은 것에서 알 수 있듯이 데이터를 바꿀 수 있는 mutable 레퍼런스 &mut T를 반환해줍니다.
+```
+impl<T> DerefMut for MySmartPointer<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        &mut self.0
+    }
+}
+```
+DerefMut트레이트의 사용법은 main함수에서 볼 수 있습니다.
+
+다음은 Drop 트레이트의 구현입니다.
+```
+impl<T> Drop for MySmartPointer<T> {
+    fn drop(&mut self) {
+        println!("Dropping MySmartPointer");
+    }
+}
+```
+사실 우리 데이터는 스택에 저장되므로 실제로 하는 일은 없습니다. 만약 메모리 할당 라이브러리를 사용해서 힙에 메모리를 할당했으면, drop 메소드에서 메모리 해지를 하면 됩니다.
+
+다음은 main함수를 보겠습니다. 먼저 Deref트레이트를 이용해서 스마트포인터가 가리키는 데이터를 읽기만 하는 방법입니다.
+```
+fn main() {
+    let my_pointer = MySmartPointer::new(5);
+    println!("Value: {}", *my_pointer);
+```
+my_pointer는 포인터입니다. 그러므로 *연산자를 붙이면 데이터를 읽을 수 있습니다. 만약 Deref트레이트를 구현하지않았으면 그냥 일반 구조체 이름에 *를 붙인 것이므로 아무 동작도 하지 않을 것입니다.
+
+그 다음에는 DerefMut 트레이트를 사용하는 방법입니다.
+```
+    let mut mut_pointer = MySmartPointer::new(1);
+    *mut_pointer = 2;
+    println!("Value: {}", *mut_pointer);
+}
+```
+mut_pointer라는 변수는 데이터가 바뀔 것이므로 반드시 mut 선언이 있어야합니다. 데이터를 바꾸는 방법은 포인터를 사용하는 것과 동일합니다. "*포인터이름" 형태로 사용하면 됩니다.
+
+그리고 마지막으로 main함수의 스코프가 끝나면 두개의 스마트포인트가 모두 사라지게 됩니다. 이때 Drop 트레이트의 drop 메소드가 호출됩니다.
 
 ## 스마트 포인터를 사용하는 경우와 사용하지 않는 경우
 
