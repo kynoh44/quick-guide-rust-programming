@@ -190,3 +190,4 @@ fn main() {
 ## 다른 스마트 포인터 타입들
 
 https://medium.com/coinmonks/smart-pointers-made-simple-a-practical-guide-to-rust-f0a2dcb69f52
+https://blog.devgenius.io/smart-pointers-in-rust-287974ddfd05
