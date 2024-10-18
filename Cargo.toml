@@ -188,6 +188,14 @@ name = "lifetime"
 path = "src/lifetime/main.rs"
 
 [[bin]]
+name = "smart_pointer_basic"
+path = "src/smart_pointer_basic/main.rs"
+
+[[bin]]
+name = "smart_pointer_application"
+path = "src/smart_pointer_application/main.rs"
+
+[[bin]]
 name = "std_library_vec"
 path = "src/std_library_vec/main.rs"
 
