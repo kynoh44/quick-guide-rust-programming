@@ -1,16 +1,27 @@
 
-# Quick guide to Rust programming language
+# 러스트 프로그래밍 빠르게 시작하기
 
-## How to run an example
+## 목차
 
-Each example is added in Cargo.toml as below.
+* [러스트 언어 소개](text/00_intro.md)
+* [러스트 개발 환경 설치](text/01_start.md)
+* [러스트 기본 문법](text/02_basic.md)
+* [트레이트](text/03_trait.md)
+* [제네릭과 수명](text/04_generic_lifetime.md)
+* [스마트 포인터](text/05_smart_pointer.md)
+* [표준 라이브러리와 표준 트레이트](text/06_std.md)
+
+
+## 예제 실행 방법
+
+Cargo.toml파일에 각 예제의 실행 파일을 빌드하는 설정이 있습니다. 
 ```
 [[bin]]
 name = "function_for"
 path = "src/function_for/main.rs"
 ```
 
-Cargo can build and run each example as below.
+다음과 같이 cargo를 이용해서 빌드하고 실행할 수 있습니다.
 ```
 gurugio@AL01945427:~/my-rust-book$ cargo build --bin function_for
    Compiling my-rust-book v0.1.0 (/home/gurugio/my-rust-book)
@@ -28,7 +39,9 @@ Hello, function_for!
 
 ## License
 
-The Embedded Rust Book (this project) is distributed under the following licenses:
+이 책의 컨텐츠와 예제 코드는 다음 라이선스를 따릅니다.
+
+This project is distributed under the following licenses:
 
 * The code samples and free-standing Cargo projects contained within this book are licensed under the terms of both the [MIT License] and the [Apache License v2.0].
 * The written prose contained within this book is licensed under the terms of the Creative Commons [CC-BY-SA v4.0] license.
