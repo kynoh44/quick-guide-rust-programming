@@ -1,11 +1,11 @@
 # Cargo 툴 소개
 
-C++에서 cmake는 빌드 과정만을 관리하고 실제 프로그램 빌드는 g++이라는 툴을 사용합니다. Python에서 pip는 외부 라이브러리를 다운받고 python툴로 실행합니다. C언어에서는 라이브러리 관리를 위해 yum, dnf, apt등 각 리눅스 배포판마다 다른 툴을 사용하고 컴파일러는 gcc입니다. cargo는 이런 일들을 한가지 툴로 실행하게됩니다. 사실 실제 러스트 언어의 컴파일러는 cargo가 아니라 rustc라는 툴입니다. 하지만 rustc를 직접 실행하는 일은 거의 없습니다. cargo는 rustc를 호출해서 프로그램을 빌드하는 것 외에도 다양한 일들을 해주기 때문입니다.
+러스트 언어의 컴파일러는 rustc라는 툴입니다. 하지만 rustc를 직접 실행하는 일은 거의 없습니다. 대신 Cargo를 사용합니다. Cargo가 무었인지 어떤 일들을 해주는지를 알아보겠습니다.
 
-Cargo의 help 메세지를 보면 러스트의 패키지를 관리를 위한 툴이라고 설명합니다.
+가장 먼저 Cargo의 help 메세지를 보면 러스트의 패키지를 관리를 위한 툴이라고 설명합니다.
 
 ```bash
-user@AL02279337 quick-guide-rust-programming % cargo help
+quick-guide-rust-programming $ cargo help
 Rust's package manager
 
 Usage: cargo [+toolchain] [OPTIONS] [COMMAND]
@@ -47,7 +47,7 @@ Commands:
 See 'cargo help <command>' for more information on a specific command.
 ```
 
-여기에서 패키지는 일반적으로 특정한 하나의 소프트웨어 설치 파일을 말하는 패키지가 아닙니다. 러스트에서는 우리가 개발하는 프로젝트를 패키지라고 부릅니다. 패키지를 관리하는 툴이라는 의미는 프로젝트의 개발하는 모든 단계에서 사용되는 툴이라는 의미입니다. 프로젝트 개발을 위한 컴파일, 프로젝트 전체 빌드, 외부 크레이트(러스트에서는 외부 라이브러리를 크레이트라고 부릅니다) 다운로드, 실행 파일 설치 등등 개발 과정의 모든 일을 처리할 수 있습니다.
+여기에서 패키지는 일반적으로 생각하는 하나의 소프트웨어 설치 파일 rpm이나 deb파일을 말할때 사용하는 패키지가 아닙니다. 러스트에서는 우리가 개발하는 프로젝트를 패키지라고 부릅니다. 패키지를 관리하는 툴이라는 의미는 프로젝트의 개발하는 모든 단계에서 사용되는 툴이라는 의미입니다. 프로젝트 개발을 위한 컴파일, 프로젝트 전체 빌드, 외부 크레이트(러스트에서는 외부 라이브러리를 크레이트라고 부릅니다) 다운로드, 실행 파일 설치 등등 개발 과정의 모든 일을 처리할 수 있습니다. 보통 다른 언어에서는 별도의 툴을 사용해야되는 코드 주석을 문서화하는 기능이나 코드 정렬 등의 기능들도 있습니다.
 
 그리고 help 메세지에 나오는 명령어 리스트가 모든 명령어의 리스트가 아닙니다. 주로 많이 사용되는 명령어들만 보여주고 있습니다. 전체 명령어 리스트를 보려면 `cargo --list` 명령을 사용합니다.
 
@@ -123,17 +123,79 @@ DESCRIPTION
 ......
 ```
 
-다음부터 제가 개발하면서 자주 사용하는 명령어들을 소개하겠습니다.
+다음부터 제가 개발하면서 자주 사용하는 명령어들을 짧게 소개하겠습니다.
 
-## cargo init
+## cargo new
 
-cargo init --bin, --lib
+현재 디렉토리에 새로운 패키지를 위한 디렉토리를 만들고, Cargo.toml 파일과 .gitignore 파일 등 개발을 시작하기 위해 필요한 파일들을 자동으로 생성해줍니다. 가장 많이 사용하는 옵션은 2가지 `-bin`과 `--lib`입니다. `--bin`옵션은 실행 파일을 만들기위한 패키지를 생성합니다. 지금 예제 파일들의 구조를 보면 전부 src/main.rs파일을 가지고 있습니다. 실행 파일을 만들기 위한 패키지이기 때문에 `--bin`옵션을 이용해서 만들어졌습니다. `--bin`옵션으로 패키지를 하나 생성해보겠습니다.
+
+```bash
+$ cargo new --bin bin-example
+    Creating binary (application) `bin-example` package
+bin-example $ ls -a
+.          ..         .git       .gitignore Cargo.toml src
+```
+
+bin-example이라는 이름의 패키지를 만들었습니다. 바이너리, 즉 실행 파일을 만들기 위한 패키지입니다. bin-example디렉토리에는 Git툴을 위한 .git디렉토리와 .gitignore파일이 생성되었습니다. 그리고 Cargo자신이 프로젝트 관리를 위하 사용하는 Cargo.toml파일과 소스를 저장할 src 디렉토리가 생성되었습니다. src/main.rs 파일에는 간단한 예제가 들어있습니다.
+
+```rust
+bin-example $ cat src/main.rs 
+fn main() {
+    println!("Hello, world!");
+}
+```
+
+`--lib`옵션은 라이브러리를 만들기 위한 패키지를 생성할 때 사용합니다. src/main.rs가 아니라 src/lib.rs 파일을 생성합니다.
+
+```
+ $ cargo new --lib lib-example
+    Creating library `lib-example` package
+note: see more `Cargo.toml` keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+$ cd lib-example
+lib-example $ ls -a
+.          ..         .git       .gitignore Cargo.toml src
+lib-example % ls src/
+lib.rs
+```
+
+lib.rs파일은 간단한 함수의 예제와 유닛 테스트 예제가 들어있습니다.
+
+```rust
+% cat src/lib.rs
+pub fn add(left: u64, right: u64) -> u64 {
+    left + right
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = add(2, 2);
+        assert_eq!(result, 4);
+    }
+}
+```
 
 ## cargo check
 
+패키지를 생성했다면 `cargo check` 명령으로 컴파일러가 제대로 설치되었는지, 모든 개발을 위한 환경 셋팅이 준비되었는지 등을 확인해볼 수 있습니다. 소스 코드에 에러가 없는지까지 확인하기 때문에 사실상 `cargo build`명령과 차이가 없어보입니다. 하지만 build 명령보다 먼저 check명령을 먼저 소개하는 이유가 있습니다. build 명령은 말 그대로 패키지를 빌드해서 최종 실행 파일까지 생성하지만, check 명령은 실행 파일 생성없이 에러만 체크합니다. 그래서 check명령이 더 빠릅니다. 개발하면서 새로 작성한 코드에 에러가 없는지 확인하기 위해 수도없이 많이 컴파일러를 실행해서 실행 파일을 만들어본 경험이 있을 것입니다. 하지만 그렇게 생성된 실행 파일을 매번 실행해보지는 않습니다. 실행 파일을 만드는 시간만 낭비되는 것입니다. build명령보다 check 명령을 더 자주 사용하면 조금의 시간이라도 더 아낄 수 있습니다. 얼마나 시간이 아껴지는지 한번 비교해보겠습니다.
 
+```bash
+bin-example $ cargo check
+    Checking bin-example v0.1.0 (/Users/user/study/bin-example)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.29s
+bin-example $ cargo build
+   Compiling bin-example v0.1.0 (/Users/user/study/bin-example)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.66s
+```
+
+check명령이 build에 비해 절반의 시간만 사용합니다. 지금은 너무나 간단한 예제만 들어있기 때문에 줄어드는 시간 차이가 너무 미미해보일 수 있습니다. 하지만 패키지의 규모가 조금이라도 커지면 조금 답답함을 느낄 수 있습니다. 러스트 컴파일러가 메모리 관리를 위한 다양한 기능들을 가지고 있기 때문에 컴파일 시간이 느린걸로 유명합니다. 단순히 문법 에러가 없는지 확인할 때는 build명령 대신에 check명령을 사용하는 것을 권장합니다.
 
 ## cargo build
+
+
 
 release
 debug
@@ -147,6 +209,13 @@ debug
 ## cargo add
 
 
+## cargo fmt
+
+
+
+## cargo test
+
+cargo test test_name -- --nocapture
 
 
 ## cargo doc
@@ -154,7 +223,3 @@ debug
 cargo rustdoc
 cargo doc
 
-
-## cargo test
-
-cargo test test_name -- --nocapture
