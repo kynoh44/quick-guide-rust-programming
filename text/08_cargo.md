@@ -470,8 +470,9 @@ fn test_integration_add() {
 cargo test 명령을 실행하면 모든 유닛테스트와 통합테스트를 전부 실행해줍니다. 마찬가지로 test_integration_add만 따로 실행할 수도 있습니다.
 
 ```bash
-lib-example % cargo test
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.00s
+ lib-example % cargo test
+   Compiling lib-example v0.1.0 (/Users/user/study/lib-example)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.86s
      Running unittests src/lib.rs (target/debug/deps/lib_example-89f31e00332d9f1d)
 
 running 1 test
@@ -479,10 +480,10 @@ test tests::it_works ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/main.rs (target/debug/deps/main-ff87754a15c48ccb)
+     Running tests/integration_add.rs (target/debug/deps/integration_add-189703c86c5c305d)
 
 running 1 test
-test test_add ... ok
+test test_integration_add ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
@@ -493,11 +494,18 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 ```
 
-## cargo doc
+### 주석에 들어있는 테스트
 
+유닛 테스트와 통합 테스트를 실행해보았습니다. 그런데 cargo test 명령을 실행하면 총 3가지 테스트를 실행하는 것을 볼 수 있습니다. 첫번째는 유닛 테스트이고, 두번째는 통합 테스트가 실행됩니다.
+그리고 
 
+```
+   Doc-tests lib_example
 
-### Doc-tests
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+```
 
 ```
 /// First line is a short summary describing function.
@@ -514,4 +522,8 @@ pub fn add(a: i32, b: i32) -> i32 {
     a + b
 }
 ```
+
+## cargo doc
+
+
 
