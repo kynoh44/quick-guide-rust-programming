@@ -693,3 +693,5 @@ lib-example $ cargo doc --open
      Opening /Users/user/study/lib-example/target/doc/lib_example/index.html
 user@AL02279337 lib-example % 
 ```
+
+![lib-example](cargo-doc-final.png)
