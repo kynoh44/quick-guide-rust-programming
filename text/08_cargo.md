@@ -214,10 +214,10 @@ Hello, world!
 디렉토리 이름이 debug인걸 보면 알수있듯이 build 명령에 아무런 옵션도 주지 않으면 디버깅 정보가 들어간 실행 파일을 만듭니다. 제품으로 출시할 수 있는 실행 파일은 아닙니다. 릴리즈 모드의 실행 파일을 만들기 위해서는 --release 옵션을 주어야합니다. 다음은 릴리즈 모드의 실행 파일을 만들어본 결과입니다.
 
 ```bash
-bin-example % cargo build --release
+bin-example $ cargo build --release
    Compiling bin-example v0.1.0 (/Users/user/study/bin-example)
     Finished `release` profile [optimized] target(s) in 0.84s
-user@AL02279337 bin-example % ls target/release/
+bin-example $ ls target/release/
 bin-example   bin-example.d build         deps          examples      incremental
 ```
 
@@ -226,11 +226,11 @@ bin-example   bin-example.d build         deps          examples      incrementa
 빌드로 생성된 파일들을 지우기위해서 clean 명령을 사용합니다.
 
 ```bash
-bin-example % ls  
+bin-example $ ls  
 Cargo.lock Cargo.toml src        target
-bin-example % cargo clean
+bin-example $ cargo clean
      Removed 11 files, 760.6KiB total
-bin-example % ls
+bin-example $ ls
 Cargo.lock Cargo.toml src
 ```
 
@@ -276,7 +276,7 @@ ckb-sentry-anyhow = "0.21.0"     # Sentry integration for anyhow.
 원하는 크레이트를 찾은 후에는 add 명령으로 패키지에 추가해줍니다.
 
 ```bash
-bin-example % cargo add anyhow
+bin-example $ cargo add anyhow
     Updating crates.io index
       Adding anyhow v1.0.94 to dependencies
              Features:
@@ -294,7 +294,7 @@ Cargo.toml 파일에 anyhow의 가장 최신 버전이 추가된 것을 확인�
 러스트로 개발하다보면 사용하고싶은 크레이트의 최신 기능이 필요할 때가 있습니다. 아직 최신 버전에 출시되지않고 이제 막 Github에 올라온 기능이 필요할때가 종종있습니다. 러스트가 아직 출시된지 오래된 언어가 아니고, 최근에도 활발하게 개발되고있기 때문입니다. 그럴때는 다음과 같이 --git옵션으로 Gihub의 클론 주소를 입력해주면 Github의 main 브랜치를 다운받아줍니다. 필요하다면 --branch 옵션을 추가해서 브랜치 이름도 지정할 수 있습니다. 
 
 ```bash
-bin-example % cargo add anyhow --git https://github.com/dtolnay/anyhow.git
+bin-example $ cargo add anyhow --git https://github.com/dtolnay/anyhow.git
     Updating git repository `https://github.com/dtolnay/anyhow.git`
       Adding anyhow (git) to dependencies
              Features:
@@ -312,7 +312,7 @@ bin-example % cargo add anyhow --git https://github.com/dtolnay/anyhow.git
 실험을 위해 다음과 같이 println앞에 불필요한 공백을 추가해주고, ;앞에도 공백을 넣어주겠습니다.
 
 ```bash
-user@AL02279337 bin-example % cat src/main.rs
+bin-example $ cat src/main.rs
 fn main() {
     	println!("Hello, world!")    ;
 }
@@ -331,9 +331,9 @@ Diff in /Users/user/study/bin-example/src/main.rs:1:
 
 어느 코드를 어떻게 수정해줄지를 보여줍니다. 그리고 fmt 명령을 실행하면 미리 알려준대로 수정해줍니다.
 
-```
-user@AL02279337 bin-example % cargo fmt
-user@AL02279337 bin-example % cat src/main.rs
+```bash
+bin-example $ cargo fmt
+bin-example $ cat src/main.rs
 fn main() {
     println!("Hello, world!");
 }
@@ -393,7 +393,7 @@ mod tests {
 그리고 우선 해당 유닛 테스트를 실행해보겠습니다. cargo test 명령에 테스트 함수의 이름을 지정해주면 지정된 테스트만 실행해줍니다.
 
 ```bash
-lib-example % cargo test it_works            
+lib-example $ cargo test it_works            
    Compiling lib-example v0.1.0 (/Users/user/study/lib-example)
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.39s
      Running unittests src/lib.rs (target/debug/deps/lib_example-89f31e00332d9f1d)
@@ -407,7 +407,7 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 실행은 잘 되지만 우리가 디버깅을 위해 추가한 메세지를 출력되지 않았습니다. 다음과 같이 --nocapture 옵션을 추가해주면 디버깅 메세지를 출력할 수 있습니다.
 
 ```bash
-lib-example % cargo test it_works -- --nocapture
+lib-example $ cargo test it_works -- --nocapture
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.01s
      Running unittests src/lib.rs (target/debug/deps/lib_example-89f31e00332d9f1d)
 
@@ -420,8 +420,8 @@ test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 주의해야할 것이 있습니다. `cargo test it_works --nocapture`가 아니라 중간에 --을 한번 더 써줘서 `cargo test it_works -- --nocapture`라고 써줘야된다는 것입니다. `cargo test it_works --nocapture`라고 중간의 --을 안써주면 --nocapture라는 옵션을 test명령의 옵션이 아닌 cargo의 실행 옵션으로 생각하기 때문입니다. 다음은 cargo를 위한 --quiet 옵션과 test를 위한 --nocapture 옵션을 둘 다 지정해서 실행한 것을 보여줍니다.
 
-```
-lib-example % cargo test it_works --quiet -- --nocapture
+```bash
+lib-example $ cargo test it_works --quiet -- --nocapture
 
 running 1 test
 Try 2 + 2
@@ -434,8 +434,7 @@ cargo명령은 --quiet 옵션을 받아서 빌드에 관한 로그 메세지를 
 다음과 같이 특정 테스트 함수의 이름을 지정하지 않으면 모든 테스트를 다 실행해줍니다. 다음 실행 결과를 보면 실행된 각 테스트의 이름과 몇개의 테스트가 성공하고 실패했는지를 확인할 수 있습니다.
 
 ```bash
-lib-example % cargo test
-   Compiling lib-example v0.1.0 (/Users/user/study/lib-example)
+lib-example $ cargo test
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
      Running unittests src/lib.rs (target/debug/deps/lib_example-89f31e00332d9f1d)
 
@@ -470,8 +469,7 @@ fn test_integration_add() {
 cargo test 명령을 실행하면 모든 유닛테스트와 통합테스트를 전부 실행해줍니다. 마찬가지로 test_integration_add만 따로 실행할 수도 있습니다.
 
 ```bash
- lib-example % cargo test
-   Compiling lib-example v0.1.0 (/Users/user/study/lib-example)
+ lib-example $ cargo test
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.86s
      Running unittests src/lib.rs (target/debug/deps/lib_example-89f31e00332d9f1d)
 
@@ -496,8 +494,7 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 ### 주석에 들어있는 테스트
 
-유닛 테스트와 통합 테스트를 실행해보았습니다. 그런데 cargo test 명령을 실행하면 총 3가지 테스트를 실행하는 것을 볼 수 있습니다. 첫번째는 유닛 테스트이고, 두번째는 통합 테스트가 실행됩니다.
-그리고 
+유닛 테스트와 통합 테스트를 실행해보았습니다. 그런데 cargo test 명령을 실행하면 총 3가지 테스트를 실행하는 것을 볼 수 있습니다. 첫번째는 유닛 테스트이고, 두번째는 통합 테스트가 실행됩니다. 그리고 마지막에는 Doc-tests라는게 실행됩니다. 이전에 lib-example에서 cargo test를 실행했을때 아래와 같이 Doc-tests라는게 0개 실행되었다는 메세지를 보셨을 것입니다.
 
 ```
    Doc-tests lib_example
@@ -507,23 +504,192 @@ running 0 tests
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 ```
 
-```
-/// First line is a short summary describing function.
+명시적으로 테스트 함수를 따로 만들어서 실행하는 테스트도 있지만 다음과 같이 주석 안에 예제 코드를 넣고 마치 각 함수의 유닛 테스트인것 처럼 실행할 수도 있습니다. 다음 예제는 lib-example 패키지에있는 src/lib.rs 파일입니다. add함수에 주석을 추가하고, 주석 안에 테스트 코드를 넣어준 것을 볼 수 있습니다.
+
+```rust
+/// '/'를 3개를 써서 주석을 만들고, 첫줄에는 함수에 대한 짧은 소개를 씁니다.
 ///
-/// The next lines present detailed documentation. Code blocks start with
-/// triple backquotes and have implicit `fn main()` inside
-/// and `extern crate <cratename>`. Assume we're testing `doccomments` crate:
+/// 공백 한줄을 만든 후, 여기에는 함수에 대한 자세한 설명을 씁니다.
+/// 설명이 끝나면 아래에 공백 한줄을 만든 후 ```와 ```로 코드의 시작과 끝을 표시합니다.
+/// 함수를 호출할때는 이름만 써주는게 아니라 크레이트의 이름도 같이 써주어야합니다.
+/// 현재 이 크레이트는 lib_example입니다.
 ///
 /// ```
-/// let result = doccomments::add(2, 3);
-/// assert_eq!(result, 5);
+/// assert_eq!(6, lib_example::add(2, 4));
 /// ```
-pub fn add(a: i32, b: i32) -> i32 {
-    a + b
+pub fn add(left: u64, right: u64) -> u64 {
+    left + right
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let result = add(2, 2);
+        println!("Try 2 + 2");
+        assert_eq!(result, 4);
+    }
+}
+```
+
+주석에도 써놨지만, 테스트로 사용할 주석은 `//`가 아니라 `///`를 사용해야하는걸 기억해주시기 바랍니다. 그럼 cargo test를 다시 실행해보겠습니다.
+
+```bash
+lib-example $ cargo test
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.25s
+     Running unittests src/lib.rs (target/debug/deps/lib_example-89f31e00332d9f1d)
+
+running 1 test
+test tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/integration_add.rs (target/debug/deps/integration_add-189703c86c5c305d)
+
+running 1 test
+test test_integration_add ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests lib_example
+
+running 1 test
+test src/lib.rs - add (line 8) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.50s
+```
+
+마지막에 실행된 Doc-tests에 1개의 테스트가 추가되었습니다. 테스트에는 별도의 이름이 없으니 테스트 이름이 아니라 함수 이름과 주석안에 있는 테스트 코드가 시작되는 줄 번호가 출력됩니다.
+
+다음과 같이 하나의 함수에 테스트가 여러개 있어도 별개의 테스트로 실행됩니다.
+
+```rust
+/// '/'를 3개를 써서 주석을 만들고, 첫줄에는 함수에 대한 짧은 소개를 씁니다.
+///
+/// 공백 한줄을 만든 후, 여기에는 함수에 대한 자세한 설명을 씁니다.
+/// 설명이 끝나면 아래에 공백 한줄을 만든 후 ```와 ```로 코드의 시작과 끝을 표시합니다.
+/// 함수를 호출할때는 이름만 써주는게 아니라 크레이트의 이름도 같이 써주어야합니다.
+/// 현재 이 크레이트는 lib_example입니다.
+///
+/// ```
+/// assert_eq!(6, lib_example::add(2, 4));
+/// ```
+///
+/// ```
+/// assert_eq!(0, lib_example::add(0, 0));
+/// ```
+pub fn add(left: u64, right: u64) -> u64 {
+    left + right
+}
+```
+
+다음은 add 함수의 주석에 있는 테스트만 별도로 실행하도록 cargo test 명령에 `--doc add` 옵션을 추가해서 실행한 것입니다. 2개의 테스트가 실행되었다는 것을 볼 수 있습니다.
+
+```bash
+lib-example $ cargo test --doc add
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+   Doc-tests lib_example
+
+running 2 tests
+test src/lib.rs - add (line 12) ... ok
+test src/lib.rs - add (line 8) ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.58s
 ```
 
 ## cargo doc
 
+주석에 테스트를 넣는 것을 소개하면서 주석에 대한 이야기기 나왔으니 cargo에서 주석과 관련된 기능을 하나 소개하겠습니다. 일단 add에 주석과 테스트가 추가된 상태에서 lib-example 코드의 상태 그대로 다음 명령을 실행해보겠습니다.
 
+```bash
+lib-example % cargo doc --open        
+ Documenting lib-example v0.1.0 (/Users/user/study/lib-example)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.43s
+     Opening /Users/user/study/lib-example/target/doc/lib_example/index.html
+```
 
+브라우저에 다음과 같이 lib_example 크레이트에 대한 문서가 나타날 것입니다. 
+
+![lib_example](cargo-doc-lib_example.png)
+
+이 사이트는 lib-example 패키지 안에있는 target/doc/lib_example 디렉토리에 생성됩니다.
+
+```bash
+lib-example $ ls target/doc/lib_example 
+all.html         fn.add.html      index.html       sidebar-items.js
+```
+
+소스 파일이 add.rs의 주석을 모아놓은 fn.add.html 파일이 생성된 것을 볼 수 있습니다. index.html에서 add 함수를 클릭하면 fn.add.html 파일이 열립니다. 
+
+cargo doc 명령은 패키지 전체에 있는 모든 주석을 분석해서 이런 문서화 사이트를 만드는 일을 합니다. 그리고 https://doc.rust-lang.org/std/index.html 와 같이 러스트의 크레이트 대부분이 cargo doc 으로 생성된 메뉴얼 사이트를 가지고 있습니다.
+
+std 크레이트의 메뉴얼 사이트 https://doc.rust-lang.org/std/index.html 를 보면 std 자체에 대한 설명부터 시작해서 std 크레이트에서 정의된 타입, 모듈, 매크로 등등을 소개하고 있습니다. 우리는 지금 std 크레이트를 보려는게 아니라 문서화에 대한 방법을 알아보려는 것이니 html 문서를 볼게 아니라 이렇게 html 문서를 생성하는 문서화 방법을 알아봐야됩니다. 그러니 std 크레이트의 첫 화면 가장 위쪽에 Crate std라는 제목 바로 밑에 있는 Source라는 링크를 눌러보겠습니다.
+
+![std](cargo-doc-std.png)
+
+이제 std 크레이트의 소스 코드 중에서 srd/std/lib.rs 파일이 보일 것입니다. 파일의 첫번째 줄에 있는 주석은 `//!`로 시작하는 주석입니다. 이 주석은 소스 파일에 Markdown 포맷의 위키 문서를 저장하게 해주는 주석입니다. Markdown 포맷은 깃허브의 README.md 파일에도 사용하는 위키 포맷입니다. 위키 문서의 작성법에 대해서는 깃허브 사이트의 안내 문서(https://docs.github.com/ko/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax)를 참고하시기 바랍니다.
+
+그 다음으로 보이는 주석들은 `///`을 사용한 것들입니다. 참고로 `//`와 같이 `/`를 2번만 사용한 주석은 문서에 나타나지 않습니다. 각 함수나 구조체, 매크로, 직접 정의한 타입 등등 필요한 곳에 `///`로 시작하는 주석을 써주면 cargo doc 명령이 이 주석이 함수인지 구조체인지 등을 파악해서 종류별로 나누고 html 문서로 만들어줍니다. 
+
+아래는 lib-example 크레이트의 src/lib.rs 파일에 다음과 같이 문서화를 위한 주석을 추가한 예제입니다. cargo doc 명령으로 사이트를 생성한 후 각 함수와 구조체의 주석이 문서화 사이트에 나타나는 것을 확인해보시기 바랍니다. 
+
+```rust
+//! # 제목입니다.
+//!
+//! 이 파일 전체에 대한 소개를 담고 있습니다.
+//! * 이런 Markdown 문법들을 사용할 수 있습니다.
+
+/// '/'를 3개를 써서 주석을 만들고, 첫줄에는 함수에 대한 짧은 소개를 씁니다.
+///
+/// 공백 한줄을 만든 후, 여기에는 함수에 대한 자세한 설명을 씁니다.
+/// 설명이 끝나면 아래에 공백 한줄을 만든 후 ```와 ```로 코드의 시작과 끝을 표시합니다.
+/// 함수를 호출할때는 이름만 써주는게 아니라 크레이트의 이름도 같이 써주어야합니다.
+/// 현재 이 크레이트는 lib_example입니다.
+///
+/// ```
+/// assert_eq!(6, lib_example::add(2, 4));
+/// ```
+///
+/// ```
+/// assert_eq!(0, lib_example::add(0, 0));
+/// ```
+pub fn add(left: u64, right: u64) -> u64 {
+    // //로 시작하는 주석은 문서화가 되지 않습니다.
+    left + right
+}
+
+/// 구조체의 문서화에 대한 예제입니다.
+///
+/// 구조체에 대한 설명을 적습니다.
+/// 다른 항목에 대한 링크는 [`add`]와 같은 형태로 적으면 자동으로 add함수에 대한 링크를 생성해줍니다.
+///
+/// # Examples
+///
+/// 이렇게 이 구조체를 사용하는 예제를 주석에 넣을 수도 있습니다. 이 예제도 cargo test에서 실행됩니다.
+///
+/// ```
+/// let ex = lib_example::StructExample::new();
+/// ```
+pub struct StructExample {
+    /// foo 필드에 대한 설명을 적습니다.
+    pub foo: usize,
+    /// pub이 없는 필드는 private 필드입니다. 주석을 써도 문서 사이트에 보여주지 않습니다.
+    bar: Option<String>,
+}
+
+impl StructExample {
+    pub fn new() -> Self {
+        StructExample { foo: 0, bar: None }
+    }
+}
+```
+
+```bash
+lib-example $ cargo doc --open
+ Documenting lib-example v0.1.0 (/Users/user/study/lib-example)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Opening /Users/user/study/lib-example/target/doc/lib_example/index.html
+user@AL02279337 lib-example % 
+```
