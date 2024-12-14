@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 fn ret_zero() -> i32 {
     0
 }

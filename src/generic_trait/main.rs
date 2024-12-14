@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 trait Printable<AGE> {
     fn print(&self);
     fn get_age(&self) -> AGE;

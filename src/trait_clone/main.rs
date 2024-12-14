@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 #[derive(Debug)]
 struct Book {
     title: String,
@@ -42,15 +44,13 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     struct Painting {
         title: String,
         author: String,
         published: i32,
     }
 
-    /* Solution for Exercise1
+    /* Solution for Exercise1 */
     impl Clone for Painting {
         fn clone(&self) -> Self {
             Painting {
@@ -59,7 +59,7 @@ mod tests {
                 published: self.published,
             }
         }
-    }*/
+    }
 
     fn show_painting_to_seoul(mypainting: Painting) {
         let newname = mypainting.title + " in Seoul";
@@ -84,15 +84,9 @@ mod tests {
             published: 2024,
         };
 
-        /* Fix build errors */
-        show_painting_to_seoul(mypainting);
-        // Exercise1 // show_painting_to_newyork(mypainting);
-        // Exercise1 // show_painting_to_london(mypainting);
-
-        /* Solution for Exercise1
+        /* Solution for Exercise1 */
         show_painting_to_seoul(mypainting.clone());
         show_painting_to_newyork(mypainting.clone());
-        show_painting_to_london(mypainting.clone());
-         */
+        show_painting_to_london(mypainting);
     }
 }
