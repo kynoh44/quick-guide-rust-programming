@@ -25,3 +25,19 @@ fn main() {
     };
     println!("area size={}", rect.area());
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_struct_define() {
+        let point1: Point = Point { x: 10.3, y: 0.4 };
+        let point2: Point = Point { x: 22.5, y: 2.4 };
+        let rect = Rectangle {
+            top_left: point1,
+            bottom_right: point2,
+        };
+        println!("area size={}", rect.area());
+    }
+}

@@ -104,24 +104,24 @@ name = "functional_closure_capture"
 path = "src/functional_closure_capture/main.rs"
 
 [[bin]]
-name = "map"
-path = "src/map/main.rs"
+name = "functional_map"
+path = "src/functional_map/main.rs"
 
 [[bin]]
-name = "map_option"
-path = "src/map_option/main.rs"
+name = "functional_map_option"
+path = "src/functional_map_option/main.rs"
 
 [[bin]]
-name = "map_result"
-path = "src/map_result/main.rs"
+name = "functional_map_result"
+path = "src/functional_map_result/main.rs"
 
 [[bin]]
-name = "map_inspect"
-path = "src/map_inspect/main.rs"
+name = "functional_map_inspect"
+path = "src/functional_map_inspect/main.rs"
 
 [[bin]]
-name = "map_debugging"
-path = "src/map_debugging/main.rs"
+name = "functional_map_debugging"
+path = "src/functional_map_debugging/main.rs"
 
 [[bin]]
 name = "functional_filter"

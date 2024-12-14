@@ -414,10 +414,10 @@ fn main() {
 ```
 
 ```bash
-$ cargo run --bin map
+$ cargo run --bin functional_map
    Compiling my-rust-book v0.1.0 (/Users/user/study/my-rust-book)
     Finished dev [unoptimized + debuginfo] target(s) in 5.44s
-     Running `target/debug/map`
+     Running `target/debug/functional_map`
 3 - Fizz
 5 - Buzz
 6 - Fizz
@@ -491,7 +491,7 @@ assert_eq!(iter.next(), None);
 이터레이터뿐 아니라 Option 타입도 map메소드를 가지고 있습니다.
 
 ```rust
-// src/map_option/main.rs
+// src/functional_map_option/main.rs
 fn main() {
     let some_number = Some(5);
     let none_number: Option<i32> = None;
@@ -505,9 +505,9 @@ fn main() {
 ```
 
 ```bash
-$ cargo run --bin map_option
+$ cargo run --bin functional_map_option
    Finished dev [unoptimized + debuginfo] target(s) in 0.40s
-    Running `target/debug/map_option`
+    Running `target/debug/functional_map_option`
 Double Some: Some(10)
 Double None: None
 ```
@@ -519,7 +519,7 @@ Option의 메소드인 map은 타입이 Some일때는 Some안에 있는 값을 �
 Option과 마찬가지로 Result 또한 map 메소드를 가지고 있습니다.
 
 ```rust
-// src/map_result/main.rs
+// src/functional_map_result/main.rs
 fn divide(numerator: i32, denominator: i32) -> Result<i32, String> {
     if denominator == 0 {
         return Err(String::from("denominator cannot be zero"));
@@ -540,9 +540,9 @@ fn main() {
 ```
 
 ```bash
-$ cargo run --bin map_result
+$ cargo run --bin functional_map_result
     Finished dev [unoptimized + debuginfo] target(s) in 0.00s
-     Running `target/debug/map_result`
+     Running `target/debug/functional_map_result`
 Double Ok: Ok(10)
 Double Error: Err("denominator cannot be zero")
 ```
@@ -559,7 +559,7 @@ map의 장점도 있지만 단점이 디버깅이 어렵다는 것입니다. map
 첫번째로 이터레이터의 inspect 메소드가 있습니다. 사실 map하고 하는 일은 동일합니다. 이터레이터에서 개별 데이터를 하나씩 받아와서 정해진 일을 하는 것입니다. 하지만 차이가 있다면 받은 데이터를 그대로 반환한다는 것입니다. 결론적으로는 아무런 일도 하지 않는 것입니다. 왜 아무런 일도 하지 않는 메소드가 필요하냐면 바로 디버깅을 위해서 필요한 것입니다. 다음 예제를 보면 이전에 map을 사용해서 만든 fizzbuzz_3함수와 완전히 동일한데 단지 inspect를 중간에 넣은 것 뿐입니다.
 
 ```rust
-// src/map_inspect/main.rs
+// src/functional_map_inspect/main.rs
 fn fizzbuzz_3(max: i32) {
     let ret = (1..=max)
         .into_iter()
@@ -581,10 +581,10 @@ fn main() {
 ```
 
 ```bash
-$ cargo run --bin map_inspect
+$ cargo run --bin functional_map_inspect
    Compiling my-rust-book v0.1.0 (/Users/user/study/my-rust-book)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.26s
-     Running `target/debug/map_inspect`
+     Running `target/debug/functional_map_inspect`
 map returns ''
 map returns ''
 map returns '3 - Fizz
@@ -673,7 +673,7 @@ inspect를 중간에 넣었지만 그 외에 아무것도 고칠 필요가 없�
 가장 단순하지만 가장 확실한 디버깅 방법은 그냥 한단계 한단계씩 나눠서 각 단계별로 결과값을 디버깅 메세지로 출력해보는 것입니다.
 
 ```rust
-// src/map_debugging/main.rs
+// src/functional_map_debugging/main.rs
 fn fizzbuzz_3(max: i32) {
     let ret_range = 1..=max;
     println!("range: {:?}", ret_range);
@@ -696,10 +696,10 @@ fn main() {
 ```
 
 ```bash
-$ cargo run --bin map_debugging
+$ cargo run --bin functional_map_debugging
    Compiling my-rust-book v0.1.0 (/Users/user/study/my-rust-book)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.26s
-     Running `target/debug/map_debugging`
+     Running `target/debug/functional_map_debugging`
 range: 1..=41
 iterator: Map { iter: 1..=41 }
 after collect: ["", "", "3 - Fizz\n", "", "5 - Buzz\n", "6 - Fizz\n", "", "", "9 - Fizz\n", "10 - Buzz\n", "", "12 - Fizz\n", "", "", "15 - FizzBuzz\n", "", "", "18 - Fizz\n", "", "20 - Buzz\n", "21 - Fizz\n", "", "", "24 - Fizz\n", "25 - Buzz\n", "", "27 - Fizz\n", "", "", "30 - FizzBuzz\n", "", "", "33 - Fizz\n", "", "35 - Buzz\n", "36 - Fizz\n", "", "", "39 - Fizz\n", "40 - Buzz\n", ""]
@@ -917,6 +917,7 @@ filter 메소드는 데이터의 불변 참조를 인자로 받습니다. 인자
 마지막으로 reduce 메소드입니다. 모든 데이터에 특정 연산을 해서 하나의 데이터를 반환하는 일을 합니다. map이나 filter는 각 데이터에 특정 처리를 한 후 각 결과값들을 다시 이터레이터로 반환했다면, reduce는 하나의 데이터로 합치는 일을 합니다. 다음은 fizzbuzz 예제에 filter와 map, reduce까지 모두 적용한 예제입니다.
 
 ```rust
+// src/functional_reduce/main.rs
 fn fizzbuzz_fn<FA, FB>(fizzfn: FA, buzzfn: FB)
 where
     FA: Fn(i32) -> bool,

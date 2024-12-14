@@ -68,35 +68,26 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     struct Painting {
         title: String,
         author: String,
-        published: i32,
+        published: u32,
     }
 
-    /* Solution
-     struct Painting {
-         title: String,
-         author: String,
-         published: u32,
-     }
-
     impl Printable for Painting {
-         type Age = u32;
-         fn print(&self) {
-             println!(
-                 "Title: {}\nAuthor: {}\nPublished: {}",
-                 self.title,
-                 self.author,
-                 self.get_age()
-             );
-         }
-         fn get_age(&self) -> Self::Age {
-             self.published
-         }
-     }
-     */
+        type Age = u32;
+        fn print(&self) {
+            println!(
+                "Title: {}\nAuthor: {}\nPublished: {}",
+                self.title,
+                self.author,
+                self.get_age()
+            );
+        }
+        fn get_age(&self) -> Self::Age {
+            self.published
+        }
+    }
 
     #[test]
     fn test_trait_printable() {
@@ -105,6 +96,6 @@ mod tests {
             author: "Vencent Gauguin".to_owned(),
             published: 2024,
         };
-        // Exercise1 // print_info(&mypainting);
+        assert_eq!(2024, mypainting.get_age());
     }
 }
