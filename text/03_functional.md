@@ -62,6 +62,7 @@ imperative_add_one함수는 비순수 함수입니다. imperative_add_one의 외
 지연처리에 대표적인 예가 피보나치 수열을 생성하는 것입니다. 러스트의 이터레이터를 이용해서 피보나치 수열을 만드는 예제를 만들어보겠습니다.
 
 ```rust
+// src/functional_iterator/main.rs
 struct Fibonacci {
     curr: u32,
     next: u32,
