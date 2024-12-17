@@ -29,10 +29,10 @@ mod tests {
         let f = double(double(inc));
         assert_eq!(9, f(5));
 
-        let f = double(double(double(inc)));
+        let _f = double(double(double(inc)));
         //assert_eq!(0 /* FIX this number */, f(5));
 
-        let f = double(double(double(double(inc))));
+        let _f = double(double(double(double(inc))));
         //assert_eq!(0 /* FIX this number */, f(5));
     }
 }
