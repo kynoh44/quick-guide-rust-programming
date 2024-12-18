@@ -47,6 +47,20 @@ Hello, function_for!
 10 - Buzz
 ```
 
+## 테스트 실행 방법
+
+tests/functional_closure_nocapture.rs 파일에 있는 test_functional_closure_nocapture 테스트 실행하기
+```
+% cargo test --test functional_closure_nocapture 
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running tests/functional_closure_nocapture.rs (target/debug/deps/functional_closure_nocapture-f131d74e44a09c8b)
+
+running 1 test
+test test_functional_closure_nocapture ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+```
+
 ## License
 
 이 책의 컨텐츠와 예제 코드는 다음 라이선스를 따릅니다.
