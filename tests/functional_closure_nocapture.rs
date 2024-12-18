@@ -20,19 +20,14 @@ fn main() {
     println!("result={}", r(5));
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[test]
+fn test_functional_closure_nocapture() {
+    let f = double(double(inc));
+    assert_eq!(9, f(5));
 
-    #[test]
-    fn test_functional_closure_nocapture() {
-        let f = double(double(inc));
-        assert_eq!(9, f(5));
+    let _f = double(double(double(inc)));
+    //assert_eq!(0 /* FIX this number */, f(5));
 
-        let _f = double(double(double(inc)));
-        //assert_eq!(0 /* FIX this number */, f(5));
-
-        let _f = double(double(double(double(inc))));
-        //assert_eq!(0 /* FIX this number */, f(5));
-    }
+    let _f = double(double(double(double(inc))));
+    //assert_eq!(0 /* FIX this number */, f(5));
 }

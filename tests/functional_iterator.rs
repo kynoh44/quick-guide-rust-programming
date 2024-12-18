@@ -30,28 +30,20 @@ impl Iterator for Fibonacci {
         Some(current)
     }
 }
+#[test]
+fn test_functional_iterator() {
+    // Solution
+    let mut fib_iter = Fibonacci {
+        curr: 0,
+        next: 1,
+        buffer: Vec::new(),
+        counter: 0,
+    };
 
-fn main() {}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_functional_iterator() {
-        // Solution
-        let mut fib_iter = Fibonacci {
-            curr: 0,
-            next: 1,
-            buffer: Vec::new(),
-            counter: 0,
-        };
-
-        for _ in 1..=10 {
-            let _ = fib_iter.next().unwrap();
-        }
-
-        // Exercise
-        assert_eq!(5, fib_iter.nth(5));
+    for _ in 1..=10 {
+        let _ = fib_iter.next().unwrap();
     }
+
+    // Exercise
+    assert_eq!(5, fib_iter.nth(5));
 }
