@@ -11,12 +11,13 @@
 * [제네릭과 수명](text/05_generic_lifetime.md)
 * [스마트 포인터](text/06_smart_pointer.md)
 * [표준 라이브러리와 표준 트레이트](text/07_std.md)
+* [부록: Cargo 사용 방법](text/08_cargo.md)
 
 ## 책 소개
 
-*업데이트: 함수형 프로그래밍 챕터를 추가했습니다.*
+*업데이트 20250105: "부록: Cargo 사용 방법" 챕터를 추가했습니다.*
 
-이미 프로그래밍을 조금이라도 해보신 분들을 대상으로 합니다.
+이미 프로그래밍을 조금 해보신 분들을 대상으로 합니다.
 프로그래밍의 기본적인 문법들을 처음부터 설명하지 않습니다. for루프가 뭔지 if가 뭔지 등을 설명하지않고 바로 Rust에서는 이렇게 사용합니다로 설명합니다.
 
 책의 범위는 싱글 쓰레드로 터미널 기반의 간단한 프로그램을 만들 정도의 내용을 가지고 있습니다.
@@ -47,9 +48,11 @@ Hello, function_for!
 10 - Buzz
 ```
 
-## 테스트 실행 방법
+## 연습문제 실행 방법
 
-tests/functional_closure_nocapture.rs 파일에 있는 test_functional_closure_nocapture 테스트 실행하기
+*texts 디렉토리에 틈나는대로 연습문제를 추가하고 있습니다.*
+
+tests/functional_closure_nocapture.rs 파일에 있는 test_functional_closure_nocapture 연습문제 실행하기
 ```
 % cargo test --test functional_closure_nocapture 
     Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s
