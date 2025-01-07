@@ -14,36 +14,6 @@ async + http server with Tokio
 
 # 쓰레드간 공유 메모리 Rc와 Arc - WIP
 
-# 스마트 포인터 Box - WIP
-
-```rust
-#[derive(Debug)]
-struct Book {
-    title: String,
-    author: String,
-    published: u32,
-    isbn: String,
-}
-
-fn main() {
-    let book_in_stack = Book {
-        title: String::from("Rust in Action"),
-        author: String::from("Tim McNamara"),
-        published: 20210810,
-        isbn: String::from("1617294551"),
-    };
-    let boxed_book = Box::new(Book {
-        title: String::from("The Rust Programming Language"),
-        author: String::from("Steve Klabnik and Carol Nichols"),
-        published: 20230228,
-        isbn: String::from("718503105"),
-    });
-
-    println!("stack variable pointer: {:p}", &book_in_stack);
-    println!("boxed_book variable pointer: {:p}", &boxed_book);
-    println!("boxed_book variable address: {:p}", boxed_book);
-}
-```
 
 # std::pin - WIP
 
