@@ -235,3 +235,6 @@ path = "src/std_library_hashmap/main.rs"
 name = "std_library_file"
 path = "src/std_library_file/main.rs"
 
+[[bin]]
+name = "project_step1"
+path = "src/project_step1/main.rs"
