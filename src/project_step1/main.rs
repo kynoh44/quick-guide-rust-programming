@@ -1,5 +1,7 @@
 use std::io::{stdin, stdout, Write};
 
+use magic_crypt::MagicCryptTrait;
+
 fn get_user_input() -> String {
     let mut s = String::new();
     let _ = stdout().flush();
@@ -67,13 +69,12 @@ fn generate_serial(items: &Vec<Box<dyn GenSerialData>>) -> String {
 }
 
 fn main() {
-    println!("hello");
-
     let userid = UserID { digit: 4, id: None };
     let productid = ProductID { digit: 8, id: None };
     let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(productid)];
 
     collect_data(&mut items);
     let serial = generate_serial(&items);
+
     println!("Serial generated: {}", serial);
 }
