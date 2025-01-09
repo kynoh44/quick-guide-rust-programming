@@ -60,11 +60,78 @@ index 5272213..2e4f18d 100644
 
 dependencies 섹션에 magic-crypt가 추가된 것을 볼 수 있습니다. 크레이트의 설치가 되었으니 이제 소스 코드에서 크레이트를 사용할 수 있습니다.
 
-============================================ 2025 01 08 ==================
-
+이제 코딩을 할 차례입니다. 먼저 MagicCrypt의 홈페이지에 있는 예제 코드를 분석해보겠습니다.
 
 ```rust
-// src/project_step1/main.rs
+use magic_crypt::{new_magic_crypt, MagicCryptTrait};
+
+let mc = new_magic_crypt!("magickey", 256);
+
+let base64 = mc.encrypt_str_to_base64("http://magiclen.org");
+
+assert_eq!("DS/2U8royDnJDiNY2ps3f6ZoTbpZo8ZtUGYLGEjwLDQ=", base64);
+
+assert_eq!("http://magiclen.org", mc.decrypt_base64_to_string(&base64).unwrap());
+```
+
+첫줄은 use 구문을 써서 new_magic_crypt와 MagicCryptTrait라는 것을 가져옵니다.
+new_magic_crypt는 바로 2번째 줄에서 사용하고 있는데요, !를 써서 호출하는 것을 보면 매크로 함수인 것을 알 수 있습니다.
+그럼 MagicCryptTrait는 뭘까요? 이름만 보면 트레이트같은데 정말 트레이트가 맞을까요? 그러면 어떤 함수들을 구현하는 트레이트일까요?
+그걸 확인하기 위해서 crates.io에서 매뉴얼 페이지를 제공하는 것입니다.
+https://crates.io/crates/magic-crypt 사이트에 들어가서 오른쪽 중간에 있는 Documentation 사이트의 링크(https://docs.rs/magic-crypt/4.0.1)를 누릅니다.
+그러면 MagicCrypt의 매뉴얼 사이트에 접속하게됩니다.
+웹페이지의 가장 윗쪽에 검색 메뉴가 있습니다. 여기에 MagicCryptTrait를 입력해보겠습니다.
+그러면 https://docs.rs/magic-crypt/4.0.1/magic_crypt/trait.MagicCryptTrait.html 페이지에 접속하게됩니다.
+이제 MagicCryptTrait라는게 정말 트레이트가 맞고, 다음과 같이 정의되어있다는 것을 확인할 수 있습니다.
+
+```rust
+pub trait MagicCryptTrait {
+    // Required methods
+    fn new<S: AsRef<[u8]>, V: AsRef<[u8]>>(key: S, iv: Option<V>) -> Self;
+    fn encrypt_to_bytes<T: ?Sized + AsRef<[u8]>>(&self, data: &T) -> Vec<u8>;
+    fn encrypt_reader_to_bytes(
+        &self,
+        reader: &mut dyn Read,
+    ) -> Result<Vec<u8>, MagicCryptError>;
+    fn encrypt_reader_to_writer2<N: ArrayLength<u8> + PartialDiv<U16> + IsGreaterOrEqual<U16, Output = True>>(
+        &self,
+        reader: &mut dyn Read,
+        writer: &mut dyn Write,
+    ) -> Result<(), MagicCryptError>;
+    fn decrypt_bytes_to_bytes<T: ?Sized + AsRef<[u8]>>(
+        &self,
+        bytes: &T,
+    ) -> Result<Vec<u8>, MagicCryptError>;
+    fn decrypt_reader_to_bytes(
+        &self,
+        reader: &mut dyn Read,
+    ) -> Result<Vec<u8>, MagicCryptError>;
+......
+```
+
+메소드가 여러개가 있지만, 일단 예제에서 사용하고 있는 encrypt_str_to_base64 함수만 확인해보겠습니다.
+
+```rust
+    fn encrypt_str_to_base64<S: AsRef<str>>(&self, string: S) -> String { ... }
+```
+
+함수 정의만 보면 
+* 인자로 받는 것은 &str 타입이다. 
+* 반환값은 String 타입이다. 즉 새로운 String 객체를 생성해준다.
+
+*AsRef도 트레이트입니다. 제가 MagicCryptTrait에 대해서 설명하고 있는 순서대로 메뉴얼 페이지에서 직접 검색해보시길 추천합니다.*
+
+이제 예제 코드가 좀 이해가 됩니다. new_magic_crypt 매크로를 써서 MagicCryptTrait를 구현하는 객체(혹은 핸들러라고도 부르는)를 만듭니다.
+그리고 encrypt_str_to_base64와 같은 함수에 문자열 레퍼런스를 전달해서 최종적으로 암호화된 데이터가 있는 String이나 바이트의 배열을 생성합니다.
+우리는 간단하게 바로 암호화된 결과물을 터미널에 출력해볼 것이니 BASE64 인코딩으로 암호문을 출력할 수 있게 만들어주는 encrypt_str_to_base64 함수가 편리하겠네요.
+이 함수가 없었다면 encrypt_str_to_bytes를 호출해서 바이트 배열을 얻은 후 별도의 BASE64 관련 크레이트를 찾아서 사용했어야 했을 것입니다.
+아니면 BASE64가 아닌 다른 인코딩을 하고 싶었더라면 다른 인코딩 크레이트를 찾아야겠지요.
+
+어쨌든 우리는 굳이 다른 인코딩을 사용할 필요가 없으므로 예제 코드를 그대로 시리얼 키 생성에 사용하겠습니다.
+이전에 평문으로 만들었던 serial이라는 문자열 변수를 그대로 encrypt_str_to_base64에 전달하면 되겠네요.
+
+```rust
+use magic_crypt::{new_magic_crypt, MagicCryptTrait};
 use std::io::{stdin, stdout, Write};
 
 fn get_user_input() -> String {
@@ -125,7 +192,6 @@ fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
     }
 }
 
-
 fn generate_serial(items: &Vec<Box<dyn GenSerialData>>) -> String {
     let mut data = String::new();
     for item in items.iter() {
@@ -135,27 +201,55 @@ fn generate_serial(items: &Vec<Box<dyn GenSerialData>>) -> String {
 }
 
 fn main() {
-    println!("hello");
-
     let userid = UserID { digit: 4, id: None };
     let productid = ProductID { digit: 8, id: None };
     let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(productid)];
 
     collect_data(&mut items);
     let serial = generate_serial(&items);
-    println!("Serial generated: {}", serial);
+    println!("Plain serial: {}", serial);
+
+    let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
+    let base64 = mc.encrypt_str_to_base64(&serial); // 암호화 후 BASE64로 인코딩
+    println!("Encrypted serial: {}", base64);
+
+    let dec = mc.decrypt_base64_to_string(base64).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
+    println!("Decrypted serial: {}", dec);
 }
 ```
 
 ```bash
-$ cargo run --bin smart_pointer_application
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.00s
-     Running `target/debug/smart_pointer_application`
-hello
+$ cargo run --bin project_step1
+   Compiling cfg-if v1.0.0
+   Compiling debug-helper v0.3.13
+   Compiling base64 v0.22.1
+......
+   Compiling cbc v0.1.2
+   Compiling des v0.8.1
+   Compiling magic-crypt v4.0.1
+   Compiling my-rust-book v0.1.0 (/Users/user/study/quick-guide-rust-programming)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.97s
+     Running `target/debug/project_step1`
 Please input 4-digits User ID: 
 1234
 Please input 8-digits Product ID: 
-qwerasdf
-Serial generated: 1234qwerasdf
+abcdabcd
+Plain serial: 1234abcdabcd
+Encrypted serial: GPghOzaNUn7G7FKiAkhKQQ==
+Decrypted serial: 1234abcdabcd
 ```
 
+최초로 실행할 때는 MagicCrypt 크레이트와 그 외 연관 크레이트들을 빌드한 후 프로그램을 실행합니다.
+사용자 번호 1234와 제품 번호 abcdabcd를 입력해서 나온 시리얼 키는 GPghOzaNUn7G7FKiAkhKQQ==입니다.
+시리얼 키를 복호화해서 원래 데이터 1234abcdabcd가 잘 나온 것을 확인할 수 있습니다.
+가장 기본적인 암호화 처리를 만들어보았습니다.
+
+### 연습문제
+
+1. 참고로 트레이트의 메뉴얼을 찾아보는 과정에 대해서 소개했습니다만 new_magic_crypt라는 매크로에 대해서는 소개를 안했습니다.
+직접 한번 메뉴얼 페이지를 검색해서 어떤 일을 하는 매크로인지 찾아보시기 바랍니다.
+어떤 타입의 객체를 생성하는 것인지, 2개의 인자는 각각 어떤 의미를 갖는지를 확인해보시면, 나중에 좀 더 다양한 옵션을 사용하는데 도움이 될 것입니다.
+
+2. BASE64에 대해서도 조사해보세요.
+특히 위 예제에서 생성한 시리얼 키 GPghOzaNUn7G7FKiAkhKQQ==에서 마지막에 있는 "=="가 어떤 의미인지를 확인해보시기 바랍니다.
+보통의 시리얼 키에는 "="라는 문자가 없는데 왜 우리가 만든 시리얼 키에는 "="가 있을까요? 사실은 "=="를 생략해도 괸찮습니다만 왜 그럴까요?
