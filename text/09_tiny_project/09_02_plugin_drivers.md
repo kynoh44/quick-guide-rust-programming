@@ -9,3 +9,5 @@ command_option은 09_04_command_option으로 번호를 미루자.
 
 각 플러그인마다 파일을 하나씩 만든다: country.rs lang.rs userid.rs product.rs serialver.rs
 Json파일은 이중에서 골라서 시리얼번호를 만든다
+
+
