@@ -1,6 +1,15 @@
-struct ProductID {
-    digit: u32,
-    id: Option<String>,
+use crate::util::get_user_input;
+use crate::GenSerialData;
+
+pub struct ProductID {
+    pub digit: u32,
+    pub id: Option<String>,
+}
+
+impl ProductID {
+    pub fn new() -> Self {
+        ProductID { digit: 0, id: None }
+    }
 }
 
 impl GenSerialData for ProductID {
