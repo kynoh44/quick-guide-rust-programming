@@ -1,24 +1,14 @@
+mod productid;
+mod userid;
+mod util;
+
 use magic_crypt::{new_magic_crypt, MagicCryptTrait};
-use std::io::{stdin, stdout, Write};
+use productid::ProductID;
+use userid::UserID;
 
 trait GenSerialData {
     fn get_input(&mut self);
     fn generate(&self) -> Option<&str>;
-}
-
-fn get_user_input() -> String {
-    let mut s = String::new();
-    let _ = stdout().flush();
-    stdin()
-        .read_line(&mut s)
-        .expect("Did not enter a correct string");
-    if let Some('\n') = s.chars().next_back() {
-        s.pop();
-    }
-    if let Some('\r') = s.chars().next_back() {
-        s.pop();
-    }
-    s
 }
 
 fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
@@ -35,11 +25,11 @@ fn generate_serial(items: &Vec<Box<dyn GenSerialData>>) -> String {
     data
 }
 
-fn register_input_data(item: &Box<dyn GenSerialData>) {}
+//fn register_input_data(item: &Box<dyn GenSerialData>) {}
 
 fn main() {
-    let userid = crate::serial_project_step2::userid::UserID { digit: 4, id: None };
-    let productid = ProductID { digit: 8, id: None };
+    let productid = ProductID::new();
+    let userid = UserID::new();
     let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(productid)];
 
     collect_data(&mut items);
