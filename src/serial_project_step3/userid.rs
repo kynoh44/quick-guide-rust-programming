@@ -1,13 +1,18 @@
-use crate::util::get_user_input;
-use crate::GenSerialData;
+use crate::InputData;
+use crate::{get_user_input, GenSerialData};
+
 pub struct UserID {
-    pub digit: u32,
+    pub digit: i32,
     pub id: Option<String>,
 }
 
 impl UserID {
-    pub fn new() -> Self {
-        UserID { digit: 0, id: None }
+    pub fn new(digit: i32) -> InputData {
+        InputData {
+            name: "UserID".to_owned(),
+            digit,
+            id: None,
+        }
     }
 }
 
@@ -17,7 +22,7 @@ impl GenSerialData for UserID {
         self.id = Some(get_user_input());
     }
 
-    fn generate(&self) -> Option<&str> {
+    fn get_data(&self) -> Option<&str> {
         self.id.as_ref().map(|x| x.as_str())
     }
 }
