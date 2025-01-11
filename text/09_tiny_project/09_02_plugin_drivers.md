@@ -42,16 +42,61 @@ pub struct InputData {
     pub digit: i32,
     pub id: Option<String>,
 }
-```
 
-만약에 
+pub struct UserID {
+    pub data: InputData, // 공통 데이터는 InputData 구조체로 묶어서 관리
+                         // 개별 데이터는 구조체의 필드로 선언
+}
 
-데이터의 형태가 동일하니 사용자에게서 두 데이터를 입력받거나, 구조체에 있는 데이터를 읽어오는 코드가 동일하게됩니다. 같은 코드에 단지 다른 데이터를 적용할 수 있게 됩니다. 서로 다른 구조체에 같은 코드가 있다면 바로 트레이트를 생각해낼 수 있어야 러스트 언어의 개발자가 될 수 있습니다.
-
-```rust
-trait GenSerialData {
-    fn get_input(&mut self);
-    fn get_data(&self) -> Option<&str>;
+pub struct ProductID {
+    pub data: InputData, // 공통 데이터는 InputData 구조체로 묶어서 관리
+                         // 개별 데이터는 구조체의 필드로 선언
 }
 ```
 
+데이터의 형태가 동일하니 사용자에게서 두 데이터를 입력받거나, 구조체에 있는 데이터를 읽어오는 코드가 동일하게됩니다. 같은 코드에 단지 다른 데이터를 적용할 수 있게 됩니다. 서로 다른 구조체에 같은 코드가 있다면 바로 트레이트로 만들 수 있습니다. 다음은 예제 코드를 보시면 공통 데이터를 얻어오는 트레이트 함수를 각각의 입력 데이터마다 별도로 구현하고, 공통 데이터를 받아온 이후부터 공통 데이터 자체를 처리하는 코드는 트레이트의 디폴트 구현으로 만든 예제입니다.
+
+```rust
+trait GenSerialData {
+    fn get_input_from_user(&mut self) {
+        let inputdata = self.return_input_data();
+        println!(
+            "Please input {}-digits for {}: ",
+            inputdata.digit, inputdata.name
+        );
+        inputdata.id = Some(get_user_input());
+    }
+
+    fn get_data_from_struct(&mut self) -> Option<&str> {
+        let inputdata = self.return_input_data();
+        inputdata.id.as_ref().map(|x| x.as_str())
+    }
+
+    fn get_length(&mut self) -> usize {
+        self.return_input_data().digit
+    }
+
+    fn return_input_data(&mut self) -> &mut InputData;
+}
+```
+
+디폴트 구현에 대한 설명~~~
+
+
+
+
+```bash
+g$ cargo run --bin serial_project_step3
+   Compiling my-rust-book v0.1.0 (/home/gkim/study/quick-guide-rust-programming)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.51s
+     Running `target/debug/serial_project_step3`
+Please input 4-digits for UserID: 
+1234
+Please input 8-digits for UserID: 
+qwerasdf
+Plain serial: 1234qwerasdf
+Encrypted serial: 3OvuVy1IXj5veDI61Mszjg==
+Decrypted serial: 1234qwerasdf
+Verify User ID: 1234
+Verify Product ID: qwerasdf
+```
