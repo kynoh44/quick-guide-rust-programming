@@ -1,14 +1,14 @@
 ## 시리얼 번호 암호화
 
-가장 먼저 시리얼 키를 암호화해서 좀 더 제대로된 시리얼 키같이 보이도록 바꿔보겠습니다.
+제가 보통 어떻게 새로운 크레이트(다른 언어에서 라이브러리라고 부르는)을 추가하고 사용하는지를 소개하겠습니다. 앞으로 Rust로 개발을 하면서 모든 걸 직접 만들 수 없으니까요. 분명히 어떤 기능이 필요할 때마다 저와 유사항 방식으로 이미 구현된 크레이트가 있는지 조사하고 사용하시게 될 것입니다.
 
-이 예제에서 보여드리려는 것은 Cargo에 어떻게 새로운 크레이트(다른 언어에서 라이브러리라고 부르는)을 추가하고 사용하는지 입니다. 가장 쉬운 방법은 아무래도 구글에서 검색해보는 것입니다. "rust encryption"이라고 검색해보면 많은 자료들이 나올 것입니다. 지금 제가 이 글을 쓰고 있는 2025년 1월 8일에 검색해본 결과 첫번째 글은 러스트 언어 홈페이지에 있는 토론 글입니다. 왜 러스트에서 문자열을 암호화하는게 어려운지에 대한 글입니다. 그리고 2번째가 MagicCrypt 메뉴얼 사이트 https://docs.rs/magic-crypt/latest/magic_crypt/ 입니다. 3번째는 Openssl의 encrypt 모듈에 대한 메뉴얼 사이트 https://docs.rs/openssl/latest/openssl/encrypt/index.html 가 나오고 있습니다. 그 외에도 여러가지 크레이트들이 검색됩니다.
+일단 가장 쉽고 먼저 해볼 것은 구글에서 검색하는 것입니다. 암호화가 필요하니까 구글에 "rust encryption"이라고 검색해보면 많은 자료들이 나올 것입니다. 지금 제가 이 글을 쓰고 있는 2025년 1월 8일에 검색해본 결과 첫번째 글은 러스트 언어 홈페이지에 있는 토론 글입니다. 왜 러스트에서 문자열을 암호화하는게 어려운지에 대한 글입니다. 좋은 토론이긴 하지만, 일단 우리는 당장 구현할게 필요하니까 넘어갑니다. 그리고 2번째가 MagicCrypt 메뉴얼 사이트 https://docs.rs/magic-crypt/latest/magic_crypt/ 입니다. 3번째는 Openssl의 encrypt 모듈에 대한 메뉴얼 사이트 https://docs.rs/openssl/latest/openssl/encrypt/index.html 가 나오고 있습니다. 그 외에도 여러가지 크레이트들이 검색됩니다.
 
 일단 가장 먼저 검색되는 2개의 크레이트를 조사해서 어느 것을 사용할지 결정해보겠습니다. 가장 먼저 https://crates.io/ 사이트에서 해당 크레이트가 얼마나 오래동안 개발이 되고 현재도 개발이 활발하게 진행되고 있는지, 안정적인 버전을 출시했는지, 사용자가 얼마나 많은지 등을 확인해보는게 좋습니다. 우선 magic_crypt를 검색해서 https://crates.io/crates/magic-crypt 페이지를 열어보겠습니다. 페이지의 왼쪽에는 크레이트의 소개와 사용법등을 보여주고, 오른쪽에는 가장 최신 버전이 언제 출시되었는지, 라이선스는 무엇인지, 그리고 Cargo를 이용해서 어떻게 설치할 수 있는지 등을 보여줍니다. Github에 레포 주소도 있습니다. 그리고 페이지 아래쪽을 보면 "Stats Overview"라는 섹션에 있고 현재 391,263번 다운로드가 되었다고 알려줍니다. 총 31개의 릴리즈가 있었다고도 보여주네요. 제가 crates.io 사이트에서 crypt나 encrypt로 검색해보면 대부분의 크레이트들의 다운로드 횟수가 몇만번이 안되는 것을 보면 MagicCrypt가 많이 사용되는 크레이트라는 것을 알 수 있었습니다.crates.io에서 openssl도 검색해보면 당연하게도 다운로드 횟수가 훨씬 높습니다. 1억번이 넘네요. 당연한 결과겠지요.
 
 저는 다운로드 횟수 다음으로 예제 코드를 확인해봅니다. Openssl의 encryp 모듈의 예제 코드와 MagicCrypt의 예제 코드를 보면 확연하게 MagicCrypt의 예제 코드가 단순하다는 것을 알 수 있습니다. 기능이 풍부한 크레이트는 사용법이 복잡한 경우가 많고, 기능이 단순한 크레이트가 사용법이 쉬운 경우가 많습니다. 저는 보통 시작할 때는 나한테 꼭 필요한 기능만 있다면 사용법이 쉬운 크레이트를 먼저 선택합니다. 개발을 하면서 내가 어떤 기능이 필요한가를 더 잘 이해하게되고, 사용중인 크레이트에 부족한 기능일 때 다른 크레이트로 변경하는 것을 선호합니다. 현재 저는 암호화에 대해서 별로 아는 것도 없으니 선택할 옵션이 없습니다. 그냥 어떻게든 암호화만 되면 충분합니다. 나중에 개발을 하면서 암호화에 대해 제가 더 잘 이해하게되고, 그러면서 더 세세한 옵션 선택을 할 수 있는 상황이 되면 좀 더 기능이 많은 크레이트를 사용할 수 있겠지요. 결국 지금은 시작 단계이니 Openssl보다 더 단순하고 직관적인 MagicCrypt를 사용하겠습니다.
 
-첫번째로 할 일은 Cargo를 써서 MagicCrypt 크레이트를 설치하는 것입니다. https://crates.io/crates/magic-crypt 에서 2가지 설치 방법을 알려주고 있습니다. 첫번째는 `cargo add magic-crypt` 명령을 실행하는 것입니다. 이 명령은 cargo가 알아서 가장 최신 버전을 확인해서 Cargo.toml에 추가해줍니다. 두번째 방법은 개발자가 직접 Cargo.toml 파일에 `magic-crypt = "4.0.1"`를 입력하는 방법입니다. 최신 버전이 아니라 이전 버전을 사용해야될 때는 직접 Cargo.toml을 수정하는게 편리합니다. 우리는 특정 버전이 필요한 상황이 아니므로 cargo 툴을 사용해서 설치하겠습니다.
+사용할 크레이트가 결정되었으니 첫번째로 할 일은 Cargo를 써서 MagicCrypt 크레이트를 설치하는 것입니다. https://crates.io/crates/magic-crypt 에서 2가지 설치 방법을 알려주고 있습니다. 첫번째는 `cargo add magic-crypt` 명령을 실행하는 것입니다. 이 명령은 cargo가 알아서 가장 최신 버전을 확인해서 Cargo.toml에 추가해줍니다. 두번째 방법은 개발자가 직접 Cargo.toml 파일에 `magic-crypt = "4.0.1"`를 입력하는 방법입니다. 최신 버전이 아니라 이전 버전을 사용해야될 때는 직접 Cargo.toml을 수정하는게 편리합니다. 우리는 특정 버전이 필요한 상황이 아니므로 cargo 툴을 사용해서 설치하겠습니다.
 
 ```bash
 $ cargo add magic-crypt
@@ -60,7 +60,7 @@ index 5272213..2e4f18d 100644
 
 dependencies 섹션에 magic-crypt가 추가된 것을 볼 수 있습니다. 크레이트의 설치가 되었으니 이제 소스 코드에서 크레이트를 사용할 수 있습니다.
 
-이제 코딩을 할 차례입니다. 먼저 MagicCrypt의 홈페이지에 있는 예제 코드를 분석해보겠습니다.
+이제 코딩을 할 차례입니다. 먼저 MagicCrypt가 대략 어떻게 구현되었는지, 어떻게 사용하면 될지를 알아야겠지요. 가장 먼저 홈페이지에 있는 예제 코드를 분석해보겠습니다.
 
 ```rust
 use magic_crypt::{new_magic_crypt, MagicCryptTrait};
@@ -149,77 +149,31 @@ fn get_user_input() -> String {
     s
 }
 
-trait GenSerialData {
-    fn get_input(&mut self);
-    fn generate(&self) -> Option<&str>;
-}
-
-struct UserID {
-    digit: u32,
-    id: Option<String>,
-}
-
-impl GenSerialData for UserID {
-    fn get_input(&mut self) {
-        println!("Please input {}-digits User ID: ", self.digit);
-        self.id = Some(get_user_input());
-    }
-
-    fn generate(&self) -> Option<&str> {
-        self.id.as_ref().map(|x| x.as_str())
-    }
-}
-
-struct ProductID {
-    digit: u32,
-    id: Option<String>,
-}
-
-impl GenSerialData for ProductID {
-    fn get_input(&mut self) {
-        println!("Please input {}-digits Product ID: ", self.digit);
-        self.id = Some(get_user_input());
-    }
-
-    fn generate(&self) -> Option<&str> {
-        self.id.as_ref().map(|x| x.as_str())
-    }
-}
-
-fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
-    for item in items.iter_mut() {
-        item.get_input();
-    }
-}
-
-fn generate_serial(items: &Vec<Box<dyn GenSerialData>>) -> String {
-    let mut data = String::new();
-    for item in items.iter() {
-        data.push_str(item.generate().unwrap());
-    }
-    data
-}
-
 fn main() {
-    let userid = UserID { digit: 4, id: None };
-    let productid = ProductID { digit: 8, id: None };
-    let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(productid)];
+    println!("Please input 4-digits User ID: ");
+    let userid = Some(get_user_input());
 
-    collect_data(&mut items);
-    let serial = generate_serial(&items);
-    println!("Plain serial: {}", serial);
+    println!("Please input 8-digits Product ID: ");
+    let productid = Some(get_user_input());
+
+    let plain_serial = format!("{}{}", userid.unwrap(), productid.unwrap());
+    println!("Plain serial: {}", plain_serial); // 암호화 전 시리얼 출력
 
     let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
-    let base64 = mc.encrypt_str_to_base64(&serial); // 암호화 후 BASE64로 인코딩
-    println!("Encrypted serial: {}", base64);
+    let serial = mc.encrypt_str_to_base64(&plain_serial); // 암호화 후 BASE64로 인코딩
+    println!("Encrypted serial: {}", serial);
 
-    let dec = mc.decrypt_base64_to_string(base64).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
+    let dec = mc.decrypt_base64_to_string(serial).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
     println!("Decrypted serial: {}", dec);
+    let verify_userid = &plain_serial[0..4];
+    let verify_productid = &plain_serial[4..12];
+    println!("Verify User ID: {}", verify_userid);
+    println!("Verify Product ID: {}", verify_productid);
 }
 ```
 
 ```bash
-$ cargo run --bin project_step1
+$ cargo run --bin serial_project_step2
    Compiling cfg-if v1.0.0
    Compiling debug-helper v0.3.13
    Compiling base64 v0.22.1
@@ -233,10 +187,12 @@ $ cargo run --bin project_step1
 Please input 4-digits User ID: 
 1234
 Please input 8-digits Product ID: 
-abcdabcd
-Plain serial: 1234abcdabcd
-Encrypted serial: GPghOzaNUn7G7FKiAkhKQQ==
-Decrypted serial: 1234abcdabcd
+qwerasdf
+Plain serial: 1234qwerasdf
+Encrypted serial: 3OvuVy1IXj5veDI61Mszjg==
+Decrypted serial: 1234qwerasdf
+Verify User ID: 1234
+Verify Product ID: qwerasdf
 ```
 
 최초로 실행할 때는 MagicCrypt 크레이트와 그 외 연관 크레이트들을 빌드한 후 프로그램을 실행합니다.

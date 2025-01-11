@@ -1,45 +1,39 @@
-mod productid;
-mod userid;
-mod util;
-
 use magic_crypt::{new_magic_crypt, MagicCryptTrait};
-use productid::ProductID;
-use userid::UserID;
+use std::io::{stdin, stdout, Write};
 
-trait GenSerialData {
-    fn get_input(&mut self);
-    fn generate(&self) -> Option<&str>;
-}
-
-fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
-    for item in items.iter_mut() {
-        item.get_input();
+fn get_user_input() -> String {
+    let mut s = String::new();
+    let _ = stdout().flush();
+    stdin()
+        .read_line(&mut s)
+        .expect("Did not enter a correct string");
+    if let Some('\n') = s.chars().next_back() {
+        s.pop();
     }
-}
-
-fn generate_serial(items: &Vec<Box<dyn GenSerialData>>) -> String {
-    let mut data = String::new();
-    for item in items.iter() {
-        data.push_str(item.generate().unwrap());
+    if let Some('\r') = s.chars().next_back() {
+        s.pop();
     }
-    data
+    s
 }
-
-//fn register_input_data(item: &Box<dyn GenSerialData>) {}
 
 fn main() {
-    let productid = ProductID::new();
-    let userid = UserID::new();
-    let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(productid)];
+    println!("Please input 4-digits User ID: ");
+    let userid = Some(get_user_input());
 
-    collect_data(&mut items);
-    let serial = generate_serial(&items);
-    println!("Plain serial: {}", serial);
+    println!("Please input 8-digits Product ID: ");
+    let productid = Some(get_user_input());
+
+    let plain_serial = format!("{}{}", userid.unwrap(), productid.unwrap());
+    println!("Plain serial: {}", plain_serial); // 암호화 전 시리얼 출력
 
     let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
-    let base64 = mc.encrypt_str_to_base64(&serial); // 암호화 후 BASE64로 인코딩
-    println!("Encrypted serial: {}", base64);
+    let serial = mc.encrypt_str_to_base64(&plain_serial); // 암호화 후 BASE64로 인코딩
+    println!("Encrypted serial: {}", serial);
 
-    let dec = mc.decrypt_base64_to_string(base64).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
+    let dec = mc.decrypt_base64_to_string(serial).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
     println!("Decrypted serial: {}", dec);
+    let verify_userid = &dec[0..4];
+    let verify_productid = &dec[4..12];
+    println!("Verify User ID: {}", verify_userid);
+    println!("Verify Product ID: {}", verify_productid);
 }
