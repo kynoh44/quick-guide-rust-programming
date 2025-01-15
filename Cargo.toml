@@ -237,13 +237,13 @@ name = "std_library_file"
 path = "src/std_library_file/main.rs"
 
 [[bin]]
+name = "serial_project_step0"
+path = "src/serial_project_step0/main.rs"
+
+[[bin]]
 name = "serial_project_step1"
 path = "src/serial_project_step1/main.rs"
 
 [[bin]]
 name = "serial_project_step2"
 path = "src/serial_project_step2/main.rs"
-
-[[bin]]
-name = "serial_project_step3"
-path = "src/serial_project_step3/main.rs"

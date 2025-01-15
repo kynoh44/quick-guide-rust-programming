@@ -25,18 +25,18 @@ fn get_user_input() -> String {
 }
 
 fn main() {
-    println!("Please input 4-digits User ID: ");
-    let userid = Some(get_user_input());
+    println!("Please input 4-digits Customer ID: ");
+    let customerid = Some(get_user_input());
 
     println!("Please input 8-digits Product ID: ");
     let productid = Some(get_user_input());
 
-    let plain_serial = format!("{}{}", userid.unwrap(), productid.unwrap());
+    let plain_serial = format!("{}{}", customerid.unwrap(), productid.unwrap());
     println!("Plain serial: {}", plain_serial); // 암호화 전 시리얼 출력
 
-    let verify_userid = &plain_serial[0..4];
+    let verify_customerid = &plain_serial[0..4];
     let verify_productid = &plain_serial[4..12];
-    println!("Verify User ID: {}", verify_userid);
+    println!("Verify Customer ID: {}", verify_customerid);
     println!("Verify Product ID: {}", verify_productid);
 }
 ```
@@ -46,12 +46,12 @@ $ cargo run --bin serial_project_step1
    Compiling my-rust-book v0.1.0 (/home/gkim/study/quick-guide-rust-programming)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.33s
      Running `target/debug/serial_project_step1`
-Please input 4-digits User ID: 
+Please input 4-digits Customer ID: 
 1234
 Please input 8-digits Product ID: 
 qwerasdf
 Plain serial: 1234qwerasdf
-Verify User ID: 1234
+Verify Customer ID: 1234
 Verify Product ID: qwerasdf
 ```
 
