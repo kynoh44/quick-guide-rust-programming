@@ -150,13 +150,13 @@ fn get_user_input() -> String {
 }
 
 fn main() {
-    println!("Please input 4-digits User ID: ");
-    let userid = Some(get_user_input());
+    println!("Please input 4-digits Customer ID: ");
+    let customerid = Some(get_user_input());
 
     println!("Please input 8-digits Product ID: ");
     let productid = Some(get_user_input());
 
-    let plain_serial = format!("{}{}", userid.unwrap(), productid.unwrap());
+    let plain_serial = format!("{}{}", customerid.unwrap(), productid.unwrap());
     println!("Plain serial: {}", plain_serial); // 암호화 전 시리얼 출력
 
     let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
@@ -165,9 +165,9 @@ fn main() {
 
     let dec = mc.decrypt_base64_to_string(serial).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
     println!("Decrypted serial: {}", dec);
-    let verify_userid = &plain_serial[0..4];
-    let verify_productid = &plain_serial[4..12];
-    println!("Verify User ID: {}", verify_userid);
+    let verify_customerid = &dec[0..4];
+    let verify_productid = &dec[4..12];
+    println!("Verify Customer ID: {}", verify_customerid);
     println!("Verify Product ID: {}", verify_productid);
 }
 ```
@@ -184,14 +184,14 @@ $ cargo run --bin serial_project_step2
    Compiling my-rust-book v0.1.0 (/Users/user/study/quick-guide-rust-programming)
     Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.97s
      Running `target/debug/project_step1`
-Please input 4-digits User ID: 
+Please input 4-digits Customer ID: 
 1234
 Please input 8-digits Product ID: 
 qwerasdf
 Plain serial: 1234qwerasdf
 Encrypted serial: 3OvuVy1IXj5veDI61Mszjg==
 Decrypted serial: 1234qwerasdf
-Verify User ID: 1234
+Verify Customer ID: 1234
 Verify Product ID: qwerasdf
 ```
 
