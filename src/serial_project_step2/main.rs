@@ -1,12 +1,25 @@
 mod customerid;
-mod expiredate;
 mod productid;
 
 use customerid::CustomerID;
-use expiredate::ExpireDate;
 use magic_crypt::{new_magic_crypt, MagicCryptTrait};
 use productid::ProductID;
 use std::io::{stdin, stdout, Write};
+
+pub fn get_user_input() -> String {
+    let mut s = String::new();
+    let _ = stdout().flush();
+    stdin()
+        .read_line(&mut s)
+        .expect("Did not enter a correct string");
+    if let Some('\n') = s.chars().next_back() {
+        s.pop();
+    }
+    if let Some('\r') = s.chars().next_back() {
+        s.pop();
+    }
+    s
+}
 
 trait GenSerialData {
     fn get_input_from_user(&mut self) {
@@ -29,24 +42,7 @@ trait GenSerialData {
     fn get_length(&mut self) -> usize;
     fn get_rawdata(&self) -> String;
     fn get_name(&self) -> String;
-    fn put_rawdata(&mut self, _data: String) {
-        unimplemented!();
-    }
-}
-
-pub fn get_user_input() -> String {
-    let mut s = String::new();
-    let _ = stdout().flush();
-    stdin()
-        .read_line(&mut s)
-        .expect("Did not enter a correct string");
-    if let Some('\n') = s.chars().next_back() {
-        s.pop();
-    }
-    if let Some('\r') = s.chars().next_back() {
-        s.pop();
-    }
-    s
+    fn put_rawdata(&mut self, _data: String);
 }
 
 fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
@@ -66,12 +62,7 @@ fn generate_serial(items: &mut Vec<Box<dyn GenSerialData>>) -> String {
 fn main() {
     let productid = ProductID::new(8);
     let customerid = CustomerID::new(4);
-    let expiredate = ExpireDate::new(8);
-    let mut items: Vec<Box<dyn GenSerialData>> = vec![
-        Box::new(customerid),
-        Box::new(productid),
-        Box::new(expiredate),
-    ];
+    let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(customerid), Box::new(productid)];
 
     collect_data(&mut items);
     let plain_serial = generate_serial(&mut items);
