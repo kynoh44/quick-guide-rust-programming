@@ -9,7 +9,7 @@ pub struct ExpireDate {
 }
 
 impl ExpireDate {
-    pub fn new(digit: usize) -> Self {
+    pub fn new() -> Self {
         ExpireDate {
             name: "ExpireDate".to_owned(),
             year: 0,
@@ -60,5 +60,9 @@ impl GenSerialData for ExpireDate {
 
     fn get_name(&self) -> String {
         self.name.clone()
+    }
+
+    fn put_rawdata(&mut self, _data: String) {
+        unimplemented!()
     }
 }

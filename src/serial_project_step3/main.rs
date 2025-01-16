@@ -1,38 +1,13 @@
+mod customerid;
+mod customertype;
+mod expiredate;
 mod productid;
-mod userid;
 
+use customerid::CustomerID;
+use customertype::CustomerType;
 use magic_crypt::{new_magic_crypt, MagicCryptTrait};
 use productid::ProductID;
 use std::io::{stdin, stdout, Write};
-use userid::UserID;
-
-pub struct InputData {
-    pub name: String,
-    pub digit: usize,
-    pub id: Option<String>,
-}
-
-trait GenSerialData {
-    fn get_input_from_user(&mut self) {
-        let inputdata = self.return_input_data();
-        println!(
-            "Please input {}-digits for {}: ",
-            inputdata.digit, inputdata.name
-        );
-        inputdata.id = Some(get_user_input());
-    }
-
-    fn get_data_from_struct(&mut self) -> Option<&str> {
-        let inputdata = self.return_input_data();
-        inputdata.id.as_ref().map(|x| x.as_str())
-    }
-
-    fn get_length(&mut self) -> usize {
-        self.return_input_data().digit
-    }
-
-    fn return_input_data(&mut self) -> &mut InputData;
-}
 
 pub fn get_user_input() -> String {
     let mut s = String::new();
@@ -49,6 +24,30 @@ pub fn get_user_input() -> String {
     s
 }
 
+trait GenSerialData {
+    fn get_input_from_user(&mut self) {
+        let input: String;
+
+        println!(
+            "Please input {}-digits for {}: ",
+            self.get_length(),
+            self.get_name()
+        );
+        input = get_user_input();
+        assert_eq!(input.len(), self.get_length());
+        self.put_rawdata(input);
+    }
+
+    fn verify(&mut self, data: &str) -> bool {
+        self.get_length() == data.len() && self.get_rawdata() == data
+    }
+
+    fn get_length(&mut self) -> usize;
+    fn get_rawdata(&self) -> String;
+    fn get_name(&self) -> String;
+    fn put_rawdata(&mut self, _data: String);
+}
+
 fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
     for item in items.iter_mut() {
         item.get_input_from_user();
@@ -58,15 +57,22 @@ fn collect_data(items: &mut Vec<Box<dyn GenSerialData>>) {
 fn generate_serial(items: &mut Vec<Box<dyn GenSerialData>>) -> String {
     let mut data = String::new();
     for item in items.iter_mut() {
-        data.push_str(item.get_data_from_struct().unwrap());
+        data.push_str(&item.get_rawdata());
     }
     data
 }
 
 fn main() {
     let productid = ProductID::new(8);
-    let userid = UserID::new(4);
-    let mut items: Vec<Box<dyn GenSerialData>> = vec![Box::new(userid), Box::new(productid)];
+    let customerid = CustomerID::new(4);
+    let customertype = CustomerType::new();
+    let expiredate = expiredate::ExpireDate::new();
+    let mut items: Vec<Box<dyn GenSerialData>> = vec![
+        Box::new(customerid),
+        Box::new(productid),
+        Box::new(customertype),
+        Box::new(expiredate),
+    ];
 
     collect_data(&mut items);
     let plain_serial = generate_serial(&mut items);
@@ -79,10 +85,12 @@ fn main() {
     let dec = mc.decrypt_base64_to_string(serial).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
     println!("Decrypted serial: {}", dec);
 
-    let userid_len = items[0].get_length();
-    let productid_len = items[1].get_length();
-    let verify_userid = &dec[0..userid_len];
-    let verify_productid = &dec[userid_len..userid_len + productid_len];
-    println!("Verify User ID: {}", verify_userid);
-    println!("Verify Product ID: {}", verify_productid);
+    let mut offset = 0;
+    for item in items.iter_mut() {
+        let len = item.get_length();
+        let rawdata = &dec[offset..offset + len];
+        println!("Verify {}: {}", item.get_name(), rawdata);
+        println!("Verify result: {}", item.verify(rawdata));
+        offset += len;
+    }
 }
