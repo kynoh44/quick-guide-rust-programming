@@ -38,11 +38,11 @@ impl GenSerialData for CustomerType {
         self.digit
     }
 
-    fn get_rawdata(&self) -> String {
+    fn get_rawdata(&self) -> Option<String> {
         if let Some(kind) = &self.customer_type {
-            return format!("{}", usize::from((*kind).clone()));
+            Some(format!("{}", usize::from((*kind).clone())))
         } else {
-            return "0".to_owned();
+            None
         }
     }
 

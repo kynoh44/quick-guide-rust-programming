@@ -27,11 +27,11 @@ pub fn get_user_input() -> String {
 
 trait GenSerialData {
     fn verify(&self, data: &str) -> bool {
-        self.get_length() == data.len() && self.get_rawdata() == data
+        self.get_length() == data.len() && self.get_rawdata().unwrap() == data
     }
 
     fn get_length(&self) -> usize;
-    fn get_rawdata(&self) -> String;
+    fn get_rawdata(&self) -> Option<String>;
     fn get_name(&self) -> &str;
     fn put_rawdata(&mut self, data: &str);
     // 명령행 인자 처리를 위해 추가된 함수들
@@ -40,17 +40,64 @@ trait GenSerialData {
     fn get_mandatory(&self) -> bool;
 }
 
+fn generate_serial(items: &mut Vec<Box<dyn GenSerialData>>) -> String {
+    let mut data = String::new();
+    for item in items.iter_mut() {
+        if let Some(rawdata) = item.get_rawdata() {
+            data.push_str(&rawdata);
+        }
+    }
+    data
+}
+
+/// HOW TO RUN
 ///
-/// $ serial --help
-/// serial 0.1.0
+/// $ cargo run --bin serial_project_step4 -- --help
+/// Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.02s
+/// Running `target/debug/serial_project_step4 --help`
 /// Serial number generator
-/// --productid <productid> Product ID
-/// --customerid <customerid> Customer ID
-/// --customertype <customertype> Customer Type
-/// --expiredate <expiredate> Expire Date
-/// --help Prints help information
 ///
-/// $ serial --productid qwerasdf --customerid 12344 --customertype 1 --expiredate 20221231
+/// Usage: serial_project_step4 [OPTIONS] --customerid <CustomerID> --productid <ProductID>
+///
+/// Options:
+///  --customerid <CustomerID>       Customer ID with 4-digit
+///  --productid <ProductID>         Product ID with 8-digit
+///  --customer_type <CustomerType>  Customer type (1-Business, 2-Individual, 3-Company):
+///  --expiredate <ExpireDate>       Expire date with YYYYMMDD format
+/// -h, --help                          Print help
+/// -V, --version                       Print version
+///
+/// customerid와 productid는 필수 입력 항목이다.
+///
+/// $ cargo run --bin serial_project_step4 -- --customerid 1234 --productid qwerasdf
+///    Compiling my-rust-book v0.1.0 (/home/gkim/study/quick-guide-rust-programming)
+///     Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.49s
+///      Running `target/debug/serial_project_step4 --customerid 1234 --productid qwerasdf`
+/// Plain serial: 1234qwerasdf
+/// Encrypted serial: 3OvuVy1IXj5veDI61Mszjg==
+/// Decrypted serial: 1234qwerasdf
+/// Verify CustomerID: 1234
+/// Verify result: true
+/// Verify ProductID: qwerasdf
+/// Verify result: true
+///
+/// expiredate와 customer_type는 선택 입력 항목이다.
+///
+/// $ cargo run --bin serial_project_step4 -- --customerid 1234 --productid qwerasdf --customer_type 1 --expiredate 20221212
+///    Compiling my-rust-book v0.1.0 (/home/gkim/study/quick-guide-rust-programming)
+///    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.46s
+///     Running `target/debug/serial_project_step4 --customerid 1234 --productid qwerasdf --customer_type 1 --expiredate 20221212`
+/// Plain serial: 1234qwerasdf120221212
+/// Encrypted serial: k5K8H3VBQryAQbzxanzUhnHzYjTtDT8WOVKeE/JCy7w=
+/// Decrypted serial: 1234qwerasdf120221212
+/// Verify CustomerID: 1234
+/// Verify result: true
+/// Verify ProductID: qwerasdf
+/// Verify result: true
+/// Verify CustomerType: 1
+/// Verify result: true
+/// Verify ExpireDate: 20221212
+/// Verify result: true
 ///
 
 fn main() {
@@ -64,7 +111,6 @@ fn main() {
         Box::new(customertype),
         Box::new(expiredate),
     ];
-    let plain_serial: String = String::new();
 
     // 더 이상 사용자에게 입력을 받지 않고 명령행 인자로 처리
     let mut command = Command::new("serial")
@@ -98,6 +144,7 @@ fn main() {
         }
     }
 
+    let plain_serial = generate_serial(&mut items);
     println!("Plain serial: {}", plain_serial);
 
     let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
@@ -109,10 +156,12 @@ fn main() {
 
     let mut offset = 0;
     for item in items.iter() {
-        let len = item.get_length();
-        let rawdata = &dec[offset..offset + len];
-        println!("Verify {}: {}", item.get_name(), rawdata);
-        println!("Verify result: {}", item.verify(rawdata));
-        offset += len;
+        if let Some(_rawdata) = item.get_rawdata() {
+            let len = item.get_length();
+            let rawdata = &dec[offset..offset + len];
+            println!("Verify {}: {}", item.get_name(), rawdata);
+            println!("Verify result: {}", item.verify(rawdata));
+            offset += len;
+        }
     }
 }
