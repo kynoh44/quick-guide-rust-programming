@@ -21,8 +21,12 @@ impl GenSerialData for CustomerID {
         self.digit
     }
 
-    fn get_rawdata(&self) -> String {
-        self.id.clone().unwrap()
+    fn get_rawdata(&self) -> Option<String> {
+        if self.id.is_some() {
+            self.id.clone()
+        } else {
+            None
+        }
     }
 
     fn get_name(&self) -> &str {
