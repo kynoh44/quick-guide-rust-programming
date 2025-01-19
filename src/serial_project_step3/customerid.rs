@@ -9,7 +9,7 @@ pub struct CustomerID {
 impl CustomerID {
     pub fn new(digit: usize) -> Self {
         CustomerID {
-            name: "UserID".to_owned(),
+            name: "CustomerID".to_owned(),
             digit,
             id: None,
         }
