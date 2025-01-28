@@ -146,9 +146,101 @@ self의 레퍼런스에서 값을 읽어오므로 kind에는 self.customer_type 
 
 ### ExpireDate 추가
 
-입력 데이터를 하나 더 
+제품의 사용 기한을 시리얼 번호에 추가해보겠습니다.
+2025년 12월 31일을 표현하기 위해서 20251231과 같이 8글자의 정보를 넣어보겠습니다.
+ExpireDate라는 이름의 데이터 구조를 만들고 간단하게 연, 월, 일을 저장하는 3가지 정수만 저장해보겠습니다.
 
+```rust
+pub struct ExpireDate {
+    year: u32,
+    month: u32,
+    day: u32,
+    name: String,
+}
 
+impl ExpireDate {
+    pub fn new() -> Self {
+        ExpireDate {
+            name: "ExpireDate".to_owned(),
+            year: 0,
+            month: 0,
+            day: 0,
+        }
+    }
+}
+```
+
+GenSerialData트레이트의 구현은 다음과 같습니다.
+
+```rust
+impl GenSerialData for ExpireDate {
+    fn get_input_from_user(&mut self) {
+        println!("Please input the expiration date (YYYYMMDD) (e.g. 20250123) : ",);
+        let rawdata = get_user_input();
+        assert_eq!(rawdata.len(), 8); // 입력받은 데이터의 길이가 10인지 검증, YYYYMMDD에 /가 2개 들어가므로 10개임
+
+        // 입력받은 날짜를 분리해서 year, month, day 필드에 저장
+        // 동시에 year, month, day 필드에 저장된 값이 올바른지 검증
+        self.year = rawdata[0..4].parse().unwrap();
+        assert!(self.year >= 2021, "The year must be 2021 or later.");
+        self.month = rawdata[4..6].parse().unwrap();
+        assert!(
+            self.month >= 1 && self.month <= 12,
+            "The month must be between 1 and 12."
+        );
+        self.day = rawdata[6..8].parse().unwrap();
+        assert!(
+            self.day >= 1 && self.day <= 31,
+            "The day must be between 1 and 31."
+        );
+    }
+
+    fn verify(&mut self, data: &str) -> bool {
+        let year = data[0..4].parse().unwrap();
+        let month = data[4..6].parse().unwrap();
+        let day = data[6..8].parse().unwrap();
+
+        self.year == year && self.month == month && self.day == day
+    }
+
+    fn get_length(&mut self) -> usize {
+        8
+    }
+
+    fn get_rawdata(&self) -> String {
+        format!("{:04}{:02}{:02}", self.year, self.month, self.day)
+    }
+
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn put_rawdata(&mut self, _data: String) {
+        unimplemented!()
+    }
+}
+```
+
+이번에도 get_input_from_user 메소드를 직접 구현했습니다.
+사용자로부터 8글자의 숫자를 입력받습니다.
+8글자중에 4자리는 연도, 2자리는 월, 2자리는 일로 나눠서 ExpireDate 구조체에 저장합니다.
+
+그리고 디폴트 구현을 사용하지 않는 메소드가 하나 더 생겼습니다.
+verify 메소드를 직접 구현하고 있습니다.
+지금까지 다른 입력 데이터들은 단순히 기존에 사용자로부터 입력받아서 저장한 문자열과, 시리얼 번호를 복호화해서 얻은 문자열을 단순 비교하는 것으로 검증하기 때문에 verify 메소드의 디폴트 구현으로 충분했습니다.
+하지만 ExpireDate 구조체는 연/월/일 정보를 정수로 저장하고 있으므로, 단순 문자열 비교를 사용할 수 없습니다.
+verify메소드의 기본 구조는 get_input_from_user 메소드와 동일합니다.
+시리얼을 복호화한 후 얻은 8글자의 문자열에서 4글자를 연도와 비교하고, 2글자를 월과 비교하고, 2글자를 일자와 비교합니다.
+get_input_from_user에서 사용자가 입력한 문자열을 날짜로 변환하는 과정과 동일합니다.
+
+GenSerialData 트레이트 구현의 마지막에 있는 put_rawdata 메소드는 구현하지 않습니다. 이 메소드는 get_input_from_user에서 사용하는 메소드인데, ExpireDate에서 사용하지 않습니다.
+
+이렇게 새로운 플러그인을 2개 추가해봤습니다. 어떤가요?
+GenSerialData라는 트레이트가 충분히 유연한 플러그인의 역할을 하는것 같은가요?
+제가 생각할 수 있는 4가지 입력 데이터를 위해서는 제 역할을 하는 것으로 보입니다만, 계속 다양한 입력 데이터를 추가하다보면 언젠가는 GenSerialData 트레이트의 메소드들을 조금씩 봐꿔주어야하는 순간이 올 것입니다.
+그러면 이미 구현한 입력 데이터들을 수정해야될 수도 있습니다.
+그래도 이런 표준 인터페이스가 있다는 것만으로도 새로운 유형이 데이터를 추가할 때 어떻게 무엇으로 시작해야될지 실마리를 얻을 수 있습니다.
+그것만으로도 개발을 시작하는데 큰 도움이 됩니다.
 
 ### 연습문제
 
