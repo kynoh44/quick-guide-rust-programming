@@ -1,19 +1,19 @@
 use crate::get_user_input;
 use crate::GenSerialData;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 enum CustomerKind {
     Business,
-    Individual,
+    Student,
     Company,
 }
 
 impl From<CustomerKind> for usize {
     fn from(item: CustomerKind) -> usize {
         match item {
-            CustomerKind::Business => 1,
-            CustomerKind::Individual => 2,
-            CustomerKind::Company => 3,
+            CustomerKind::Business => 1, // 개인이 구매해서 사용하는 경우
+            CustomerKind::Student => 2,  // 학생이 무료버전을 사용하는 경우
+            CustomerKind::Company => 3,  // 회사에서 단체 구매한 경우
         }
     }
 }
@@ -38,7 +38,22 @@ impl GenSerialData for CustomerType {
     fn get_input_from_user(&mut self) {
         let input: String;
 
-        println!("Please input customer type: 1-Business, 2-Individual, 3-Company");
+        print!("Please input customer type: ");
+        print!(
+            "{}-{:?}, ",
+            usize::from(CustomerKind::Business),
+            CustomerKind::Business
+        );
+        print!(
+            "{}-{:?}, ",
+            usize::from(CustomerKind::Student),
+            CustomerKind::Student
+        );
+        print!(
+            "{}-{:?}:",
+            usize::from(CustomerKind::Company),
+            CustomerKind::Company
+        );
         input = get_user_input();
         assert_eq!(input.len(), self.get_length());
         self.put_rawdata(input);
@@ -63,7 +78,7 @@ impl GenSerialData for CustomerType {
     fn put_rawdata(&mut self, data: String) {
         let kind = match data.as_str() {
             "1" => CustomerKind::Business,
-            "2" => CustomerKind::Individual,
+            "2" => CustomerKind::Student,
             "3" => CustomerKind::Company,
             _ => CustomerKind::Business,
         };

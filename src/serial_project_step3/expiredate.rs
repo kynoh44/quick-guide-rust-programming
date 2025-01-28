@@ -21,21 +21,20 @@ impl ExpireDate {
 
 impl GenSerialData for ExpireDate {
     fn get_input_from_user(&mut self) {
-        println!("Please input the expiration date (YYYY/MM/DD) (e.g. 2025/01/23) : ",);
+        println!("Please input the expiration date (YYYYMMDD) (e.g. 20250123) : ",);
         let rawdata = get_user_input();
-        assert_eq!(rawdata.len(), 10); // 입력받은 데이터의 길이가 10인지 검증, YYYYMMDD에 /가 2개 들어가므로 10개임
+        assert_eq!(rawdata.len(), 8); // 입력받은 데이터의 길이가 10인지 검증, YYYYMMDD에 /가 2개 들어가므로 10개임
 
         // 입력받은 날짜를 분리해서 year, month, day 필드에 저장
         // 동시에 year, month, day 필드에 저장된 값이 올바른지 검증
-        let date: Vec<&str> = rawdata.split('/').collect();
-        self.year = date[0].parse().unwrap();
+        self.year = rawdata[0..4].parse().unwrap();
         assert!(self.year >= 2021, "The year must be 2021 or later.");
-        self.month = date[1].parse().unwrap();
+        self.month = rawdata[4..6].parse().unwrap();
         assert!(
             self.month >= 1 && self.month <= 12,
             "The month must be between 1 and 12."
         );
-        self.day = date[2].parse().unwrap();
+        self.day = rawdata[6..8].parse().unwrap();
         assert!(
             self.day >= 1 && self.day <= 31,
             "The day must be between 1 and 31."
