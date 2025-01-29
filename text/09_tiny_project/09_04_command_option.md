@@ -106,4 +106,61 @@ Hello Gioh!
 우리가 만들 시리얼 프로그램은 예제와 같이 항상 동일한 옵션을 가지지 않습니다.
 어떤 경우에는 지금까지 우리가 만든 4개의 입력 데이터를 모두 사용할 때도 있지만, 어떤 제품은 4개 입력 데이터 중에 한두개만 사용할 수도 있습니다.
 
-따라서 Args와 같이 고정된 데이터 구조를 만들어서 옵션을 처리할 수 없고, 동적으로 옵션 처리를 만들어야합니다.
+따라서 이전 예제의 Args와 같이 고정된 데이터 구조를 만들어서 늘 고정된 옵션을 처리하도록 만들 수가 없습니다. 좀 더 옵션을 유연하게 만들 수 있도록 수정해야합니다.
+그렇게 유연한 옵션 처리를 위해서 clap은 다음과 같이 Arg와 Command라는 데이터 구조를 제공하고 있습니다.
+아래 예제는 Arg와 Command를 이용해서 이전 예제와 같이 count 옵션에 받은 수만큼 이름을 출력하는 예제입니다.
+
+```rust
+use clap::{Arg, Command};
+
+fn main() {
+    // clap::Command타입의 객체 생성
+    // --version과 --help 옵션에 대한 설정을 추가함
+    let mut command = Command::new("serial") // 프로그램의 이름은 serial
+        .version("0.1.0") // cargo run -- --version 명령을 실행하면 0.1.0이 출력됨
+        .about("Serial number generator"); // cargo run -- --help 명령을 실행하면 출력되는 프로그램 설명
+
+    // "Name"이라는 ID를 가진 Arg타입의 객체 생성
+    // --name 혹은 -n 옵션으로 지정가능
+    // 디폴트 값은 없고 반드시 옵션으로 지정되어야함
+    let arg = Arg::new("NAME")
+        .long("name")
+        .short('n')
+        .help("Name of the person to greet")
+        .required(true);
+    // command의 arg 메소드를 호출해서 "Name" 옵션을 추가함. arg의 반환값은 새로 생성된 command 객체임
+    command = command.arg(arg);
+    // "Count"라는 ID를 가진 Arg타입의 객체 셍성
+    // --count 혹은 -c 옵션으로 지정가능
+    // 커맨드 라인 옵션으로 값을 입력받지 못하면 1값을 디폴트로 사용함
+    let arg = Arg::new("COUNT")
+        .long("count")
+        .short('c')
+        .help("Number of times to greet")
+        .default_value("1");
+    // 옵션 이름으로 Arg타입 객체를 만든 후 command 객체에 추가해줌
+    command = command.arg(arg);
+
+    // get_matches함수는 프로그램에 전달된 모든 커맨드 라인 옵션을 읽어옴 - parser와 같은 역할
+    let matches = command.get_matches();
+
+    // --name/-n 옵션을 읽어옴
+    if let Some(name) = matches.get_one::<String>("NAME") {
+        // --count/-c 옵션을 읽어옴
+        if let Some(count) = matches.get_one::<String>("COUNT") {
+            let count: usize = count.parse::<usize>().unwrap_or(1);
+            for _ in 0..count {
+                println!("Hello {}!", name);
+            }
+        }
+    }
+}
+```
+
+가장 처음에 해야 할 일은 Command타입의 객체를 만드는 것입니다.
+예제 코드에서는 Command 구조체의 3가지 메소드를 사용하고 있습니다.
+* new: Command 타입의 객체를 생성합니다
+* version: 프로그램의 버전을 지정합니다
+* about: help 옵션을 실행하면 출력될 안내 메세지를 지정합니다.
+
+그 다음은 우리가 만들고자하는 2개의 옵션 `--name`과 `--count`에 
