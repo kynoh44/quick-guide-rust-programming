@@ -253,6 +253,72 @@ Hello, function_for!
 10 - Buzz
 ```
 
+그리고 프로그램이 커맨드 라인 옵션을 받는 경우에 cargo run 명령에 커맨드 라인 옵션을 추가할 수 있습니다.
+아래는 Clap이라는 크레이트의 예제 코드를 실행하는 모습입니다.
+이 예제는 --help, --version 등 총 4개의 옵션을 받을 수 있습니다.
+이런 예제를 개발하는 중에는 아래와 같이 demo라는 실행파일을 실행하는게 아니라 cargo run 명령으로 바로 실행하고, 옵션도 전달할 수 있으면 개발에 편리할 것입니다.
+
+```bash
+$ demo --help
+A simple to use, efficient, and full-featured Command Line Argument Parser
+
+Usage: demo[EXE] [OPTIONS] --name <NAME>
+
+Options:
+  -n, --name <NAME>    Name of the person to greet
+  -c, --count <COUNT>  Number of times to greet [default: 1]
+  -h, --help           Print help
+  -V, --version        Print version
+
+$ demo --name Me
+Hello Me!
+```
+
+예제 코드가 --help라는 옵션을 처리할 수 있다고해서 다음과 같이 바로 cargo run 명령에 --help 옵션을 주면 cargo run이 처리할 수 있는 옵션들이 출력됩니다. 우리는 예제 코드에 --help 옵션을 전달하려는 것이지 cargo에게 --help 옵션을 전달하려는 것이 아니기 때문에 다른 방법이 필요합니다.
+
+```bash
+% cargo run --help  
+Run a binary or example of the local package
+
+Usage: cargo run [OPTIONS] [ARGS]...
+
+Arguments:
+  [ARGS]...  Arguments for the binary or example to run
+
+Options:
+      --message-format <FMT>  Error format
+  -v, --verbose...            Use verbose output (-vv very verbose/build.rs output)
+  -q, --quiet                 Do not print cargo log messages
+      --color <WHEN>          Coloring: auto, always, never
+      --config <KEY=VALUE>    Override a configuration value
+  -Z <FLAG>                   Unstable (nightly-only) flags to Cargo, see 'cargo -Z help' for details
+  -h, --help                  Print help
+......생략
+```
+
+cargo run 명령에서 cargo 자체에 대한 옵션이 아니라 실행할 바이너리 실행 파일에게 전달할 옵션은 다음과 같이 `--` 이후에 적어주게됩니다. 아래 실행 예제는 `demo --help`로 실행한 결과와 동일한 실행 결과를 확인할 수 있습니다.
+
+```
+$ cargo run -- --help
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+     Running `target/debug/bin-example --help`
+Simple program to greet a person
+
+Usage: bin-example [OPTIONS] --name <NAME>
+
+Options:
+  -n, --name <NAME>    Name of the person to greet
+  -c, --count <COUNT>  Number of times to greet [default: 1]
+  -h, --help           Print help
+  -V, --version        Print version
+$ cargo run -- -n Gioh --count 2
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running `target/debug/bin-example -n Gioh --count 2`
+Hello Gioh!
+Hello Gioh!
+```
+
+`--` 다음에 전달한 `-n Gioh --count 2` 옵션이 cargo가 아닌 예제 코드로 전달되서 실행되었습니다.
 
 ## cargo search 와 cargo add
 
