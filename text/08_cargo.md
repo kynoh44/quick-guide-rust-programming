@@ -354,13 +354,25 @@ bin-example $ cargo add anyhow
 bin-example % grep anyhow Cargo.toml
 anyhow = "1.0.94"
 ```
-
 Cargo.toml 파일에 anyhow의 가장 최신 버전이 추가된 것을 확인할 수 있습니다.
+
+최신 버전이 아니라 다른 버전을 직접 지정하고 싶을 때는 다음과 같이 `@x.y`와 같이 버전을 써줍니다.
+
+```
+% cargo add anyhow@1.0
+    Updating crates.io index
+      Adding anyhow v1.0 to dependencies
+             Features as of v1.0.0:
+             + std
+    Updating crates.io index
+     Locking 1 package to latest compatible version
+      Adding anyhow v1.0.95
+```
 
 러스트로 개발하다보면 사용하고싶은 크레이트의 최신 기능이 필요할 때가 있습니다. 아직 최신 버전에 출시되지않고 이제 막 Github에 올라온 기능이 필요할때가 종종있습니다. 러스트가 아직 출시된지 오래된 언어가 아니고, 최근에도 활발하게 개발되고있기 때문입니다. 그럴때는 다음과 같이 --git옵션으로 Gihub의 클론 주소를 입력해주면 Github의 main 브랜치를 다운받아줍니다. 필요하다면 --branch 옵션을 추가해서 브랜치 이름도 지정할 수 있습니다. 
 
 ```bash
-bin-example $ cargo add anyhow --git https://github.com/dtolnay/anyhow.git
+$ cargo add anyhow --git https://github.com/dtolnay/anyhow.git
     Updating git repository `https://github.com/dtolnay/anyhow.git`
       Adding anyhow (git) to dependencies
              Features:
@@ -370,6 +382,22 @@ bin-example $ cargo add anyhow --git https://github.com/dtolnay/anyhow.git
      Locking 1 package to latest compatible version
       Adding anyhow v1.0.94 (https://github.com/dtolnay/anyhow.git#8ceb5e98)
 ```
+
+
+cargo add 명령에서 자주 사용되는 옵션중에 `--features` 옵션이 있습니다.
+다음은 clap 크레이트를 추가하면서 derive라는 기능을 사용하는 명령입니다.
+
+```bash
+$ cargo add clap --features string
+```
+실행 후 Cargo.toml 파일을 열어보면 다음과 같이 clap 크레이트가 추가될 것을 확인할 수 있습니다.
+
+```
+[dependencies]
+clap = { version = "4.5.26", features = ["string"] }
+```
+
+Cargo.toml 파일을 수정하는 명령들은 Cargo.toml을 손으로 직접 수정하는 것과 동일합니다. cargo add 등의 명령에 대한 사용법이 잘 기억이 나지않으면 Cargo.toml 파일을 직접 수정해도 상관없습니다.
 
 ## cargo fmt
 
