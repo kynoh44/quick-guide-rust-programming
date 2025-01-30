@@ -163,4 +163,170 @@ fn main() {
 * version: 프로그램의 버전을 지정합니다
 * about: help 옵션을 실행하면 출력될 안내 메세지를 지정합니다.
 
-그 다음은 우리가 만들고자하는 2개의 옵션 `--name`과 `--count`에 
+그 다음은 우리가 만들고자하는 2개의 옵션 `--name`과 `--count`를 위한 Arg타입 객체를 만드는 것입니다.
+예제 코드에서 사용하는 메소드는 다음과 같습니다.
+* long: `--name`과 같이 옵션의 전체 이름 지정
+* short: `-n`과 같이 옵션의 짧은 이름 지정
+* help: 각 옵션에 대한 설명
+* default_value: 프로그램 사용자가 옵션을 지정하지 않았을 때 기본으로 저장되는 값
+* required: 프로그램 사용자가 반드시 지정해야되는 옵션인지 지정
+
+그리고 Command의 get_matches 메소드를 호출합니다.
+이 메소드는 프로그램에 전달된 모든 옵션을 파싱해서 저장하는 일을 합니다.
+그리고 ArgMatches 타입의 객체를 반환합니다.
+
+최종적으로 각 옵션에 지정된 값을 읽어오는 것이 ArgMatches 객체의 get_one 메소드입니다.
+이전에 "NAME"라는 ID를 가진 Arg타입 객체를 만들었는데 get_one메소드에 "NAME"과 같은 ID를 지정해야 옵션을 읽어올 수 있습니다.
+
+프로그램을 실행해보면 이전에 Clap홈페이지에 있는 예제와 동일하게 실행되는 것을 알 수 있습니다.
+
+```bash
+% cargo run -- --name gioh --count 2
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.05s
+     Running `target/debug/bin-example --name gioh --count 4`
+Hello gioh!
+Hello gioh!
+```
+
+이제 Clap을 적용해서 시리얼 번호 생성에 필요한 입력 데이터를 읽어오도록 만들어보겠습니다.
+
+우선 다음과 같이 Cargo.toml 파일을 수정합니다. features에 "derive"를 "string"으로 바꿉니다.
+
+```
+[dependencies]
+clap = { version = "4.5.26", features = ["string"] }
+```
+
+그리고 GenSerialData 트레이트에 3개의 메소드를 추가합니다.
+* get_arg_name: `--productid`와 같이 옵션의 긴 이름을 반환
+* get_help: 각 옵션의 설명 반환
+* get_mandatory: 필수로 필요한 옵션일 경우 true 반환
+
+```rust
+trait GenSerialData {
+    fn verify(&self, data: &str) -> bool {
+        self.get_length() == data.len() && self.get_rawdata().unwrap() == data
+    }
+
+    fn get_length(&self) -> usize;
+    fn get_rawdata(&self) -> Option<String>;
+    fn get_name(&self) -> &str;
+    fn put_rawdata(&mut self, data: &str);
+    // 명령행 인자 처리를 위해 추가된 함수들
+    fn get_arg_name(&self) -> &str;
+    fn get_help(&self) -> String;
+    fn get_mandatory(&self) -> bool;
+}
+```
+
+다음은 CustomerID 구조체에 새로운 메소드 3개를 추가하는 예제입니다.
+
+```rust
+impl GenSerialData for CustomerID {
+...생략
+
+    fn get_arg_name(&self) -> &'static str {
+        "customerid"
+    }
+
+    fn get_help(&self) -> String {
+        format!("Customer ID with {}-digit", self.digit)
+    }
+
+    fn get_mandatory(&self) -> bool {
+        true
+    }
+}
+```
+
+그리고 main함수를 다음과 같이 수정합니다.
+
+```rust
+fn main() {
+    let productid = ProductID::new(8);
+    let customerid = CustomerID::new(4);
+    let customertype = CustomerType::new();
+    let expiredate = expiredate::ExpireDate::new();
+    let mut items: Vec<Box<dyn GenSerialData>> = vec![
+        Box::new(customerid),
+        Box::new(productid),
+        Box::new(customertype),
+        Box::new(expiredate),
+    ];
+
+    // 더 이상 사용자에게 입력을 받지 않고 명령행 인자로 처리
+    let mut command = Command::new("serial")
+        .version("0.1.0")
+        .about("Serial number generator");
+
+    for item in items.iter() {
+        // Cargo.toml에서도 Clap의 string feature를 사용하고 있기 때문에 String을 넣어줘야 함
+        // Arg의 new, long, help, required 함수에 String을 넣어주기 위해 to_owned()를 사용
+        // 만약에 Clap의 string feature를 사용하지 않는다면 &str을 넣어주면 됨
+        // 그런데 &str은 item.get_name()이 &'static str이 아니기 때문에 to_owned()를 사용해야 함
+        // 예를 들어 curstomerid 객체의 name은 String이다. 그런데 get_name()으로 name의 레퍼런스를 받아서
+        // Arg의 long 함수에 넣어주게되면, Arg가 customerid에 대한 레퍼런스를 가지게 된다.
+        // 그러면 Arg와 customerid는 서로 다른 라이프타임을 가지게 되어서 컴파일 에러가 발생한다.
+        // 개발자는 Customerid가 arg보다 더 오래 존재한다고 생각하지만, 사실상 Rust 컴파일러가 customerid와 arg 중에
+        // 어느 것을 먼저 해지할지는 알 수 없다. 따라서 이러한 의존성으로 생기는 라이프타임 문제를 해결하기 위해서는
+        // Arg에 레퍼런스를 넣어주는 것이 아니라 String 객체를 넣어주어서 라이프타임에 대한 의존성을 없애야만한다.
+        command = command.arg(
+            Arg::new(item.get_name().to_owned())
+                .long(item.get_arg_name().to_owned())
+                .help(item.get_help())
+                .required(item.get_mandatory().to_owned()),
+        );
+    }
+
+    let matches = command.get_matches();
+
+    for item in items.iter_mut() {
+        if let Some(data) = matches.get_one::<String>(item.get_name()) {
+            item.put_rawdata(data.as_str());
+        }
+    }
+
+    let plain_serial = generate_serial(&mut items);
+    println!("Plain serial: {}", plain_serial);
+
+    let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
+    let serial = mc.encrypt_str_to_base64(&plain_serial); // 암호화 후 BASE64로 인코딩
+    println!("Encrypted serial: {}", serial);
+
+    let dec = mc.decrypt_base64_to_string(serial).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
+    println!("Decrypted serial: {}", dec);
+
+    let mut offset = 0;
+    for item in items.iter() {
+        if let Some(_rawdata) = item.get_rawdata() {
+            let len = item.get_length();
+            let rawdata = &dec[offset..offset + len];
+            println!("Verify {}: {}", item.get_name(), rawdata);
+            println!("Verify result: {}", item.verify(rawdata));
+            offset += len;
+        }
+    }
+}
+```
+
+각 옵션의 ID를 각 입력 데이터 구조체의 get_name 메소드로 얻어옵니다.
+옵션 이름도 get_arg_name으로 얻어오고, 도움말 메세지도 get_help로 얻어옵니다.
+
+한가지 특이한게 있는데 제가 주석으로 잔뜩 설명을 써놓은 부분입니다.
+Cargo.toml에 clap의 "string" 기능을 사용하도록 `features = ["string"]` 옵션을 추가했습니다.
+그래서 Arg 객체의 new, long, help 등의 메소드에 문자열에 대한 레퍼런스가 아니라 String 객체를 인자로 사용하게되었습니다.
+```rust
+            Arg::new(item.get_name().to_owned())
+                .long(item.get_arg_name().to_owned())
+                .help(item.get_help().to_owned())
+                .required(item.get_mandatory().to_owned()),
+        );
+```
+
+왜 문자열에 대한 레퍼런스가 아니라 객체를 그대로 전달해서 소유권을 넘기는게 필요할까요?
+이 문제는 눈에 보이지 않는 수명에 관한 문제라서 처음 접하게 되면 당황할 수 있습니다.
+만약에 new, long, help 메소드에 productid, customerid등의 객체가 가진 name 필드의 레퍼런스를 
+
+### 연습문제
+
+1. CustomerID 구조체 외에 다른 입력 데이터에도 get_arg_name, get_help, get_mandatory 메소드를 구현해보세요.
