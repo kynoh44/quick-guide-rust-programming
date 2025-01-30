@@ -346,5 +346,119 @@ Clap 크레이트의 개발자들은 이런 문제를 이미 알고있으므로 
 
 1. CustomerID 구조체 외에 다른 입력 데이터에도 get_arg_name, get_help, get_mandatory 메소드를 구현해보세요.
 
-2. Cargo.toml에서 `features = ["string"]` 옵션을 없애고, Arg객체가 문자열의 레퍼런스를 받도록 수정해보세요. 어떤 에러가 나는지 확인해보시고, `features = ["string"]` 옵션이 아닌 다른 방법으로 해결할 수 있는지 시도해보세요. 오래 다양한 시도를 해볼 수록 더 잘 이해할 수 있습니다.
+2. Cargo.toml에서 `features = ["string"]` 옵션을 없애고, Arg객체가 문자열의 레퍼런스를 받도록 수정해보세요. 어떤 에러가 나는지 확인해보세요. command나 arg, productid 객체에서 에러가 나는게 아니라 의외의 변수에서 에러가 나는 것을 확인할 수 있습니다. 또 에러 메세지에 수명 lifetime에 대한 에러라는 설명이 없고, 상관없는 에러가 발생하는 것처럼 보일 수 있습니다. `features = ["string"]` 옵션이 아닌 다른 방법으로 해결할 수 있는지 시도해보세요. 오래 다양한 시도를 해볼 수록 더 잘 이해할 수 있습니다.
 
+```rust
+fn main() {
+    let productid = ProductID::new(8);
+    let customerid = CustomerID::new(4);
+    let customertype = CustomerType::new();
+    let expiredate = expiredate::ExpireDate::new();
+    let mut items: Vec<Box<dyn GenSerialData>> = vec![
+        Box::new(customerid),
+        Box::new(productid),
+        Box::new(customertype),
+        Box::new(expiredate),
+    ];
+
+    // 더 이상 사용자에게 입력을 받지 않고 명령행 인자로 처리
+    let mut command = Command::new("serial")
+        .version("0.1.0")
+        .about("Serial number generator");
+
+    for item in items.iter() {
+        // Cargo.toml에서도 Clap의 string feature를 사용하고 있기 때문에 String을 넣어줘야 함
+        // Arg의 new, long, help, required 함수에 String을 넣어주기 위해 to_owned()를 사용
+        // 만약에 Clap의 string feature를 사용하지 않는다면 &str을 넣어주면 됨
+        // 그런데 &str은 item.get_name()이 &'static str이 아니기 때문에 to_owned()를 사용해야 함
+        // 예를 들어 curstomerid 객체의 name은 String이다. 그런데 get_name()으로 name의 레퍼런스를 받아서
+        // Arg의 long 함수에 넣어주게되면, Arg가 customerid에 대한 레퍼런스를 가지게 된다.
+        // 그러면 Arg와 customerid는 서로 다른 라이프타임을 가지게 되어서 컴파일 에러가 발생한다.
+        // 개발자는 Customerid가 arg보다 더 오래 존재한다고 생각하지만, 사실상 Rust 컴파일러가 customerid와 arg 중에
+        // 어느 것을 먼저 해지할지는 알 수 없다. 따라서 이러한 의존성으로 생기는 라이프타임 문제를 해결하기 위해서는
+        // Arg에 레퍼런스를 넣어주는 것이 아니라 String 객체를 넣어주어서 라이프타임에 대한 의존성을 없애야만한다.
+        command = command.arg(
+            Arg::new(item.get_name())
+                .long(item.get_arg_name())
+                .help(item.get_help())
+                .required(item.get_mandatory()),
+        );
+    }
+
+    let matches = command.get_matches();
+
+    for item in items.iter_mut() {
+        if let Some(data) = matches.get_one::<String>(item.get_name()) {
+            item.put_rawdata(data.as_str());
+        }
+    }
+
+    let plain_serial = generate_serial(&mut items);
+    println!("Plain serial: {}", plain_serial);
+
+    let mc = new_magic_crypt!("magickey", 256); // AES256 알고리즘을 사용하는 MagicCrypt256타입의 객체 생성
+    let serial = mc.encrypt_str_to_base64(&plain_serial); // 암호화 후 BASE64로 인코딩
+    println!("Encrypted serial: {}", serial);
+
+    let dec = mc.decrypt_base64_to_string(serial).unwrap(); // BASE64로 인코딩된 데이터를 디코딩 후 암호 해제
+    println!("Decrypted serial: {}", dec);
+
+    let mut offset = 0;
+    for item in items.iter() {
+        if let Some(_rawdata) = item.get_rawdata() {
+            let len = item.get_length();
+            let rawdata = &dec[offset..offset + len];
+            println!("Verify {}: {}", item.get_name(), rawdata);
+            println!("Verify result: {}", item.verify(rawdata));
+            offset += len;
+        }
+    }
+}
+```
+
+```bash
+% cargo run --bin serial_project_step4
+   Compiling my-rust-book v0.1.0 (/Users/user/study/quick-guide-rust-programming)
+error[E0597]: `items` does not live long enough
+   --> src/serial_project_step4/main.rs:120:17
+    |
+108 |     let mut items: Vec<Box<dyn GenSerialData>> = vec![
+    |         --------- binding `items` declared here
+...
+120 |     for item in items.iter() {
+    |                 ^^^^^-------
+    |                 |
+    |                 borrowed value does not live long enough
+    |                 argument requires that `items` is borrowed for `'static`
+...
+167 | }
+    | - `items` dropped here while still borrowed
+
+error[E0502]: cannot borrow `items` as mutable because it is also borrowed as immutable
+   --> src/serial_project_step4/main.rs:141:17
+    |
+120 |     for item in items.iter() {
+    |                 ------------
+    |                 |
+    |                 immutable borrow occurs here
+    |                 argument requires that `items` is borrowed for `'static`
+...
+141 |     for item in items.iter_mut() {
+    |                 ^^^^^ mutable borrow occurs here
+
+error[E0502]: cannot borrow `items` as mutable because it is also borrowed as immutable
+   --> src/serial_project_step4/main.rs:147:40
+    |
+120 |     for item in items.iter() {
+    |                 ------------
+    |                 |
+    |                 immutable borrow occurs here
+    |                 argument requires that `items` is borrowed for `'static`
+...
+147 |     let plain_serial = generate_serial(&mut items);
+    |                                        ^^^^^^^^^^ mutable borrow occurs here
+
+Some errors have detailed explanations: E0502, E0597.
+For more information about an error, try `rustc --explain E0502`.
+error: could not compile `my-rust-book` (bin "serial_project_step4") due to 3 previous errors
+```

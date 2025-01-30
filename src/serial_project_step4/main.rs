@@ -129,8 +129,8 @@ fn main() {
         // 어느 것을 먼저 해지할지는 알 수 없다. 따라서 이러한 의존성으로 생기는 라이프타임 문제를 해결하기 위해서는
         // Arg에 레퍼런스를 넣어주는 것이 아니라 String 객체를 넣어주어서 라이프타임에 대한 의존성을 없애야만한다.
         command = command.arg(
-            Arg::new(item.get_name().to_owned())
-                .long(item.get_arg_name().to_owned())
+            Arg::new(item.get_name())
+                .long(item.get_arg_name())
                 .help(item.get_help())
                 .required(item.get_mandatory()),
         );
