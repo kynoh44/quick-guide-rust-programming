@@ -18,7 +18,7 @@
   * [플러그인](text/09_tiny_project/09_02_plugin_drivers.md)
   * [추가 플러그인](text/09_tiny_project/09_03_more_drivers.md)
   * [커맨드 라인 옵션](text/09_tiny_project/09_04_command_option.md)
-  * [설정 파일](text/09_tiny_project/)
+  * [설정 파일](text/09_tiny_project/09_05_conf_file.md)
 
 ## 책 소개
 
