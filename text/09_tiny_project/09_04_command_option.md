@@ -274,7 +274,7 @@ fn main() {
             Arg::new(item.get_name().to_owned())
                 .long(item.get_arg_name().to_owned())
                 .help(item.get_help())
-                .required(item.get_mandatory().to_owned()),
+                .required(item.get_mandatory()),
         );
     }
 
@@ -316,17 +316,35 @@ fn main() {
 Cargo.toml에 clap의 "string" 기능을 사용하도록 `features = ["string"]` 옵션을 추가했습니다.
 그래서 Arg 객체의 new, long, help 등의 메소드에 문자열에 대한 레퍼런스가 아니라 String 객체를 인자로 사용하게되었습니다.
 ```rust
-            Arg::new(item.get_name().to_owned())
-                .long(item.get_arg_name().to_owned())
-                .help(item.get_help().to_owned())
-                .required(item.get_mandatory().to_owned()),
+            Arg::new(item.get_name())
+                .long(item.get_arg_name())
+                .help(item.get_help())
+                .required(item.get_mandatory()),
         );
 ```
 
 왜 문자열에 대한 레퍼런스가 아니라 객체를 그대로 전달해서 소유권을 넘기는게 필요할까요?
 이 문제는 눈에 보이지 않는 수명에 관한 문제라서 처음 접하게 되면 당황할 수 있습니다.
-만약에 new, long, help 메소드에 productid, customerid등의 객체가 가진 name 필드의 레퍼런스를 
+new, long, help 메소드에 productid, customerid등의 객체가 가진 name 필드의 레퍼런스를 전달합니다.
+그래서 결국 Arg 객체에 다른 객체가 가진 데이터의 레퍼런스가 저장됩니다.
+여기서 수명의 문제가 생깁니다.
+Arg타입 객체 arg가 productid의 name필드에 대한 레퍼런스를 가지고 있으므로, 두 객체 중에 어느 것이 더 메모리에 오래 있어야될까요?
+당연히 productid가 더 오래 존재해야합니다. 만약 productid의 메모리가 해지되고, productid가 존재하던 메모리에 다른 데이터가 저장된다면 arg 객체는 완전히 다른 데이터에 접근하게됩니다.
+
+여기까지는 쉽습니다.
+하지만 우리 예제와 같이 arg객체와 productid객체가 main함수의 끝까지 존재한다면 어떻게 될까요?
+main함수가 끝난다는 것은 프로그램이 끝난다는 것인데, 프로그램이 끝날 때 main함수가 가지고 있던 다양한 객체들을 해지할 때 arg객체와 productid객체중에 어느 것이 먼저 해지될까요?
+사실 프로그램이 종료될 때 프로그램이 가진 메모리를 해지하는 것은 운영체제의 역할이기 때문에, 어느 객체가 먼저 해지될지 알 수 없습니다.
+결국 러스트 컴파일러가 서로간에 참조되고 있는 객체들의 수명이 옳바른지를 알 수 없기 때문에, 컴파일 에러가 발생합니다.
+그래서 arg객체에 productid객체의 레퍼런스를 저장하지 않도록, new, long, help 메소드에 String객체를 전달할 수 있어야 합니다.
+기본적으로 Arg의 메소드들은 문자열에 대한 레퍼런스를 인자로 받습니다. 그게 대부분의 상황에서 더 편리하기 때문입니다.
+하지만 우리 프로그램과 같이 옵션의 이름들이 다른 객체에 저장되어있는 경우 new, long, help 메소드들이 String객체를 전달받도록 바꿔야합니다.
+Clap 크레이트의 개발자들은 이런 문제를 이미 알고있으므로 `features = ["string"]`를 통해서 메소드들이 받은 인자 타입을 바꿀 수 있도록 지원하고 있습니다.
+
 
 ### 연습문제
 
 1. CustomerID 구조체 외에 다른 입력 데이터에도 get_arg_name, get_help, get_mandatory 메소드를 구현해보세요.
+
+2. Cargo.toml에서 `features = ["string"]` 옵션을 없애고, Arg객체가 문자열의 레퍼런스를 받도록 수정해보세요. 어떤 에러가 나는지 확인해보시고, `features = ["string"]` 옵션이 아닌 다른 방법으로 해결할 수 있는지 시도해보세요. 오래 다양한 시도를 해볼 수록 더 잘 이해할 수 있습니다.
+

@@ -132,7 +132,7 @@ fn main() {
             Arg::new(item.get_name().to_owned())
                 .long(item.get_arg_name().to_owned())
                 .help(item.get_help())
-                .required(item.get_mandatory().to_owned()),
+                .required(item.get_mandatory()),
         );
     }
 
