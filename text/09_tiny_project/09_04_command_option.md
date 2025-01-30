@@ -241,6 +241,8 @@ impl GenSerialData for CustomerID {
 
 그리고 main함수를 다음과 같이 수정합니다.
 
+*중복된 코드가 많으므로 모든 코드를 복사해서 옮겨적지 않았습니다. 프로그램의 전체 코드는 https://github.com/gurugio/quick-guide-rust-programming 에서 확인바랍니다.*
+
 ```rust
 fn main() {
     let productid = ProductID::new(8);
