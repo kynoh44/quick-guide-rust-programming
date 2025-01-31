@@ -182,9 +182,9 @@ See 'cargo help <command>' for more information on a specific command.
 new 명령을 아래와 같이 실행하면 새로운 디렉토리와 하위 디렉토리 및 파일들을 만들어줍니다. Rust언어의 패키지나 프로젝트 관리에 대해서는 나중에 다시 설명하겠습니다.
 
 ```bash
-% cargo new my-rust-book
-l     Created binary (application) `my-rust-book` package
-% cd my-rust-book
+% cargo new cargo-new-test
+l     Created binary (application) `cargo-new-test` package
+% cd cargo-new-test
 % ls
 Cargo.toml  src
 % ls -R
@@ -194,22 +194,22 @@ Cargo.toml  src
 main.rs
 ```
 
-cargo new 명령으로 my-rust-book이라는 디렉토리와, my-rust-book/src라는 디렉토리가 생성됩니다. 그리고 my-rust-book/Cargo.toml, my-rust-book/src/main.rs 파일들이 생성됩니다.
+cargo new 명령으로 cargo-new-test이라는 디렉토리와, cargo-new-test/src라는 디렉토리가 생성됩니다. 그리고 cargo-new-test/Cargo.toml, cargo-new-test/src/main.rs 파일들이 생성됩니다.
 
 참고로 이미 존재하는 디렉토리를 Rust언어 프로젝트 디렉토리로 만들고 있다면 아래와 같이 cargo init 명령을 사용하면 됩니다. Cargo.toml 파일을 생성하고 그 외에 src디렉토리를 만들지 않는 것을 알 수 있습니다.
 
-Cargo.toml은 현재 디렉토리에 있는 main.rs라는 파일을 빌드해서 pyalgo라는 실행파일을 만들 것입니다.
+Cargo.toml은 현재 디렉토리에 있는 main.rs라는 파일을 빌드해서 cargo-init-test라는 실행파일을 만들 것입니다.
 
 ```bash
-user@AL02279337 pyalgo % ls
+user@AL02279337 cargo-init_test % ls
 main.rs
-user@AL02279337 pyalgo % cargo init
+user@AL02279337 cargo-init_test % cargo init
      Created binary (application) package
-user@AL02279337 pyalgo % ls
+user@AL02279337 cargo-init-test % ls
 Cargo.toml main.rs
-user@AL02279337 pyalgo % cat Cargo.toml
+user@AL02279337 cargo-init-test % cat Cargo.toml
 [package]
-name = "pyalgo"
+name = "cargo-init-test"
 version = "0.1.0"
 edition = "2021"
 
@@ -218,7 +218,7 @@ edition = "2021"
 [dependencies]
 
 [[bin]]
-name = "pyalgo"
+name = "cargo-init-test"
 path = "main.rs"
 ```
 
@@ -226,12 +226,12 @@ path = "main.rs"
 
 ## Hello, world! 구현하기
 
-“cargo new” 명령을 사용해서 간단한 바이너리 파일을 빌드하기 위한 패키지를 생성해보겠습니다. 다음은 my-rust-book이라는 패키지를 생성하는 방법입니다.
+“cargo new” 명령을 사용해서 간단한 바이너리 파일을 빌드하기 위한 패키지를 생성해보겠습니다. 다음은 hello이라는 패키지를 생성하는 방법입니다.
 
 ```bash
-% cargo new my-rust-book
-l     Created binary (application) `my-rust-book` package
-% cd my-rust-book
+% cargo new hello
+     Created binary (application) `hello` package
+% cd hello
 % ls
 Cargo.toml  src
 % ls -R
@@ -248,7 +248,7 @@ Cargo.toml 파일의 가장 중요한 역할은 패키지의 이름과 버전 �
 ```bash
 % cat Cargo.toml
 [package]
-name = "ch01"
+name = "hello"
 version = "0.1.0"
 edition = "2021"
 
@@ -262,16 +262,16 @@ package 섹션에 있는 name과 version은 패키지의 이름과 버전입니�
 dependencies 섹션은 이 패키지에서 사용될 외부 라이브러리를 지정합니다. 이 책에서는 표준 라이브러리만 사용하지만, 만약에 외부 라이브러리를 사용하고 싶다면 다음과 같이 “cargo add” 명령으로 라이브러리를 dependencies 섹션에 추가할 수 있습니다. 다음은 anyhow라는 라이브러리를 추가해본 것입니다.
 
 ```bash
-gurugio@AL01945427:~/my-rust-book$ cargo add anyhow
+$ cargo add anyhow
     Updating crates.io index
       Adding anyhow v1.0.80 to dependencies.
              Features:
              + std
              - backtrace
     Updating crates.io index
-gurugio@AL01945427:~/my-rust-book$ cat Cargo.toml
+$ cat Cargo.toml
 [package]
-name = "my-rust-book"
+name = "hello"
 version = "0.1.0"
 edition = "2021"
 
@@ -281,7 +281,7 @@ edition = "2021"
 anyhow = "1.0.80"
 ```
 
-crate.io라는 메세지가 나오는데 <https://crates.io/> 라는 사이트에서 anyhow라이브러리를 다운받기 때문입니다. crates.io사이트에 접속해서 anyhow를 검색해보면 가장 최신 버전이 1.0.80인것을 확인할 수 있습니다.
+`cargo add` 명령을 실행하면 crate.io라는 사이트로부터 패키지에 대한 인덱스를 업데이트한다는 메세지가 나오는데 <https://crates.io/> 라는 사이트에서 anyhow라이브러리를 다운받기 때문입니다. crates.io사이트에 접속해서 anyhow를 검색해보면 가장 최신 버전이 1.0.80인것을 확인할 수 있습니다.
 
 그럼 개발 환경 셋팅이 끝났으니 간단하게 Hello, World!를 출력해보겠습니다. 다음과 같이 main.rs를 만들어보겠습니다.
 
@@ -295,11 +295,11 @@ fn main() {
 ```
 
 ```bash
-$ cargo run --bin hello
-   Compiling my-rust-book v0.1.0 (/home/gkim/study/my-rust-book)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s
+% cargo run
+   Compiling hello v0.1.0 (/Users/user/study/hello)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.98s
      Running `target/debug/hello`
-Hello, World!
+Hello, world!
 Hello, World again!
 ffff
 ```
