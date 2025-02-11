@@ -5,7 +5,7 @@ fn fizzbuzz_3(max: i32) {
             (0, 0) => format!("{} - FizzBuzz\n", i),
             (0, _) => format!("{} - Fizz\n", i),
             (_, 0) => format!("{} - Buzz\n", i),
-            (_, _) => "".to_string(),
+            _ => "".to_string(),
         })
         .inspect(|s| println!("map returns '{}'", s))
         .collect::<Vec<String>>()

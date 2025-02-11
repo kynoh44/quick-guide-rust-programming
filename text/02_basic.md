@@ -440,7 +440,7 @@ fn fizzbuzz_2(max: i32) {
             (0, 0) => println!("{} - FizzBuzz", i),
             (0, _) => println!("{} - Fizz", i),
             (_, 0) => println!("{} - Buzz", i),
-            (_, _) => (),
+            _ => (),
         }
     }
 }
@@ -525,7 +525,7 @@ fn fizzbuzz_2(max: i32) {
             (0, _) => println!("{} - Fizz", i),
             (_, 0) => println!("{} - Buzz", i),
             (0, 0) => println!("{} - FizzBuzz", i),
-            (_, _) => (),
+            _ => (),
         }
     }
 }

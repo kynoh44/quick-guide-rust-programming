@@ -4,7 +4,7 @@ fn fizzbuzz_2(max: i32) {
             (0, 0) => println!("{} - FizzBuzz", i),
             (0, _) => println!("{} - Fizz", i),
             (_, 0) => println!("{} - Buzz", i),
-            (_, _) => (),
+            _ => (),
         }
     }
 }
@@ -15,7 +15,7 @@ fn fizzbuzz_3(max: i32) {
             (0, 0) => format!("{} - FizzBuzz\n", i),
             (0, _) => format!("{} - Fizz\n", i),
             (_, 0) => format!("{} - Buzz\n", i),
-            (_, _) => "".to_string(),
+            _ => "".to_string(),
         })
         .collect::<Vec<String>>()
         .join("");
